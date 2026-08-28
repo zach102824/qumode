@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qumode-vqe"
+version = "0.1.0"
+description = "ECD-VQE simulator for hybrid qubit-qumode QUBO with a comprehensive cQED noise model"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "qutip>=5.0",
+    "numpy",
+    "scipy",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+qumode-experiment = "qumode_vqe.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+qumode_vqe = ["data/*.json"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = [
+    "slow: long-running optimization and noisy-VQE regression tests",
+]
+filterwarnings = [
+    "ignore:Method BFGS cannot handle bounds:RuntimeWarning",
+]
+addopts = "-q --strict-markers -m 'not slow'"
