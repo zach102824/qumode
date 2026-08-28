@@ -6,6 +6,7 @@ __pycache__/
 .DS_Store
 results/*
 !results/.gitkeep
+!results/*.json
 dist/
 build/
 *.npz
