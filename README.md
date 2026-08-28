@@ -52,7 +52,7 @@ src/qumode_vqe/     simulator (Hamiltonian, circuit, noise, VQE, Gibbs η)
 scripts/            experiment drivers
 tests/              pytest suite
 docs/               paper PDF and Gibbs-vs-energy note
-results/            suite JSON (tracked); plots / NPZ stay gitignored
+results/            suite JSON, NPZ, and plots
 ```
 
 ## Setup
@@ -167,9 +167,8 @@ energy does not.
 ### Local mixed-suite snapshot
 
 Numbers below are from the development 20 knapsack + 20 Ising suite (one start
-each, same seeds), stored as JSON under `results/`. Plots and `.npz` files stay
-gitignored. Success means the decoded \(\lvert q,n,m\rangle\) is an exact ground
-state.
+each, same seeds), stored under `results/`. Success means the decoded
+\(\lvert q,n,m\rangle\) is an exact ground state.
 
 | Run | Hits |
 |---|---|
