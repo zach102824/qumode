@@ -49,6 +49,28 @@ from qumode_vqe.qaoa import (
 )
 from qumode_vqe.vqe import HybridSimulator, optimize_gibbs_adaptive
 
+def _limit_blas_threads(n: int = 1) -> None:
+    """Avoid 4-worker × OpenMP oversubscription (QuTiP/NumPy matmul)."""
+    n_s = str(int(n))
+    for key in (
+        "OMP_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS",
+        "NUMEXPR_NUM_THREADS",
+        "VECLIB_MAXIMUM_THREADS",
+        "QUTIP_NUM_PROCESSES",
+    ):
+        os.environ[key] = n_s
+    try:
+        import threadpoolctl
+
+        threadpoolctl.threadpool_limits(int(n))
+    except Exception:
+        pass
+
+
+_limit_blas_threads(1)
+
 OUTDIR = Path("results")
 SEED_BASE = 4000
 # Distinct from n=7 ham_seed=8000. Documented per n.
@@ -273,6 +295,7 @@ def _prepare_meta(meta: dict) -> dict:
 
 
 def run_hea_job(job: dict) -> dict:
+    _limit_blas_threads(1)
     n_qubits = int(job["n_qubits"])
     n_layers = int(job["n_layers"])
     energies = np.asarray(job["energies"], dtype=float)
@@ -326,6 +349,7 @@ def run_hea_job(job: dict) -> dict:
 
 
 def run_ecd_job(job: dict) -> dict:
+    _limit_blas_threads(1)
     ndepth = int(job["ndepth"])
     nfocks = (int(job["nfocks"][0]), int(job["nfocks"][1]))
     part = tuple(int(v) for v in job["partition"])
@@ -422,13 +446,40 @@ def run_ecd_job(job: dict) -> dict:
     return rec
 
 
-def _run_pool(jobs: list[dict], worker, workers: int) -> list[dict]:
-    records: list[dict] = []
+def _checkpoint(path: Path | None, records: list[dict]) -> None:
+    if path is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".partial")
+    tmp.write_text(json.dumps(_json_ready({"n_done": len(records), "trials": records}), indent=2), encoding="utf-8")
+    tmp.replace(path)
+
+
+def _load_partial_trials(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    return list(raw.get("trials") or [])
+
+
+def _run_pool(
+    jobs: list[dict],
+    worker,
+    workers: int,
+    checkpoint_path: Path | None = None,
+    prior: list[dict] | None = None,
+) -> list[dict]:
+    records: list[dict] = list(prior or [])
+    if not jobs:
+        records.sort(key=lambda r: (str(r.get("family", "")), int(r.get("hamiltonian_id", 0)), int(r["trial"])))
+        return records
     if workers <= 1 or len(jobs) <= 1:
         for i, job in enumerate(jobs, 1):
             rec = worker(job)
             records.append(rec)
             _print_line(i, len(jobs), rec)
+            if checkpoint_path is not None:
+                _checkpoint(checkpoint_path, records)
     else:
         with ProcessPoolExecutor(max_workers=int(workers)) as pool:
             futs = {pool.submit(worker, job): job for job in jobs}
@@ -438,6 +489,8 @@ def _run_pool(jobs: list[dict], worker, workers: int) -> list[dict]:
                 records.append(rec)
                 done += 1
                 _print_line(done, len(jobs), rec)
+                if checkpoint_path is not None:
+                    _checkpoint(checkpoint_path, records)
     records.sort(key=lambda r: (str(r.get("family", "")), int(r.get("hamiltonian_id", 0)), int(r["trial"])))
     return records
 
@@ -534,7 +587,7 @@ def run_hea_phase(
         flush=True,
     )
     t0 = time.perf_counter()
-    records = _run_pool(jobs, run_hea_job, workers)
+    records = _run_pool(jobs, run_hea_job, workers, checkpoint_path=outpath.with_suffix(".partial.json"))
     elapsed = time.perf_counter() - t0
     by_family: dict[str, list[dict]] = {}
     for rec in records:
@@ -581,6 +634,14 @@ def run_hea_phase(
     return payload
 
 
+def _done_keys(path: Path) -> set[tuple[str, int, int]]:
+    if not path.exists():
+        return set()
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    trials = raw.get("trials") or []
+    return {(str(t["family"]), int(t["hamiltonian_id"]), int(t.get("trial", 0))) for t in trials}
+
+
 def run_ecd_phase(
     instances: list[dict],
     *,
@@ -591,13 +652,22 @@ def run_ecd_phase(
     outpath: Path,
 ) -> dict:
     jobs = build_ecd_jobs(instances, seed_base=seed_base, maxiter=maxiter)
+    partial = outpath.with_suffix(".partial.json")
+    prior = _load_partial_trials(partial)
+    done = {(str(t["family"]), int(t["hamiltonian_id"]), int(t.get("trial", 0))) for t in prior}
+    if done:
+        before = len(jobs)
+        jobs = [j for j in jobs if (str(j["family"]), int(j["hamiltonian_id"]), int(j["trial"])) not in done]
+        print(f"Resuming ECD: {len(done)} done, {len(jobs)} remaining (of {before}).", flush=True)
     print(
         f"=== ECD Nd={NDEPTH} Gibbs joint-{maxiter}  n={n_qubits}  "
         f"params={n_parameters(NDEPTH)}+{N_PREP_PARAMS}  jobs={len(jobs)}  workers={workers} ===",
         flush=True,
     )
     t0 = time.perf_counter()
-    records = _run_pool(jobs, run_ecd_job, workers)
+    records = _run_pool(
+        jobs, run_ecd_job, workers, checkpoint_path=partial, prior=prior
+    )
     elapsed = time.perf_counter() - t0
     by_family: dict[str, list[dict]] = {}
     for rec in records:
