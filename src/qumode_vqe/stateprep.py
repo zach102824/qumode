@@ -26,6 +26,8 @@ from dataclasses import dataclass
 import numpy as np
 import qutip as qt
 from scipy.linalg import expm
+from scipy.sparse import diags
+from scipy.sparse.linalg import expm_multiply
 from scipy.special import gammaln
 
 from .circuit import qubit_rotation
@@ -296,6 +298,7 @@ def plus_postselect_cavity(psi_hybrid: np.ndarray, n_fock: int) -> tuple[np.ndar
 # ---------------------------------------------------------------------------
 
 _ladder_cache: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+_sqrtn_cache: dict[int, np.ndarray] = {}
 _rot_cache: dict[tuple[float, float], np.ndarray] = {}
 
 
@@ -312,11 +315,32 @@ def _ladders(n_fock: int) -> tuple[np.ndarray, np.ndarray]:
     return a, adag
 
 
+def _sqrtn(n_fock: int) -> np.ndarray:
+    l = int(n_fock)
+    cached = _sqrtn_cache.get(l)
+    if cached is None:
+        cached = np.sqrt(np.arange(1, l, dtype=float))
+        _sqrtn_cache[l] = cached
+    return cached
+
+
 def displace_matrix(n_fock: int, alpha: complex) -> np.ndarray:
     """Truncated ``D(α) = exp(α a† − α* a)`` on ``span{|0⟩,…,|L−1⟩}``."""
     a, adag = _ladders(n_fock)
     z = complex(alpha)
     return expm(z * adag - np.conjugate(z) * a)
+
+
+def apply_displace(vec: np.ndarray, alpha: complex, n_fock: int) -> np.ndarray:
+    """Apply truncated ``D(α)`` to a Fock vector via sparse ``expm_multiply``."""
+    l = int(n_fock)
+    z = complex(alpha)
+    if z == 0.0:
+        return np.asarray(vec, dtype=complex).reshape(l).copy()
+    n = _sqrtn(l)
+    # Generator G = α a† − α* a is tridiagonal in the Fock basis.
+    gen = diags([z * n, -np.conjugate(z) * n], [-1, 1], shape=(l, l), dtype=complex)
+    return np.asarray(expm_multiply(gen, np.asarray(vec, dtype=complex).reshape(l)), dtype=complex)
 
 
 def qubit_rotation_matrix(theta: float, phi: float) -> np.ndarray:
@@ -347,11 +371,9 @@ def apply_qubit_rotation(psi_hybrid: np.ndarray, theta: float, phi: float, n_foc
 def apply_ecd(psi_hybrid: np.ndarray, beta: complex, n_fock: int) -> np.ndarray:
     """Apply ``ECD(β)``: ``|g, ψ⟩ → |e, D(β/2) ψ⟩``, ``|e, ψ⟩ → |g, D(−β/2) ψ⟩``."""
     comps = hybrid_to_components(psi_hybrid, n_fock)
-    d_plus = displace_matrix(n_fock, 0.5 * complex(beta))
-    d_minus = displace_matrix(n_fock, -0.5 * complex(beta))
     out = np.zeros((2, int(n_fock)), dtype=complex)
-    out[E] = d_plus @ comps[G]
-    out[G] = d_minus @ comps[E]
+    out[E] = apply_displace(comps[G], 0.5 * complex(beta), n_fock)
+    out[G] = apply_displace(comps[E], -0.5 * complex(beta), n_fock)
     return out.reshape(-1)
 
 
