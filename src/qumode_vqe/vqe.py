@@ -598,6 +598,7 @@ def optimize_gibbs_adaptive(
     prep_step_scale: float = 1.0,
     energy_tensor: np.ndarray | None = None,
     hamiltonian: qt.Qobj | None = None,
+    partition: tuple[int, int, int] = (1, 3, 3),
 ) -> AdaptiveGibbsResult:
     """Joint prep+ansatz SPSA (default: 70 steps, prep never frozen).
 
@@ -633,6 +634,7 @@ def optimize_gibbs_adaptive(
         layout=layout,
         cost_kind="gibbs",
         target_qnm=None,
+        partition=partition,
         initial_state=prep_params_to_ket(prep0, nfocks),
         **ham_kw,
     )

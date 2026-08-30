@@ -110,7 +110,7 @@ def verify_energy_vector(
                 f"encoding mismatch at z={idx} bits={bitstring_from_bits(bits)}: "
                 f"E[z]={got} vs tensor[{q},{n},{m}]={want}"
             )
-        if qubit_index_from_bits(bits) != idx:
+        if qubit_index_from_bits(bits, nq) != idx:
             raise RuntimeError(f"qubit_index_from_bits is not inverse of bits_from_qubit_index at {idx}")
     emin_t = float(np.min(tensor))
     emin_e = float(np.min(e))

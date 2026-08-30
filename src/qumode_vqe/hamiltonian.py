@@ -70,13 +70,26 @@ class BKPInstance:
         weights: Sequence[float] | None = None,
         capacity: float = DEFAULT_CAPACITY,
         penalty: float = DEFAULT_LAMBDA,
+        *,
+        n_slack: int | None = None,
     ) -> None:
         self.values = np.asarray(DEFAULT_VALUES if values is None else values, dtype=float)
         self.weights = np.asarray(DEFAULT_WEIGHTS if weights is None else weights, dtype=float)
         self.capacity = float(capacity)
         self.penalty = float(penalty)
-        if self.values.shape != (N_PRIMARY,) or self.weights.shape != (N_PRIMARY,):
-            raise ValueError("This module implements the N0=4 paper instance.")
+        if self.values.shape != self.weights.shape or self.values.ndim != 1:
+            raise ValueError("values and weights must be 1-D arrays of the same length.")
+        self.n_primary = int(self.values.size)
+        if n_slack is None:
+            if self.n_primary == N_PRIMARY:
+                self.n_slack = N_AUX
+            else:
+                raise ValueError("n_slack is required when n_primary != 4")
+        else:
+            self.n_slack = int(n_slack)
+        if self.n_slack < 1:
+            raise ValueError("n_slack must be >= 1")
+        self.n_qubits = self.n_primary + self.n_slack
 
 
 def default_instance() -> BKPInstance:
@@ -89,6 +102,49 @@ def bkp_instance_as_dict(instance: BKPInstance) -> dict:
         "weights": [float(v) for v in instance.weights],
         "capacity": float(instance.capacity),
         "penalty": float(instance.penalty),
+        "n_primary": int(instance.n_primary),
+        "n_slack": int(instance.n_slack),
+    }
+
+
+def bkp_instance_from_dict(data: dict) -> BKPInstance:
+    n_slack = data.get("n_slack")
+    return BKPInstance(
+        data["values"],
+        data["weights"],
+        data["capacity"],
+        data["penalty"],
+        n_slack=None if n_slack is None else int(n_slack),
+    )
+
+
+def slack_from_bits(bits: Sequence[int] | np.ndarray, n_primary: int, n_slack: int) -> float:
+    """Binary slack, LSB at bits[n_primary]: Σ x_{n_primary+i} 2^i."""
+    x = np.asarray(bits, dtype=float).reshape(-1)
+    return float(sum(float(x[int(n_primary) + i]) * (2.0**i) for i in range(int(n_slack))))
+
+
+def hybrid_ladder(n_qubits: int) -> dict:
+    """Dutta-style one-transmon + two-cavity embedding: n = 1+2k, L = 2^k.
+
+    Qubit 0 is the MSB (transmon). Each cavity holds k bits, Fock cutoff L=2^k.
+    Knapsack uses n_primary = 1+k items and n_slack = k slack bits (paper n=7
+    is k=3 → 4 items + 3 slack).
+    """
+    nq = int(n_qubits)
+    if nq < 3 or nq % 2 == 0:
+        raise ValueError(f"hybrid ladder requires odd n = 1+2k, got {nq}")
+    k = (nq - 1) // 2
+    cutoff = 1 << k
+    return {
+        "n_qubits": nq,
+        "k": k,
+        "partition": (1, k, k),
+        "nfocks": (cutoff, cutoff),
+        "n_primary": 1 + k,
+        "n_slack": k,
+        "dim": 2 * cutoff * cutoff,
+        "max_capacity": float(cutoff - 1),
     }
 
 
@@ -108,16 +164,21 @@ def sample_bkp_instance(
     weight_lo: float = 1.0,
     weight_hi: float = 5.0,
     anti_correlated: bool = False,
+    n_primary: int = N_PRIMARY,
+    n_slack: int = N_AUX,
 ) -> BKPInstance:
-    """Random 4-item / 3-slack knapsack in the paper encoding.
+    """Random knapsack in the paper encoding, generalized to n_primary + n_slack.
 
     Integer values/weights/capacity so the slack bits can cancel leftover
-    exactly. ``penalty`` is raised if needed so the QUBO ground state is a
-    feasible packing.
+    exactly. Capacity is capped at ``2^{n_slack}-1`` (7 for the paper instance).
+    ``penalty`` is raised if needed so the QUBO ground state is a feasible packing.
     """
+    n_p = int(n_primary)
+    n_s = int(n_slack)
+    max_cap = float((1 << n_s) - 1)
     for _ in range(32):
-        values = _choice_integers(rng, int(round(value_lo)), int(round(value_hi)), N_PRIMARY)
-        weights = _choice_integers(rng, int(round(weight_lo)), int(round(weight_hi)), N_PRIMARY)
+        values = _choice_integers(rng, int(round(value_lo)), int(round(value_hi)), n_p)
+        weights = _choice_integers(rng, int(round(weight_lo)), int(round(weight_hi)), n_p)
         if anti_correlated:
             values = np.sort(values)[::-1]
             weights = np.sort(weights)
@@ -125,13 +186,13 @@ def sample_bkp_instance(
         wmax = float(np.max(weights))
         wmin = float(np.min(weights))
         c_lo = wmax
-        c_hi = min(7.0, max(wsum - wmin, wmax))
+        c_hi = min(max_cap, max(wsum - wmin, wmax))
         if c_hi < c_lo:
-            c_hi = min(7.0, wsum)
+            c_hi = min(max_cap, wsum)
             c_lo = min(c_lo, c_hi)
         cap = c_lo + float(capacity_frac) * (c_hi - c_lo)
-        cap = float(min(max(round(cap), 1.0), 7.0))
-        inst = BKPInstance(values, weights, cap, float(penalty))
+        cap = float(min(max(round(cap), 1.0), max_cap))
+        inst = BKPInstance(values, weights, cap, float(penalty), n_slack=n_s)
         need = min_faithful_penalty(inst)
         if math.isfinite(need):
             return with_faithful_penalty(inst, floor=float(penalty))
@@ -142,10 +203,10 @@ def knapsack_packing_stats(
     bits: Sequence[int] | np.ndarray,
     instance: BKPInstance,
 ) -> dict:
-    x = np.asarray(bits, dtype=float).reshape(N_QUBITS)
-    value = float(np.dot(instance.values, x[:N_PRIMARY]))
-    weight = float(np.dot(instance.weights, x[:N_PRIMARY]))
-    slack = float(x[4] + 2.0 * x[5] + 4.0 * x[6])
+    x = np.asarray(bits, dtype=float).reshape(instance.n_qubits)
+    value = float(np.dot(instance.values, x[: instance.n_primary]))
+    weight = float(np.dot(instance.weights, x[: instance.n_primary]))
+    slack = slack_from_bits(x, instance.n_primary, instance.n_slack)
     residual = float(instance.capacity - weight - slack)
     return {
         "value": value,
@@ -156,20 +217,21 @@ def knapsack_packing_stats(
     }
 
 
-def _primary_subset(mask: int) -> np.ndarray:
-    bits = np.zeros(N_PRIMARY, dtype=int)
-    for i in range(N_PRIMARY):
+def _primary_subset(mask: int, n_primary: int = N_PRIMARY) -> np.ndarray:
+    bits = np.zeros(int(n_primary), dtype=int)
+    for i in range(int(n_primary)):
         bits[i] = (int(mask) >> i) & 1
     return bits
 
 
 def best_feasible_subset(instance: BKPInstance) -> tuple[np.ndarray, float, float]:
-    """Highest-value 4-bit packing with weight ≤ capacity (empty allowed)."""
-    best_bits = np.zeros(N_PRIMARY, dtype=int)
+    """Highest-value primary packing with weight ≤ capacity (empty allowed)."""
+    n_p = int(instance.n_primary)
+    best_bits = np.zeros(n_p, dtype=int)
     best_val = 0.0
     best_w = 0.0
-    for mask in range(1 << N_PRIMARY):
-        bits = _primary_subset(mask)
+    for mask in range(1 << n_p):
+        bits = _primary_subset(mask, n_p)
         weight = float(np.dot(instance.weights, bits))
         value = float(np.dot(instance.values, bits))
         if weight > instance.capacity + 1e-8:
@@ -181,8 +243,8 @@ def best_feasible_subset(instance: BKPInstance) -> tuple[np.ndarray, float, floa
     return best_bits, best_val, best_w
 
 
-def _best_slack_sqerr(leftover: float) -> float:
-    return min((float(leftover) - s) ** 2 for s in range(8))
+def _best_slack_sqerr(leftover: float, n_slack: int = N_AUX) -> float:
+    return min((float(leftover) - s) ** 2 for s in range(1 << int(n_slack)))
 
 
 def min_faithful_penalty(instance: BKPInstance) -> float:
@@ -191,13 +253,14 @@ def min_faithful_penalty(instance: BKPInstance) -> float:
     Compares actual slack-minimized residuals, not just (weight − C)². Returns
     +inf if slack quantization makes the encodings inseparable.
     """
+    n_p = int(instance.n_primary)
     feas: list[tuple[float, float]] = []
     infeas: list[tuple[float, float]] = []
-    for mask in range(1 << N_PRIMARY):
-        bits = _primary_subset(mask)
+    for mask in range(1 << n_p):
+        bits = _primary_subset(mask, n_p)
         weight = float(np.dot(instance.weights, bits))
         value = float(np.dot(instance.values, bits))
-        err = _best_slack_sqerr(instance.capacity - weight)
+        err = _best_slack_sqerr(instance.capacity - weight, instance.n_slack)
         if weight <= instance.capacity + 1e-8:
             feas.append((value, err))
         else:
@@ -230,7 +293,9 @@ def with_faithful_penalty(
     if not math.isfinite(need):
         raise ValueError("no finite penalty separates feasible and overweight packings")
     lam = max(lam_floor, float(margin) * need)
-    return BKPInstance(instance.values, instance.weights, instance.capacity, lam)
+    return BKPInstance(
+        instance.values, instance.weights, instance.capacity, lam, n_slack=instance.n_slack
+    )
 
 
 def knapsack_sweep_instance(index: int, ham_seed: int = 7000) -> tuple[str, BKPInstance]:
@@ -267,12 +332,12 @@ def qubo_energy(
     bits: Sequence[int] | np.ndarray,
     instance: BKPInstance | None = None,
 ) -> float:
-    """Evaluate Eq. (24) on a length-7 binary vector."""
+    """Evaluate Eq. (24) on a binary vector of length n_primary + n_slack."""
     inst = instance or default_instance()
-    x = np.asarray(bits, dtype=float).reshape(N_QUBITS)
-    value = float(np.dot(inst.values, x[:N_PRIMARY]))
-    weight = float(np.dot(inst.weights, x[:N_PRIMARY]))
-    slack = float(x[4] + 2.0 * x[5] + 4.0 * x[6])
+    x = np.asarray(bits, dtype=float).reshape(inst.n_qubits)
+    value = float(np.dot(inst.values, x[: inst.n_primary]))
+    weight = float(np.dot(inst.weights, x[: inst.n_primary]))
+    slack = slack_from_bits(x, inst.n_primary, inst.n_slack)
     return -value + inst.penalty * (inst.capacity - weight - slack) ** 2
 
 
@@ -333,8 +398,9 @@ def bits_from_qubit_index(index: int, n_qubits: int = N_QUBITS) -> np.ndarray:
     return x
 
 
-def qubit_index_from_bits(bits: Sequence[int]) -> int:
-    x = np.asarray(bits, dtype=int).reshape(N_QUBITS)
+def qubit_index_from_bits(bits: Sequence[int], n_qubits: int | None = None) -> int:
+    nq = N_QUBITS if n_qubits is None else int(n_qubits)
+    x = np.asarray(bits, dtype=int).reshape(nq)
     idx = 0
     for b in x:
         idx = (idx << 1) | int(b)
@@ -382,15 +448,21 @@ def qubit_hamiltonian_from_qubo(instance: BKPInstance | None = None) -> qt.Qobj:
 def hybrid_energy_tensor(
     nfocks: Sequence[int] = DEFAULT_NFOCKS,
     instance: BKPInstance | None = None,
+    partition: tuple[int, int, int] = (1, 3, 3),
 ) -> np.ndarray:
     """C[q, n, m] = QUBO energy of the decoded bitstring, C-ordered with m fastest."""
     inst = instance or default_instance()
     l1, l2 = int(nfocks[0]), int(nfocks[1])
+    expected = 1 + int(partition[1]) + int(partition[2])
+    if inst.n_qubits != expected:
+        raise ValueError(
+            f"instance n_qubits={inst.n_qubits} does not match partition {partition} ({expected} bits)"
+        )
     coeffs = np.empty((2, l1, l2), dtype=float)
     for q in range(2):
         for n in range(l1):
             for m in range(l2):
-                coeffs[q, n, m] = qubo_energy(bits_from_qnm(q, n, m), inst)
+                coeffs[q, n, m] = qubo_energy(bits_from_qnm(q, n, m, partition), inst)
     return coeffs
 
 
@@ -492,16 +564,33 @@ def rms_normalize_z_terms(
     return [(tuple(s), float(c) / rms) for s, c in terms]
 
 
-def knapsack_benchmark_instance(index: int, ham_seed: int = 8000) -> BKPInstance:
-    """Paper encoding (4 items + 3 slack), random values / weights / capacity."""
+def knapsack_benchmark_instance(
+    index: int,
+    ham_seed: int = 8000,
+    n_primary: int = N_PRIMARY,
+    n_slack: int = N_AUX,
+) -> BKPInstance:
+    """Paper knapsack recipe: random integer values/weights/capacity, faithful λ.
+
+    Defaults are the n=7 encoding (4 items + 3 slack). Larger odd n uses
+    ``hybrid_ladder``: n_primary = 1+k items, n_slack = k.
+    """
     rng = np.random.default_rng(int(ham_seed) + 10_000 + int(index))
-    return sample_bkp_instance(rng)
+    return sample_bkp_instance(rng, n_primary=int(n_primary), n_slack=int(n_slack))
 
 
-def ising_benchmark_terms(index: int, ham_seed: int = 8000) -> list[tuple[tuple[int, ...], float]]:
-    """7-spin diagonal Ising: all local Z fields plus 12 random ZZ couplings, RMS-normalized."""
+def ising_benchmark_terms(
+    index: int,
+    ham_seed: int = 8000,
+    n_qubits: int = N_QUBITS,
+) -> list[tuple[tuple[int, ...], float]]:
+    """Diagonal Ising: all local Z fields plus 12 random ZZ couplings, RMS-normalized.
+
+    Same n=7 mixed-suite recipe; only ``n_qubits`` grows.
+    """
+    nq = int(n_qubits)
     rng = np.random.default_rng(int(ham_seed) + 20_000 + int(index))
-    terms = random_diag_ising_terms(N_QUBITS, rng, n_body={1: N_QUBITS, 2: 12}, scale=1.0)
+    terms = random_diag_ising_terms(nq, rng, n_body={1: nq, 2: 12}, scale=1.0)
     return rms_normalize_z_terms(terms)
 
 
