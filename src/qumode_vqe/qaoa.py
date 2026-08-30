@@ -194,10 +194,39 @@ def apply_cz(psi: np.ndarray, q1: int, q2: int, n_qubits: int) -> np.ndarray:
     return psi
 
 
-def apply_nearest_cz(psi: np.ndarray, n_qubits: int) -> np.ndarray:
+def nearest_cz_even_odd_pairs(n_qubits: int) -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
+    """Even then odd nearest-neighbour CZ pairs (IBM-style depth-2 packing).
+
+    Even (parallel): CZ(0,1), CZ(2,3), … ; the last qubit is idle when n is odd.
+    Odd (parallel): CZ(1,2), CZ(3,4), … ; qubit 0 is idle.
+    All CZs commute, so this is the same unitary as sequential CZ(i, i+1).
+    """
+    nq = int(n_qubits)
+    even = [(q, q + 1) for q in range(0, nq - 1, 2)]
+    odd = [(q, q + 1) for q in range(1, nq - 1, 2)]
+    return even, odd
+
+
+def apply_nearest_cz_sequential(psi: np.ndarray, n_qubits: int) -> np.ndarray:
+    """In-place sequential CZ(0,1) CZ(1,2) … CZ(n-2, n-1). Same unitary as even/odd."""
     nq = int(n_qubits)
     for q in range(nq - 1):
         apply_cz(psi, q, q + 1, nq)
+    return psi
+
+
+def apply_nearest_cz(psi: np.ndarray, n_qubits: int) -> np.ndarray:
+    """In-place nearest-neighbour CZ: even commuting group, then odd.
+
+    On 7 qubits: CZ(0,1), CZ(2,3), CZ(4,5) (q6 idle), then CZ(1,2), CZ(3,4),
+    CZ(5,6) (q0 idle). Qubit 0 is MSB. Same unitary as the sequential staircase.
+    """
+    nq = int(n_qubits)
+    even, odd = nearest_cz_even_odd_pairs(nq)
+    for q1, q2 in even:
+        apply_cz(psi, q1, q2, nq)
+    for q1, q2 in odd:
+        apply_cz(psi, q1, q2, nq)
     return psi
 
 
@@ -269,7 +298,7 @@ def hea_statevector(
     n_qubits: int,
     n_layers: int | None = None,
 ) -> np.ndarray:
-    """Noiseless HEA from |0⟩^{⊗ n}: L × (Ry + NN-CZ) plus a final Ry layer."""
+    """Noiseless HEA from |0⟩^{⊗ n}: L × (Ry + even/odd NN-CZ) plus a final Ry layer."""
     nq = int(n_qubits)
     th = np.asarray(thetas, dtype=float)
     if th.ndim == 1:

@@ -20,10 +20,13 @@ from qumode_vqe.hamiltonian import (
 )
 from qumode_vqe.qaoa import (
     apply_mixer,
+    apply_nearest_cz,
+    apply_nearest_cz_sequential,
     energy_vector_from_tensor,
     evaluate_histogram,
     hea_statevector,
     n_hea_params,
+    nearest_cz_even_odd_pairs,
     plus_state,
     probabilities,
     qaoa_statevector,
@@ -111,6 +114,20 @@ def test_qaoa_p1_two_qubit_ising_is_unitary_and_normalized():
     basis[0] = 1.0
     apply_mixer(basis, beta, 2)
     assert np.linalg.norm(basis) == pytest.approx(1.0, abs=1e-12)
+
+
+def test_even_odd_cz_matches_sequential_staircase():
+    n_qubits = 7
+    even, odd = nearest_cz_even_odd_pairs(n_qubits)
+    assert even == [(0, 1), (2, 3), (4, 5)]
+    assert odd == [(1, 2), (3, 4), (5, 6)]
+    rng = np.random.default_rng(7)
+    vec = rng.normal(size=1 << n_qubits) + 1j * rng.normal(size=1 << n_qubits)
+    vec = vec / np.linalg.norm(vec)
+    packed = apply_nearest_cz(vec.copy(), n_qubits)
+    sequential = apply_nearest_cz_sequential(vec.copy(), n_qubits)
+    np.testing.assert_allclose(packed, sequential, atol=1e-12, rtol=0.0)
+    assert np.linalg.norm(packed) == pytest.approx(1.0, abs=1e-12)
 
 
 def test_hea_probabilities_sum_to_one():

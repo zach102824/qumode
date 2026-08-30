@@ -28,6 +28,7 @@ SPSA protocol.
 | Seeds | `seed_base=3000` (mixed-suite convention). Knapsack: `seed_base + 100·hid + protocol_offset`. Ising: `seed_base + 10_000 + 100·hid + protocol_offset`. Offsets: QAOA Gibbs p=20 `+30000`, QAOA energy p=20 `+31000`, HEA Gibbs `+32000`, QAOA Gibbs p=22 `+33000`. |
 | Primary param count | QAOA \(p=20\) → 40 real \((\gamma,\beta)\), matching Dutta and matching ECD's 40 ECD parameters. |
 | HEA param count | \(n(L+1)=7\cdot 6=42\) (Ry on each qubit, \(L=5\) nearest-neighbour CZ layers, plus a final Ry layer). |
+| HEA CZ packing | Even then odd commuting groups: CZ(0,1), CZ(2,3), CZ(4,5) (q6 idle), then CZ(1,2), CZ(3,4), CZ(5,6) (q0 idle). Same unitary as sequential CZ(\(i,i+1\)); depth-2 packing only. |
 
 QAOA native initial state is \(\lvert+\rangle^{\otimes 7}\). HEA starts from
 \(\lvert 0\rangle^{\otimes 7}\).

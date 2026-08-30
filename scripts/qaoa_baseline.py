@@ -59,6 +59,7 @@ PROTOCOL_SEED = {
     "qaoa_gibbs_p20": 30_000,
     "qaoa_energy_p20": 31_000,
     "hea_gibbs": 32_000,
+    "hea_gibbs_evenodd": 32_000,  # same starts as hea_gibbs; even/odd is the same unitary
     "qaoa_gibbs_p22": 33_000,
 }
 
@@ -72,6 +73,7 @@ OUTPUT_FILES = {
     "qaoa_gibbs_p20": "qaoa_gibbs_p20.json",
     "qaoa_energy_p20": "qaoa_energy_p20.json",
     "hea_gibbs": "hea_gibbs.json",
+    "hea_gibbs_evenodd": "hea_gibbs_evenodd.json",
     "qaoa_gibbs_p22": "qaoa_gibbs_p22.json",
 }
 
@@ -278,7 +280,7 @@ def _protocol_spec(name: str) -> dict:
             initial_state="plus",
             extra=False,
         )
-    if name == "hea_gibbs":
+    if name in ("hea_gibbs", "hea_gibbs_evenodd"):
         return dict(
             protocol=name,
             ansatz="hea",
@@ -288,6 +290,7 @@ def _protocol_spec(name: str) -> dict:
             n_params=n_hea_params(N_QUBITS, DEFAULT_HEA_LAYERS),
             initial_state="zero",
             extra=False,
+            cz_packing="even_odd",
         )
     if name == "qaoa_gibbs_p22":
         return dict(
@@ -393,6 +396,7 @@ def run_protocol(
         "p": spec["p"] if spec["ansatz"] == "qaoa" else None,
         "n_layers": spec["n_layers"] if spec["ansatz"] == "hea" else None,
         "n_params": spec["n_params"],
+        "cz_packing": spec.get("cz_packing"),
         "n_hamiltonians": len({(r["family"], r["hamiltonian_id"]) for r in records}),
         "n_trials_per_hamiltonian": n_trials,
         "maxiter": maxiter,
@@ -520,6 +524,7 @@ def comparison_rows(ecd: dict, qubit: dict[str, dict]) -> list[dict]:
         ("qaoa_gibbs_p20", "qaoa_gibbs_p20"),
         ("qaoa_energy_p20", "qaoa_energy_p20"),
         ("hea_gibbs", "hea_gibbs"),
+        ("hea_gibbs_evenodd", "hea_gibbs_evenodd"),
         ("qaoa_gibbs_p22", "qaoa_gibbs_p22"),
     ]
     labels = {
@@ -529,6 +534,7 @@ def comparison_rows(ecd: dict, qubit: dict[str, dict]) -> list[dict]:
         "qaoa_gibbs_p20": "QAOA p=20 Gibbs 70",
         "qaoa_energy_p20": "QAOA p=20 energy 70",
         "hea_gibbs": "HEA L=5 Gibbs 70 (42 params)",
+        "hea_gibbs_evenodd": "HEA L=5 Gibbs 70 even/odd CZ (42 params)",
         "qaoa_gibbs_p22": "QAOA p=22 Gibbs 70 (extra)",
     }
     for key, qname in order:
