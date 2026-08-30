@@ -6,6 +6,7 @@
       "n_success": 24,
       "n": 40,
       "success_rate": 0.6,
+      "mean_p_ground": null,
       "by_family": {
         "ising": {
           "n_success": 11,
@@ -25,6 +26,7 @@
       "n_success": 0,
       "n": 40,
       "success_rate": 0.0,
+      "mean_p_ground": null,
       "by_family": {
         "ising": {
           "n_success": 0,
@@ -63,6 +65,7 @@
       "n_success": 0,
       "n": 40,
       "success_rate": 0.0,
+      "mean_p_ground": 0.011641280439633061,
       "by_family": {
         "ising": {
           "n_success": 0,
@@ -80,6 +83,7 @@
       "n_success": 0,
       "n": 40,
       "success_rate": 0.0,
+      "mean_p_ground": 0.010312531873022876,
       "by_family": {
         "ising": {
           "n_success": 0,
@@ -97,6 +101,25 @@
       "n_success": 38,
       "n": 40,
       "success_rate": 0.95,
+      "mean_p_ground": 0.6111056702462381,
+      "by_family": {
+        "ising": {
+          "n_success": 19,
+          "n": 20,
+          "success_rate": 0.95
+        },
+        "knapsack": {
+          "n_success": 19,
+          "n": 20,
+          "success_rate": 0.95
+        }
+      }
+    },
+    "hea_gibbs_evenodd": {
+      "n_success": 38,
+      "n": 40,
+      "success_rate": 0.95,
+      "mean_p_ground": 0.6111056702462381,
       "by_family": {
         "ising": {
           "n_success": 19,
@@ -114,6 +137,7 @@
       "n_success": 0,
       "n": 40,
       "success_rate": 0.0,
+      "mean_p_ground": 0.009052999206481524,
       "by_family": {
         "ising": {
           "n_success": 0,
@@ -166,10 +190,17 @@
       "ising": "19/20"
     },
     {
+      "name": "HEA L=5 Gibbs 70 even/odd CZ (42 params)",
+      "all": "38/40",
+      "knapsack": "19/20",
+      "ising": "19/20"
+    },
+    {
       "name": "QAOA p=22 Gibbs 70 (extra)",
       "all": "0/40",
       "knapsack": "0/20",
       "ising": "0/20"
     }
-  ]
+  ],
+  "note": "HEA even/odd matches sequential hea_gibbs.json exactly (CZs commute)."
 }

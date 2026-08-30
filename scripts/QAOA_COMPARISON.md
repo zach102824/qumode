@@ -59,7 +59,14 @@ python scripts/qaoa_baseline.py --outdir results --workers 7
 ```
 
 Writes `results/qaoa_gibbs_p20.json`, `results/qaoa_energy_p20.json`,
-`results/hea_gibbs.json`, and extra `results/qaoa_gibbs_p22.json`.
+`results/hea_gibbs.json`, extra `results/qaoa_gibbs_p22.json`, and the
+even/odd HEA rerun `results/hea_gibbs_evenodd.json` (does not overwrite
+`hea_gibbs.json`).
+
+```bash
+# HEA-only even/odd rerun (same seeds as hea_gibbs)
+python scripts/qaoa_baseline.py --protocols hea_gibbs_evenodd --outdir results --workers 7
+```
 
 ## Results
 
@@ -81,7 +88,13 @@ are 40/50/80/100/150/200, not 70. Freeze 20+50 is `results/gibbs_mixed_40.json`
 | QAOA p=20 Gibbs 70 | 0/40 | 0/20 | 0/20 |
 | QAOA p=20 energy 70 | 0/40 | 0/20 | 0/20 |
 | HEA L=5 Gibbs 70 (42 params) | 38/40 | 19/20 | 19/20 |
+| HEA L=5 Gibbs 70 even/odd CZ (42 params) | 38/40 | 19/20 | 19/20 |
 | QAOA p=22 Gibbs 70 (extra) | 0/40 | 0/20 | 0/20 |
+
+The even/odd HEA rerun (`results/hea_gibbs_evenodd.json`) matches the
+stored sequential `hea_gibbs.json` exactly: same 38/40, same mean
+\(P(\mathrm{gs})=0.611\), same misses (knapsack H1 and Ising H19). That
+is required: all CZs commute, so the packing is only a depth-2 rewrite.
 
 Mean \(P(\mathrm{ground})\) on the qubit runs: QAOA \(p=20\) Gibbs 0.012,
 QAOA \(p=20\) energy 0.010, HEA Gibbs 0.611, QAOA \(p=22\) Gibbs 0.009
