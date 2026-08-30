@@ -1,0 +1,295 @@
+{
+  "n7": {
+    "n": 7,
+    "partition": [
+      1,
+      3,
+      3
+    ],
+    "dim": 128,
+    "hea": {
+      "hits": "38/40",
+      "n_success": 38,
+      "n": 40,
+      "mean_p_ground": 0.6111056702462381,
+      "mean_gap_to_min": 0.2642038435182096,
+      "n_params": 42,
+      "source": "results/hea_gibbs.json",
+      "by_family": {
+        "ising": {
+          "n": 20,
+          "n_success": 19,
+          "success_rate": 0.95,
+          "n_feasible": 0,
+          "mean_rel_gap": 0.000440152225258101,
+          "mean_gap_to_min": 0.008407687036419188,
+          "mean_energy_diag": -10.47000823456624,
+          "mean_p_ground": 0.6506033636218421,
+          "mean_eta": 15.501308574013871
+        },
+        "knapsack": {
+          "n": 20,
+          "n_success": 19,
+          "success_rate": 0.95,
+          "n_feasible": 20,
+          "mean_rel_gap": 0.0009912314144109797,
+          "mean_gap_to_min": 0.52,
+          "mean_energy_diag": -12.73,
+          "mean_p_ground": 0.571607976870634,
+          "mean_eta": 12.12799972139262
+        }
+      }
+    },
+    "ecd": {
+      "hits": "26/40",
+      "n_success": 26,
+      "n": 40,
+      "mean_p_ground": 0.14721312586901464,
+      "mean_p_ground_note": "not stored in gibbs_schedule_abc.json; recomputed from stored (prep, x) vs stored energy tensors, one eval each, no re-opt",
+      "mean_gap_to_min": 1.3149186461402096,
+      "n_params": 45,
+      "source": "results/gibbs_schedule_abc.json joint70",
+      "by_family": {
+        "ising": {
+          "n": 20,
+          "n_success": 14,
+          "success_rate": 0.7,
+          "n_feasible": 0,
+          "mean_rel_gap": 0.007602479756355573,
+          "mean_gap_to_min": 0.15733729228041912,
+          "mean_energy_diag": -10.32107862932224,
+          "mean_eta": 1.6623014714485822
+        },
+        "knapsack": {
+          "n": 20,
+          "n_success": 12,
+          "success_rate": 0.6,
+          "n_feasible": 17,
+          "mean_rel_gap": 0.0055445424985424655,
+          "mean_gap_to_min": 2.4725,
+          "mean_energy_diag": -10.7775,
+          "mean_eta": 0.555564617413201
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "n": 7,
+      "partition": [
+        1,
+        3,
+        3
+      ],
+      "dim": 128,
+      "hea": {
+        "hits": "38/40",
+        "n_success": 38,
+        "n": 40,
+        "mean_p_ground": 0.6111056702462381,
+        "mean_gap_to_min": 0.2642038435182096,
+        "n_params": 42,
+        "source": "results/hea_gibbs.json",
+        "by_family": {
+          "ising": {
+            "n": 20,
+            "n_success": 19,
+            "success_rate": 0.95,
+            "n_feasible": 0,
+            "mean_rel_gap": 0.000440152225258101,
+            "mean_gap_to_min": 0.008407687036419188,
+            "mean_energy_diag": -10.47000823456624,
+            "mean_p_ground": 0.6506033636218421,
+            "mean_eta": 15.501308574013871
+          },
+          "knapsack": {
+            "n": 20,
+            "n_success": 19,
+            "success_rate": 0.95,
+            "n_feasible": 20,
+            "mean_rel_gap": 0.0009912314144109797,
+            "mean_gap_to_min": 0.52,
+            "mean_energy_diag": -12.73,
+            "mean_p_ground": 0.571607976870634,
+            "mean_eta": 12.12799972139262
+          }
+        }
+      },
+      "ecd": {
+        "hits": "26/40",
+        "n_success": 26,
+        "n": 40,
+        "mean_p_ground": 0.14721312586901464,
+        "mean_p_ground_note": "not stored in gibbs_schedule_abc.json; recomputed from stored (prep, x) vs stored energy tensors, one eval each, no re-opt",
+        "mean_gap_to_min": 1.3149186461402096,
+        "n_params": 45,
+        "source": "results/gibbs_schedule_abc.json joint70",
+        "by_family": {
+          "ising": {
+            "n": 20,
+            "n_success": 14,
+            "success_rate": 0.7,
+            "n_feasible": 0,
+            "mean_rel_gap": 0.007602479756355573,
+            "mean_gap_to_min": 0.15733729228041912,
+            "mean_energy_diag": -10.32107862932224,
+            "mean_eta": 1.6623014714485822
+          },
+          "knapsack": {
+            "n": 20,
+            "n_success": 12,
+            "success_rate": 0.6,
+            "n_feasible": 17,
+            "mean_rel_gap": 0.0055445424985424655,
+            "mean_gap_to_min": 2.4725,
+            "mean_energy_diag": -10.7775,
+            "mean_eta": 0.555564617413201
+          }
+        }
+      }
+    },
+    {
+      "n": 9,
+      "partition": [
+        1,
+        4,
+        4
+      ],
+      "dim": 512,
+      "hea": {
+        "hits": "34/40",
+        "n_success": 34,
+        "n": 40,
+        "mean_p_ground": 0.4508455311138917,
+        "mean_gap_to_min": 0.9517950013903341,
+        "n_params": 54,
+        "source": "results/size_sweep_n9_hea.json",
+        "by_family": {
+          "ising": {
+            "n": 20,
+            "n_success": 18,
+            "success_rate": 0.9,
+            "n_feasible": 0,
+            "mean_rel_gap": 0.002103019481337251,
+            "mean_gap_to_min": 0.05359000278066821,
+            "mean_energy_diag": -12.330748737638224,
+            "mean_p_ground": 0.5112317342809154,
+            "mean_eta": 4.888459822560032
+          },
+          "knapsack": {
+            "n": 20,
+            "n_success": 16,
+            "success_rate": 0.8,
+            "n_feasible": 19,
+            "mean_rel_gap": 0.0025638401453618844,
+            "mean_gap_to_min": 1.85,
+            "mean_energy_diag": -19.8,
+            "mean_p_ground": 0.390459327946868,
+            "mean_eta": 2.73442979146644
+          }
+        },
+        "elapsed_sec": 1.3705532889999859
+      },
+      "ecd": {
+        "hits": "19/40",
+        "n_success": 19,
+        "n": 40,
+        "mean_p_ground": 0.058346912642987706,
+        "mean_gap_to_min": 50.20906683733931,
+        "n_params": 45,
+        "source": "results/size_sweep_n9_ecd.json",
+        "by_family": {
+          "ising": {
+            "n": 20,
+            "n_success": 12,
+            "success_rate": 0.6,
+            "n_feasible": 0,
+            "mean_rel_gap": 0.07856052331072721,
+            "mean_gap_to_min": 1.8556336746786226,
+            "mean_energy_diag": -10.52870506574027,
+            "mean_p_ground": 0.06473033627886449,
+            "mean_eta": 0.6784170210871242
+          },
+          "knapsack": {
+            "n": 20,
+            "n_success": 7,
+            "success_rate": 0.35,
+            "n_feasible": 17,
+            "mean_rel_gap": 0.09450457277804009,
+            "mean_gap_to_min": 98.5625,
+            "mean_energy_diag": 76.9125,
+            "mean_p_ground": 0.0519634890071109,
+            "mean_eta": 1.2400707472317716
+          }
+        },
+        "elapsed_sec": 768.637359376
+      }
+    },
+    {
+      "n": 11,
+      "partition": [
+        1,
+        5,
+        5
+      ],
+      "dim": 2048,
+      "hea": {
+        "hits": "24/40",
+        "n_success": 24,
+        "n": 40,
+        "mean_p_ground": 0.21765611985606004,
+        "mean_gap_to_min": 0.6967114633194116,
+        "n_params": 66,
+        "source": "results/size_sweep_n11_hea.json",
+        "by_family": {
+          "ising": {
+            "n": 20,
+            "n_success": 16,
+            "success_rate": 0.8,
+            "n_feasible": 0,
+            "mean_rel_gap": 0.0023216924166459237,
+            "mean_gap_to_min": 0.06592292663882296,
+            "mean_energy_diag": -14.069354176352334,
+            "mean_p_ground": 0.3211364358104047,
+            "mean_eta": 8.359988380849986
+          },
+          "knapsack": {
+            "n": 20,
+            "n_success": 8,
+            "success_rate": 0.4,
+            "n_feasible": 13,
+            "mean_rel_gap": 0.00033344687277871686,
+            "mean_gap_to_min": 1.3275000000000001,
+            "mean_energy_diag": -25.5225,
+            "mean_p_ground": 0.1141758039017153,
+            "mean_eta": 5.910588621366837
+          }
+        },
+        "elapsed_sec": 2.7175735859999577
+      },
+      "ecd": {
+        "skipped": true,
+        "reason": "Phase 0 kill switch"
+      }
+    }
+  ],
+  "skip_ecd_n11": true,
+  "leftover": {
+    "n11_hea_L3": {
+      "note": "n=11 HEA L=3 (44 params), closest HEA to ECD's 45 coordinates. Distinct seed_base+1000.",
+      "n_success": 19,
+      "n": 40,
+      "mean_p_ground": 0.17068938020981778,
+      "mean_gap_to_min": 26.82624952599595,
+      "n_params": 44
+    },
+    "n13_hea_L5": {
+      "note": "n=13 HEA L=5 only (78 params). ECD skipped (out of budget).",
+      "n_success": 16,
+      "n": 40,
+      "mean_p_ground": 0.1320807905886262,
+      "mean_gap_to_min": 4.375278715233456,
+      "n_params": 78
+    }
+  }
+}

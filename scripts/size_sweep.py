@@ -1151,12 +1151,34 @@ def main(argv: list[str] | None = None) -> int:
             protocol="hea_gibbs_L3",
         )
         leftover_info = {
-            "note": "n=11 HEA L=3 (44 params), closest HEA to ECD's 45 coordinates. Distinct seed_base+1000.",
-            "n_success": leftover_run["n_success"],
-            "n": leftover_run["n_hamiltonians"],
-            "mean_p_ground": leftover_run["mean_p_ground"],
-            "mean_gap_to_min": leftover_run["mean_gap_to_min"],
-            "n_params": leftover_run["n_params"],
+            "n11_hea_L3": {
+                "note": "n=11 HEA L=3 (44 params), closest HEA to ECD's 45 coordinates. Distinct seed_base+1000.",
+                "n_success": leftover_run["n_success"],
+                "n": leftover_run["n_hamiltonians"],
+                "mean_p_ground": leftover_run["mean_p_ground"],
+                "mean_gap_to_min": leftover_run["mean_gap_to_min"],
+                "n_params": leftover_run["n_params"],
+            }
+        }
+        # n=13 HEA-only (ECD out of budget). Same recipe, ham_seed=13000.
+        insts13 = ensure_hams(13)
+        n13 = run_hea_phase(
+            insts13,
+            n_qubits=13,
+            seed_base=seed_base,
+            maxiter=maxiter,
+            workers=workers,
+            outpath=outdir / "size_sweep_n13_hea.json",
+            n_layers=HEA_LAYERS,
+            protocol="hea_gibbs",
+        )
+        leftover_info["n13_hea_L5"] = {
+            "note": "n=13 HEA L=5 only (78 params). ECD skipped (out of budget).",
+            "n_success": n13["n_success"],
+            "n": n13["n_hamiltonians"],
+            "mean_p_ground": n13["mean_p_ground"],
+            "mean_gap_to_min": n13["mean_gap_to_min"],
+            "n_params": n13["n_params"],
         }
     if phase in ("report", "all", "leftover"):
         write_report(outdir, skip_ecd_n11=skip_ecd_n11, leftover=leftover_info)
