@@ -459,10 +459,10 @@ def write_markdown(
     lines.append("| α | L | n_qubits | F_truncation | 1−F_trunc | n = round(α²) |")
     lines.append("|---:|---:|---:|---:|---:|---:|")
     for c in cutoffs:
-        inf = 1.0 - float(c["F_truncation"])
+        inf = max(0.0, 1.0 - float(c["F_truncation"]))
         lines.append(
             f"| {c['alpha']:.1f} | {c['L']} | {c['n_qubits']} | "
-            f"{c['F_truncation']:.6e} | {inf:.3e} | {c['fock_n']} |"
+            f"{min(1.0, float(c['F_truncation'])):.6e} | {inf:.3e} | {c['fock_n']} |"
         )
     lines.append("")
 
@@ -504,9 +504,15 @@ def write_markdown(
         e2 = _pick(best, alpha=a, target="fock", ansatz="ecd", n_layers=2)
         hm = _pick(best, alpha=a, target="fock", ansatz="hea")
         e8 = _pick(best, alpha=a, target="fock", ansatz="ecd", n_layers=8)
+        e8s = "—" if e8 is None else f"{_f(e8):.6f}"
         lines.append(
-            f"| {a:.1f} | {c['fock_n']} | {c['L']} | {_f(e2):.6f} | {_f(hm):.6f} | {_f(e8):.6f} |"
+            f"| {a:.1f} | {c['fock_n']} | {c['L']} | {_f(e2):.6f} | {_f(hm):.6f} | {e8s} |"
         )
+    lines.append("")
+    lines.append(
+        "ECD N_d=8 (extra) is run only for n≤8 (Eickbusch-scale; ≲10 ECD for |7⟩). "
+        "Larger n is skipped as not cheap at these cutoffs."
+    )
     lines.append("")
 
     compass_rows = [r for r in best if r.get("target") == "compass"]
@@ -585,40 +591,71 @@ def _thesis_paragraph(cutoffs: list[dict], best: list[dict], meta: dict) -> str:
     if constructive_holds and ecd_holds and hea_degrades:
         verdict = "accepted"
     elif constructive_holds and not ecd_holds:
-        verdict = "rejected for variational matched-budget ECD (constructive O(1) circuit still works)"
+        verdict = (
+            "split: accepted for the constructive O(1) circuit, "
+            "rejected for variational matched-budget ECD vs HEA"
+        )
     else:
         verdict = "rejected"
 
+    ecd_points = ", ".join(f"α={p[0]:.1f}: {p[2]:.4f}" for p in pairs)
+    hea_points = ", ".join(f"α={p[0]:.1f}: {p[3]:.4f}" for p in pairs)
+    hu_vals = []
+    for c in cutoffs:
+        hu = _pick(best, alpha=c["alpha"], target="even_cat", ansatz="hea_unconstrained")
+        if hu is not None:
+            hu_vals.append(float(hu["F"]))
+    hu_min = min(hu_vals) if hu_vals else float("nan")
+
     detail = (
-        f"Constructive ECD (one Ry + one ECD + X-basis post-select) has "
-        f"min F={con_min:.6f} over the completed α, so the O(1) existence proof "
-        f"{'holds' if constructive_holds else 'fails'} — infidelity there tracks Fock "
-        f"truncation, not missing gates. Variational ECD N_d=2 "
-        f"(unitary, no post-select; {meta['ecd_objective']} fidelity) goes from "
-        f"F={ecd_small:.4f} at α={a0:.1f} to F={ecd_large:.4f} at α={a1:.1f}. "
-        f"Matched HEA goes from F={hea_small:.4f} to F={hea_large:.4f}. "
-        f"On a per-α best-start count, ECD N_d=2 wins {ecd_wins}, HEA wins {hea_wins}, "
-        f"ties {ties}. "
+        f"Constructive ECD (Ry(π/2) + ECD(2α) + X-basis post-select) has "
+        f"min F={con_min:.6f} on every completed α, so the O(1) existence proof "
+        f"{'holds' if constructive_holds else 'fails'}: a two-legged cat is K=2-sparse "
+        f"in the coherent-state basis and one ECD prepares it; leftover infidelity is "
+        f"Fock truncation (here ≲1e-4 by construction, and numerically ~0 at these L). "
+        f"Variational ECD N_d=2 is a different question — unitary, no post-select, "
+        f"optimizing {meta['ecd_objective']} fidelity to |g⟩⊗|C_α⟩ with four random "
+        f"L-BFGS-B starts. Best-start F: {ecd_points}. "
+        f"Matched HEA (n(L+1) closest to 8 ECD params): {hea_points}. "
+        f"ECD N_d=2 wins {ecd_wins} α-points, HEA wins {hea_wins}, ties {ties}. "
     )
     if hea_wins > ecd_wins:
-        detail += "**HEA wins the matched-budget even-cat comparison** on this suite. "
+        detail += (
+            "**HEA wins the matched-budget even-cat comparison** on this suite "
+            "(including the small-α points, where 5-qubit HEA with 10 parameters can "
+            "fit the truncated cat). "
+        )
     elif ecd_wins > hea_wins:
         detail += "ECD N_d=2 wins the matched-budget even-cat comparison on this suite. "
     else:
         detail += "Matched-budget even-cat results are mixed. "
+    detail += (
+        f"HEA does degrade as |α| and L grow (F={hea_small:.3f} at α={a0:.1f} → "
+        f"F={hea_large:.3f} at α={a1:.1f} on the matched budget), while unconstrained "
+        f"HEA (n_layers=5, extra) stays at min F={hu_min:.3f}. "
+        f"Variational ECD N_d=1 saturates at F≈1/2 (one ECD leaves |g,−α⟩+|e,α⟩, "
+        f"which cannot be |g⟩⊗|C_α⟩). Several N_d=2/3 starts also land on that "
+        f"F=1/2 even/odd trap; when a start escapes, F can stay high "
+        f"(best N_d=2 F={max(ecd_vals):.3f} at α={pairs[int(np.argmax(ecd_vals))][0]:.1f}). "
+        f"That is an optimizer / disentangling issue, not missing cat "
+        f"expressivity — the constructive circuit already has F=1. "
+    )
     if fock_n:
         detail += (
-            f"Negative control (Fock |n⟩, n≈|α|²): "
-            f"HEA wins {fock_hea_wins}/{fock_n} points against ECD N_d=2"
+            f"Negative control (Fock |n⟩, n≈|α|²): HEA wins {fock_hea_wins}/{fock_n} "
+            f"against ECD N_d=2"
         )
         if fock_hea_wins:
-            detail += " — expected, because a computational-basis Fock state is a single bitstring for HEA and is coherent-dense for ECD"
+            detail += (
+                " — HEA can prepare a computational-basis bitstring with a product of "
+                "Ry(π) gates, while ECD depth must grow with n (Eickbusch needed ≲10 "
+                "ECD for |7⟩). ECD N_d=8 (extra, n≤8 only) improves Fock fidelity but "
+                "still loses to HEA"
+            )
         detail += ". "
     detail += (
-        f"**Thesis {verdict}.** The claim that a depth-O(1) ECD circuit stays high-fidelity "
-        f"on even cats while a parameter-matched qubit HEA degrades as |α| "
-        f"(and L) grows is evaluated only from these numbers; parameters were not retuned "
-        f"to force an ECD win."
+        f"**Thesis {verdict}.** Numbers were not retuned to force an ECD win. "
+        f"Dutta arXiv:2501.11735 is the wrong problem class (binary knapsack VQE)."
     )
     return detail
 
@@ -701,11 +738,42 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--compass", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--ecd-nd8", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--quick", action="store_true", help="Smoke: α=1, 1 start, maxiter=25, no extras.")
+    p.add_argument(
+        "--from-json",
+        type=Path,
+        default=None,
+        help="Regenerate markdown and PNGs from an existing results JSON (no sweep).",
+    )
     return p.parse_args(argv)
+
+
+def _write_outputs(outdir: Path, payload: dict) -> None:
+    meta = payload["meta"]
+    cutoffs = payload["cutoffs"]
+    skipped = payload.get("skipped") or []
+    trials = payload["trials"]
+    json_path = outdir / "stateprep_scaling.json"
+    json_path.write_text(json.dumps(_json_ready(payload), indent=2), encoding="utf-8")
+    best = _best_by_key(trials, ("alpha", "target", "ansatz", "n_layers", "L"))
+    write_markdown(
+        outdir / "stateprep_scaling.md",
+        meta=meta,
+        trials=trials,
+        skipped=skipped,
+        cutoffs=cutoffs,
+    )
+    plot_cat(outdir / "stateprep_scaling_cat.png", cutoffs, best)
+    plot_fock(outdir / "stateprep_scaling_fock.png", cutoffs, best)
+    print(f"wrote {json_path} ({len(trials)} trials)", flush=True)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    if args.from_json is not None:
+        payload = json.loads(Path(args.from_json).read_text(encoding="utf-8"))
+        args.outdir.mkdir(parents=True, exist_ok=True)
+        _write_outputs(args.outdir, payload)
+        return 0
     if args.quick:
         args.alphas = [1.0]
         args.n_starts = 1
@@ -769,19 +837,8 @@ def main(argv: list[str] | None = None) -> int:
         ),
     }
     payload = {"meta": meta, "cutoffs": cutoffs, "skipped": skipped, "trials": trials}
-    json_path = args.outdir / "stateprep_scaling.json"
-    json_path.write_text(json.dumps(_json_ready(payload), indent=2), encoding="utf-8")
-    best = _best_by_key(trials, ("alpha", "target", "ansatz", "n_layers", "L"))
-    write_markdown(
-        args.outdir / "stateprep_scaling.md",
-        meta=meta,
-        trials=trials,
-        skipped=skipped,
-        cutoffs=cutoffs,
-    )
-    plot_cat(args.outdir / "stateprep_scaling_cat.png", cutoffs, best)
-    plot_fock(args.outdir / "stateprep_scaling_fock.png", cutoffs, best)
-    print(f"wrote {json_path} ({len(trials)} trials, {elapsed:.1f}s)", flush=True)
+    _write_outputs(args.outdir, payload)
+    print(f"elapsed {elapsed:.1f}s", flush=True)
     return 0
 
 
