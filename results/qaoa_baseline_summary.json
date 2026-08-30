@@ -1,0 +1,175 @@
+{
+  "ecd": {
+    "ecd_gibbs_freeze_20_50": {
+      "source": "results/gibbs_mixed_40.json",
+      "label": "ECD Gibbs freeze 20+50",
+      "n_success": 24,
+      "n": 40,
+      "success_rate": 0.6,
+      "by_family": {
+        "ising": {
+          "n_success": 11,
+          "n": 20,
+          "success_rate": 0.55
+        },
+        "knapsack": {
+          "n_success": 13,
+          "n": 20,
+          "success_rate": 0.65
+        }
+      }
+    },
+    "ecd_energy_spsa_vacuum_70": {
+      "source": "results/energy_spsa_baseline.json",
+      "label": "ECD energy SPSA vacuum 70",
+      "n_success": 0,
+      "n": 40,
+      "success_rate": 0.0,
+      "by_family": {
+        "ising": {
+          "n_success": 0,
+          "n": 20,
+          "success_rate": 0.0
+        },
+        "knapsack": {
+          "n_success": 0,
+          "n": 20,
+          "success_rate": 0.0
+        }
+      }
+    },
+    "ecd_gibbs_joint_70": {
+      "source": "results/gibbs_schedule_abc.json",
+      "label": "ECD Gibbs joint-70",
+      "n_success": 26,
+      "n": 40,
+      "success_rate": 0.65,
+      "by_family": {
+        "ising": {
+          "n_success": 14,
+          "n": 20,
+          "success_rate": 0.7
+        },
+        "knapsack": {
+          "n_success": 12,
+          "n": 20,
+          "success_rate": 0.6
+        }
+      }
+    }
+  },
+  "qubit": {
+    "qaoa_gibbs_p20": {
+      "n_success": 0,
+      "n": 40,
+      "success_rate": 0.0,
+      "by_family": {
+        "ising": {
+          "n_success": 0,
+          "n": 20,
+          "success_rate": 0.0
+        },
+        "knapsack": {
+          "n_success": 0,
+          "n": 20,
+          "success_rate": 0.0
+        }
+      }
+    },
+    "qaoa_energy_p20": {
+      "n_success": 0,
+      "n": 40,
+      "success_rate": 0.0,
+      "by_family": {
+        "ising": {
+          "n_success": 0,
+          "n": 20,
+          "success_rate": 0.0
+        },
+        "knapsack": {
+          "n_success": 0,
+          "n": 20,
+          "success_rate": 0.0
+        }
+      }
+    },
+    "hea_gibbs": {
+      "n_success": 38,
+      "n": 40,
+      "success_rate": 0.95,
+      "by_family": {
+        "ising": {
+          "n_success": 19,
+          "n": 20,
+          "success_rate": 0.95
+        },
+        "knapsack": {
+          "n_success": 19,
+          "n": 20,
+          "success_rate": 0.95
+        }
+      }
+    },
+    "qaoa_gibbs_p22": {
+      "n_success": 0,
+      "n": 40,
+      "success_rate": 0.0,
+      "by_family": {
+        "ising": {
+          "n_success": 0,
+          "n": 20,
+          "success_rate": 0.0
+        },
+        "knapsack": {
+          "n_success": 0,
+          "n": 20,
+          "success_rate": 0.0
+        }
+      }
+    }
+  },
+  "table": [
+    {
+      "name": "ECD Gibbs freeze 20+50",
+      "all": "24/40",
+      "knapsack": "13/20",
+      "ising": "11/20"
+    },
+    {
+      "name": "ECD Gibbs joint-70",
+      "all": "26/40",
+      "knapsack": "12/20",
+      "ising": "14/20"
+    },
+    {
+      "name": "ECD energy SPSA vacuum 70",
+      "all": "0/40",
+      "knapsack": "0/20",
+      "ising": "0/20"
+    },
+    {
+      "name": "QAOA p=20 Gibbs 70",
+      "all": "0/40",
+      "knapsack": "0/20",
+      "ising": "0/20"
+    },
+    {
+      "name": "QAOA p=20 energy 70",
+      "all": "0/40",
+      "knapsack": "0/20",
+      "ising": "0/20"
+    },
+    {
+      "name": "HEA L=5 Gibbs 70 (42 params)",
+      "all": "38/40",
+      "knapsack": "19/20",
+      "ising": "19/20"
+    },
+    {
+      "name": "QAOA p=22 Gibbs 70 (extra)",
+      "all": "0/40",
+      "knapsack": "0/20",
+      "ising": "0/20"
+    }
+  ]
+}

@@ -63,7 +63,9 @@ Writes `results/qaoa_gibbs_p20.json`, `results/qaoa_energy_p20.json`,
 ## Results
 
 Success = decoded most-likely bitstring is an exact ground of the energy
-tensor. ECD numbers are from stored JSON, not rerun.
+tensor. ECD numbers are from stored JSON, not rerun. Qubit rows are from
+`scripts/qaoa_baseline.py` on this suite (`seed_base=3000`, 70 SPSA steps,
+one start each).
 
 Joint-70 ECD is taken from `results/gibbs_schedule_abc.json` (`joint70`
 block, 26/40). `results/gibbs_joint_step_sweep.json` exists but its budgets
@@ -75,10 +77,36 @@ are 40/50/80/100/150/200, not 70. Freeze 20+50 is `results/gibbs_mixed_40.json`
 | ECD Gibbs freeze 20+50 | 24/40 | 13/20 | 11/20 |
 | ECD Gibbs joint-70 | 26/40 | 12/20 | 14/20 |
 | ECD energy SPSA vacuum 70 | 0/40 | 0/20 | 0/20 |
-| QAOA p=20 Gibbs 70 | *pending suite run* | | |
-| QAOA p=20 energy 70 | *pending suite run* | | |
-| HEA L=5 Gibbs 70 (42 params) | *pending suite run* | | |
-| QAOA p=22 Gibbs 70 (extra) | *pending suite run* | | |
+| QAOA p=20 Gibbs 70 | 0/40 | 0/20 | 0/20 |
+| QAOA p=20 energy 70 | 0/40 | 0/20 | 0/20 |
+| HEA L=5 Gibbs 70 (42 params) | 38/40 | 19/20 | 19/20 |
+| QAOA p=22 Gibbs 70 (extra) | 0/40 | 0/20 | 0/20 |
 
-Interpretation will be filled after the suite finishes. Do not read a
-ranking into the ECD rows above until the qubit numbers are in.
+Mean \(P(\mathrm{ground})\) on the qubit runs: QAOA \(p=20\) Gibbs 0.012,
+QAOA \(p=20\) energy 0.010, HEA Gibbs 0.611, QAOA \(p=22\) Gibbs 0.009
+(uniform would be \(1/128\approx 0.008\)). HEA knapsack packings were
+feasible on 20/20 instances. HEA misses: knapsack H1 (most-likely
+`1000100`, \(E=0.4\) vs \(E_{\min}=-10\)) and Ising H19 (most-likely
+`0101010`, gap \(0.17\)).
+
+### What the numbers say
+
+Under **this** protocol, the Dutta-style fair match (QAOA \(p=20\), 40
+params, one random start, 70 SPSA steps) does **not** recover grounds:
+0/40 on both Gibbs and \(\langle H\rangle\). That is the same hit rate as
+ECD energy SPSA from vacuum, and far below ECD Gibbs (24/40 freeze, 26/40
+joint). Adding two QAOA layers (\(p=22\), 44 params) stayed at 0/40.
+
+That is not a general statement that a 40-parameter qubit ansatz is weaker
+than ECD. The 42-parameter HEA, with the same Gibbs cost, \(\eta\), SPSA
+gains, and budget, hits **38/40** and concentrates (\(P(\mathrm{gs})\approx 0.61\)).
+QAOA from \(\gamma\sim U(0,2\pi)\), \(\beta\sim U(0,\pi)\) at \(p=20\) stays
+near-uniform: a deep random QAOA circuit plus SPSA did not concentrate on
+these landscapes. An adiabatic-style small-angle QAOA start was not used;
+the suite convention is one random start.
+
+So: ECD Gibbs still beats **this** QAOA baseline by a wide margin, which is
+compatible with Dutta's QAOA comparison being optimizer/init limited rather
+than a theorem about ECD expressivity. A different qubit generator set
+(HEA) wins under the same Gibbs protocol. These are hit counts on one
+start each, not a landscape or expressivity proof.
