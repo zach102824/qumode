@@ -1,0 +1,56 @@
+{
+  "phase": 0,
+  "seed_base": 4000,
+  "microbench_steps": 5,
+  "kill_seconds_per_70": 180.0,
+  "skip_ecd_n11": true,
+  "rows": [
+    {
+      "ansatz": "hea",
+      "n_qubits": 9,
+      "maxiter": 5,
+      "elapsed_sec": 0.011763260999998693,
+      "nfev": 10,
+      "sec_per_spsa_step": 0.0023526521999997383,
+      "sec_per_eval": 0.0011763260999998692,
+      "sec_single_eval": 0.0006612690000338262,
+      "extrapolated_70_sec": 0.1646856539999817
+    },
+    {
+      "ansatz": "ecd",
+      "n_qubits": 9,
+      "maxiter": 5,
+      "elapsed_sec": 8.251147658000036,
+      "nfev": 10,
+      "sec_per_spsa_step": 1.6502295316000073,
+      "sec_per_eval": 0.8251147658000036,
+      "sec_single_eval": 0.4275725859999966,
+      "extrapolated_70_sec": 115.51606721200051,
+      "hit": false
+    },
+    {
+      "ansatz": "hea",
+      "n_qubits": 11,
+      "maxiter": 5,
+      "elapsed_sec": 0.024332431999994242,
+      "nfev": 10,
+      "sec_per_spsa_step": 0.004866486399998848,
+      "sec_per_eval": 0.002433243199999424,
+      "sec_single_eval": 0.0013684280000347826,
+      "extrapolated_70_sec": 0.3406540479999194
+    },
+    {
+      "ansatz": "ecd",
+      "n_qubits": 11,
+      "maxiter": 5,
+      "elapsed_sec": 169.46104540699997,
+      "nfev": 10,
+      "sec_per_spsa_step": 33.8922090814,
+      "sec_per_eval": 16.9461045407,
+      "sec_single_eval": 8.056613601000095,
+      "extrapolated_70_sec": 2372.4546356979995,
+      "hit": false
+    }
+  ],
+  "workers_note": "nproc=4 requested_workers=4"
+}

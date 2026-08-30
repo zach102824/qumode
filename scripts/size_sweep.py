@@ -875,9 +875,9 @@ def write_report(outdir: Path, *, skip_ecd_n11: bool, leftover: dict | None = No
     lines = [
         "# HEA vs ECD Gibbs size sweep",
         "",
-        "Question: ECD \(N_d=5\) has a **fixed** 40 ECD + 5 prep parameters as the",
-        "Fock cutoff grows. HEA \(L=5\) has \(n(L+1)\) parameters. Does ECD catch",
-        "HEA as \(n\) grows on this diagonal knapsack / Ising class?",
+        r"Question: ECD \(N_d=5\) has a **fixed** 40 ECD + 5 prep parameters as the",
+        r"Fock cutoff grows. HEA \(L=5\) has \(n(L+1)\) parameters. Does ECD catch",
+        r"HEA as \(n\) grows on this diagonal knapsack / Ising class?",
         "",
         "No retuning. Same Gibbs + SPSA protocol as the n=7 suite. No QAOA.",
         "n=7 numbers are stored (not rerun). n=9/11 instances are **new** files",
@@ -890,7 +890,7 @@ def write_report(outdir: Path, *, skip_ecd_n11: bool, leftover: dict | None = No
         "| Item | Setting |",
         "|---|---|",
         "| Embedding | Dutta ladder: n=7 L=8 (1,3,3); n=9 L=16 (1,4,4); n=11 L=32 (1,5,5). Qubit 0 = MSB. |",
-        "| Cost | Gibbs \(f=-\\ln\\langle e^{-\\eta E}\\rangle\), `sampled_tail` η (eta.py untouched) |",
+        r"| Cost | Gibbs \(f=-\ln\langle e^{-\eta E}\rangle\), `sampled_tail` η (eta.py untouched) |",
         "| Optimizer | `run_spsa` a=0.2, c=0.15, A=10, α=0.602, γ=0.101, 70 steps, one start / H |",
         "| Success | most-likely bitstring is an exact ground (atol=1e-8) |",
         "| HEA | \\|0⟩^n, L=5, n(L+1) params, even-then-odd NN CZ, Ry ~ U(0,2π) |",
@@ -953,7 +953,7 @@ def write_report(outdir: Path, *, skip_ecd_n11: bool, leftover: dict | None = No
         lines.append(
             "HEA still wins on this diagonal knapsack / Ising class as n grows. "
             "ECD's fixed 45-parameter joint-70 ansatz does not catch the growing "
-            f"HEA \(L=5\) circuit at n=9 or n=11 under this protocol. "
+            r"HEA \(L=5\) circuit at n=9 or n=11 under this protocol. "
             "Size does not create an ECD win here. "
             + (
                 "Hit counts: "
