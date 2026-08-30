@@ -878,14 +878,15 @@ def write_fair_markdown(
         + (" + 1 constructive ECD seed" if meta.get("constructive_seed") else "")
         + f", maxiter={meta.get('maxiter')} |",
         "",
-        "| α | L | n_qubits | ECD params | HEA floor params | HEA nearest params (historical) |",
+        "| α | L | n_qubits | ECD params | HEA floor params | HEA nearest-to-8 (historical confound) |",
         "|---:|---:|---:|---:|---:|---:|",
     ]
     for c in cutoffs:
         counts = _hea_match_counts(c["n_qubits"], n_ecd_params(PRIMARY_ND, bool(meta.get("terminal_rotation"))))
+        hist8 = n_hea_params(c["n_qubits"], matched_hea_layers(c["n_qubits"], 8))
         lines.append(
             f"| {c['alpha']:.1f} | {c['L']} | {c['n_qubits']} | {counts['ecd_n_params']} | "
-            f"{counts['hea_n_params_floor']} | {counts['hea_n_params_nearest']} |"
+            f"{counts['hea_n_params_floor']} | {hist8} |"
         )
     lines += [
         "",
@@ -1088,6 +1089,28 @@ def write_umbrella(path: Path, fair: dict | None, fixed: dict | None) -> None:
         "| `results/stateprep_fixedL32.json` / `.md` | **B. Fixed L=32**, n_qubits=5 for every α. Cleaner: HEA cannot gain qubits as |α| grows. |",
         "",
     ]
+    if fixed is not None:
+        best_f = _best_by_key(fixed["trials"], ("alpha", "target", "ansatz", "n_layers", "L"))
+        ecd_w = hea_w = 0
+        for c in fixed["cutoffs"]:
+            e2 = _pick(best_f, alpha=c["alpha"], target="even_cat", ansatz="ecd", n_layers=2)
+            hm = _pick(best_f, alpha=c["alpha"], target="even_cat", ansatz="hea")
+            if e2 is None or hm is None:
+                continue
+            if float(hm["F"]) > float(e2["F"]) + 1e-6:
+                hea_w += 1
+            elif float(e2["F"]) > float(hm["F"]) + 1e-6:
+                ecd_w += 1
+        if hea_w > ecd_w:
+            lines[5:5] = [
+                f"On the cleaner fixed-L=32 fair-match test, **HEA still wins cats** ({hea_w} α-points vs {ecd_w}).",
+                "",
+            ]
+        elif ecd_w > hea_w:
+            lines[5:5] = [
+                f"On the cleaner fixed-L=32 fair-match test, ECD N_d=2 wins cats ({ecd_w} vs HEA {hea_w}).",
+                "",
+            ]
     if fair is not None:
         best = _best_by_key(fair["trials"], ("alpha", "target", "ansatz", "n_layers", "L"))
         lines += [
