@@ -11,6 +11,7 @@ from qumode_vqe.stateprep import (
     apply_ecd,
     choose_cutoff,
     constructive_even_cat,
+    constructive_seed_params,
     ecd_gate_single,
     ecd_statevector,
     embed_fock_in_qubits,
@@ -18,10 +19,12 @@ from qumode_vqe.stateprep import (
     even_parity_weight,
     fock_amplitudes,
     matched_hea_layers,
+    matched_hea_layers_floor,
     n_ecd_params,
     n_qubits_for_cutoff,
-    state_fidelity,
+    unpack_ecd_params,
     vacuum_hybrid,
+    state_fidelity,
 )
 
 
@@ -79,12 +82,45 @@ def test_ecd_param_count_is_four_per_layer():
 
 
 def test_matched_hea_layers_tracks_ecd_budget():
-    # Primary match: N_d=2 → 8 ECD params.
+    # Historical nearest match: N_d=2 → 8 ECD params can pick a product Ry.
     assert n_hea_params(5, matched_hea_layers(5, 8)) in (5, 10)
     assert abs(n_hea_params(5, matched_hea_layers(5, 8)) - 8) <= abs(n_hea_params(5, 0) - 8)
     assert n_hea_params(6, matched_hea_layers(6, 8)) == 6  # 6 closer to 8 than 12
     assert n_qubits_for_cutoff(25) == 5
     assert n_qubits_for_cutoff(64) == 6
+
+
+def test_hea_floor_match_never_drops_below_and_has_entangling_layer():
+    """Fair match: n_params >= ECD budget and n_layers >= 1 (not a product Ry)."""
+    # n=6, ECD N_d=2 + terminal = 10 → smallest n(L+1) >= 10 is 12.
+    assert matched_hea_layers_floor(6, 10) == 1
+    assert n_hea_params(6, matched_hea_layers_floor(6, 10)) == 12
+    assert n_hea_params(6, matched_hea_layers_floor(6, 10)) >= 10
+    # n=5, budget 10 → exact 10 with one CZ layer.
+    assert matched_hea_layers_floor(5, 10) == 1
+    assert n_hea_params(5, matched_hea_layers_floor(5, 10)) == 10
+    # Historical nearest match to 8 ECD params (no terminal) picked a product Ry.
+    assert matched_hea_layers(6, 8) == 0
+    assert n_hea_params(6, matched_hea_layers(6, 8)) == 6
+    assert matched_hea_layers_floor(6, 8) >= 1
+    assert n_hea_params(6, matched_hea_layers_floor(6, 8)) >= 8
+    for n_qubits, budget in ((5, 8), (5, 10), (6, 8), (6, 10), (6, 12)):
+        n_layers = matched_hea_layers_floor(n_qubits, budget)
+        assert n_layers >= 1
+        assert n_hea_params(n_qubits, n_layers) >= budget
+
+
+def test_constructive_seed_first_layer_is_ry_plus_ecd_2alpha():
+    alpha = 2.0
+    x = constructive_seed_params(2, alpha, terminal_rotation=True)
+    assert x.size == n_ecd_params(2, True)
+    beta, theta, phi, terminal = unpack_ecd_params(x, 2, True)
+    assert beta[0] == pytest.approx(2.0 * alpha)
+    assert theta[0] == pytest.approx(0.5 * np.pi)
+    assert phi[0] == pytest.approx(0.5 * np.pi)
+    assert abs(beta[1]) < 0.2
+    assert abs(theta[1]) < 0.2
+    assert terminal is not None
 
 
 def test_constructive_even_cat_high_fidelity():

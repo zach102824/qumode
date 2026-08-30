@@ -57,10 +57,10 @@ def n_qubits_for_cutoff(n_fock: int) -> int:
 
 
 def matched_hea_layers(n_qubits: int, n_ecd_params: int) -> int:
-    """``n_layers`` minimizing ``|n_qubits (n_layers+1) - n_ecd_params|``.
+    """Nearest match (historical): ``n_layers`` minimizing ``|n(L+1) - n_ecd|``.
 
-    HEA parameter count is ``n_qubits * (n_layers + 1)`` (see ``qaoa.n_hea_params``).
-    Ties keep the smaller layer count.
+    Ties keep the smaller layer count. This can return ``n_layers=0`` (a product
+    of Ry with no CZ). The fair-match rule is ``matched_hea_layers_floor``.
     """
     nq = int(n_qubits)
     budget = int(n_ecd_params)
@@ -68,13 +68,34 @@ def matched_hea_layers(n_qubits: int, n_ecd_params: int) -> int:
         raise ValueError("n_qubits must be >= 1")
     best_l = 0
     best_err = abs(nq - budget)
-    # Search a finite range; n_layers=0 is the product-Ry circuit.
     for n_layers in range(0, max(budget, 1) + 2):
         err = abs(nq * (n_layers + 1) - budget)
         if err < best_err:
             best_l = n_layers
             best_err = err
     return best_l
+
+
+def matched_hea_layers_floor(
+    n_qubits: int,
+    n_ecd_params: int,
+    *,
+    min_layers: int = 1,
+) -> int:
+    """Floor match: smallest ``n_layers >= min_layers`` with ``n(L+1) >= n_ecd``.
+
+    Never drops below the ECD budget. Default ``min_layers=1`` forbids a
+    product-Ry circuit (no entangling CZ layer). For ``n=6`` and 10 ECD
+    parameters this is ``n_layers=1`` → 12 HEA params, not 6.
+    """
+    nq = int(n_qubits)
+    budget = int(n_ecd_params)
+    if nq < 1:
+        raise ValueError("n_qubits must be >= 1")
+    n_layers = max(int(min_layers), 0)
+    while nq * (n_layers + 1) < budget:
+        n_layers += 1
+    return n_layers
 
 
 def cutoff_formula(alpha: complex | float) -> int:
@@ -424,6 +445,41 @@ def ecd_statevector(
     return psi / nrm
 
 
+def constructive_seed_params(
+    n_layers: int,
+    alpha: complex | float,
+    *,
+    terminal_rotation: bool = True,
+    second_beta: float = 0.05,
+    second_theta: float = 0.05,
+) -> np.ndarray:
+    """Seed for variational ECD: exact constructive first layer, later layers small.
+
+    Layer 0 is ``R_y(π/2)`` then ``ECD(β=2α)``. Remaining layers (and the
+    optional terminal rotation) are a small perturbation, not ECD(0):
+    ``ECD(0)=X``, so a literal zero second block is a qubit flip, not identity.
+    L-BFGS-B can then try to uncompute the transmon unitarily.
+    """
+    nd = int(n_layers)
+    if nd < 1:
+        raise ValueError("constructive seed requires N_d >= 1")
+    a = complex(alpha)
+    x = np.zeros(n_ecd_params(nd, terminal_rotation), dtype=float)
+    x[0] = 2.0 * a.real
+    x[1] = 2.0 * a.imag
+    x[2] = 0.5 * np.pi
+    x[3] = 0.5 * np.pi
+    for i in range(1, nd):
+        x[4 * i] = float(second_beta)
+        x[4 * i + 1] = 0.0
+        x[4 * i + 2] = float(second_theta)
+        x[4 * i + 3] = 0.0
+    if terminal_rotation:
+        x[-2] = float(second_theta)
+        x[-1] = 0.5 * np.pi
+    return x
+
+
 def random_ecd_params(
     n_layers: int,
     rng: np.random.Generator,
@@ -554,7 +610,9 @@ __all__ = [
     "fock_amplitudes",
     "fock_index_for_alpha",
     "joint_fidelity_ground_cavity",
+    "constructive_seed_params",
     "matched_hea_layers",
+    "matched_hea_layers_floor",
     "n_ecd_params",
     "n_hea_params",
     "n_qubits_for_cutoff",
