@@ -23,6 +23,11 @@ for _p in (_ROOT, _SRC):
 import numpy as np
 import scipy.optimize as sciopt
 
+from qumode_vqe.circuit import (
+    N_PREP_PARAMS,
+    coherent_radius_max,
+    prep_params_to_ket,
+)
 from qumode_vqe.eta import SampledTailEta
 from qumode_vqe.hamiltonian import TARGET_QNM
 from qumode_vqe.params import random_parameters
@@ -32,6 +37,31 @@ from qumode_vqe.vqe import HybridSimulator, OptimizeResult, _history_record, opt
 def notebook_ecd_x0(ndepth: int, rng: np.random.Generator) -> np.ndarray:
     """Initial ECD vector from the published knapsack notebook."""
     return random_parameters(int(ndepth), rng)
+
+
+def unit_to_prep(u: np.ndarray, nfocks: tuple[int, int]) -> np.ndarray:
+    """Map a unit-cube point to ``(θ, Re α₁, Im α₁, Re α₂, Im α₂)``.
+
+    Same covering as ``scripts/Gibbs_and_adaptive_optim_ECD.py``: θ ~ U[0, π],
+    each coherent amplitude uniform in area on the disk |α| ≤ √(N−1).
+    """
+    u = np.asarray(u, dtype=float).reshape(N_PREP_PARAMS)
+    theta = float(u[0] * np.pi)
+    r1 = coherent_radius_max(nfocks[0])
+    r2 = coherent_radius_max(nfocks[1])
+    mag1 = r1 * np.sqrt(float(u[1]))
+    mag2 = r2 * np.sqrt(float(u[3]))
+    a1 = mag1 * np.exp(1j * (2.0 * np.pi * float(u[2])))
+    a2 = mag2 * np.exp(1j * (2.0 * np.pi * float(u[4])))
+    return np.array([theta, a1.real, a1.imag, a2.real, a2.imag], dtype=float)
+
+
+def random_product_prep(
+    nfocks: tuple[int, int],
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Random product state Ry(θ)|0⟩ ⊗ |α₁⟩ ⊗ |α₂⟩, frozen during ECD BFGS."""
+    return unit_to_prep(rng.random(N_PREP_PARAMS), nfocks)
 
 
 def _history_lite(history: list[dict]) -> list[dict]:
@@ -131,10 +161,19 @@ def optimize_ecd_bfgs(
 
 
 def run_ecd_trial(job: dict) -> dict:
-    """Picklable worker: one notebook start, energy or Gibbs BFGS."""
+    """Picklable worker: one notebook start, energy or Gibbs BFGS.
+
+    ``job["prep"]`` is optional. If omitted, the hybrid vacuum is used.
+    If present, it is the frozen 5-vector of Ry(θ)|0⟩ ⊗ |α₁⟩ ⊗ |α₂⟩.
+    """
     x0 = np.asarray(job["x0"], dtype=float)
     objective = str(job.get("objective", "energy"))
+    prep = job.get("prep")
+    init = "random_product" if prep is not None else "vacuum"
     sim = HybridSimulator(ndepth=int(job.get("ndepth", 5)), cost_kind=objective)
+    if prep is not None:
+        sim.initial_state = prep_params_to_ket(np.asarray(prep, dtype=float), sim.nfocks)
+    ev0 = sim.evaluate(x0)
     opt = optimize_ecd_bfgs(
         sim,
         x0,
@@ -149,11 +188,15 @@ def run_ecd_trial(job: dict) -> dict:
         "trial": int(job["trial"]),
         "seed": int(job["seed"]),
         "objective": objective,
+        "init": init,
+        "prep": None if prep is None else np.asarray(prep, dtype=float),
         "nit": int(opt.nit),
         "nfev": int(opt.nfev),
         "fun": float(opt.fun),
         "energy_physical": float(final.energy_physical),
         "pstar": float(final.target_prob_physical),
+        "pstar0": float(ev0.target_prob_physical),
+        "energy0": float(ev0.energy_physical),
         "most_likely": list(final.most_likely),
         "most_likely_bitstring": str(final.most_likely_bitstring),
         "success": tuple(int(v) for v in final.most_likely) == TARGET_QNM,
