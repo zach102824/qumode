@@ -1,0 +1,2 @@
+ECD init ablation  preset=paper  trials=50  maxiter=200  objectives=('energy',)  workers=7
+reusing vacuum ('energy',) from paper_result/out/fig5.json  (n=50)
