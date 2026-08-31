@@ -8,6 +8,7 @@ Fock cutoffs L1 = L2 = 8.
 from __future__ import annotations
 
 import math
+from pathlib import Path
 from typing import Sequence
 
 import numpy as np
@@ -22,6 +23,8 @@ DEFAULT_WEIGHTS = np.array([2.5, 3.0, 4.0, 3.5], dtype=float)
 DEFAULT_CAPACITY = 7.0
 DEFAULT_LAMBDA = 2.0
 DEFAULT_NFOCKS = (8, 8)
+MIXED_P_SPIN_NPZ_GLOB = "mixed_p_spin_p2-4_[0-9][0-9][0-9].npz"
+DEFAULT_MIXED_P_SPIN_DIR = Path("Hamiltonians") / "mixed_p_spin"
 
 TARGET_QNM = (0, 6, 0)
 TARGET_BITSTRING = "0110000"
@@ -510,6 +513,7 @@ def energy_tensor_from_z_terms(
     nfocks: Sequence[int] = DEFAULT_NFOCKS,
     partition: tuple[int, int, int] = (1, 3, 3),
     identity: float = 0.0,
+    tilt: float = 1e-10,
 ) -> np.ndarray:
     """Hybrid |q,n,m> diagonal from a 7-bit Z-string expansion."""
     l1, l2 = int(nfocks[0]), int(nfocks[1])
@@ -519,8 +523,126 @@ def energy_tensor_from_z_terms(
             for m in range(l2):
                 bits = bits_from_qnm(q, n, m, partition)
                 coeffs[q, n, m] = energy_from_z_terms(bits, terms, identity)
-    tilt = 1e-10 * np.arange(coeffs.size, dtype=float).reshape(coeffs.shape)
-    return coeffs + tilt
+    if tilt:
+        coeffs = coeffs + float(tilt) * np.arange(coeffs.size, dtype=float).reshape(coeffs.shape)
+    return coeffs
+
+
+def z_terms_from_mixed_p_spin_arrays(
+    sites: np.ndarray,
+    orders: np.ndarray,
+    coefficients: np.ndarray,
+) -> list[tuple[tuple[int, ...], float]]:
+    """Convert padded mixed p-spin NPZ arrays into (sites, coeff) Z-strings."""
+    sites = np.asarray(sites)
+    orders = np.asarray(orders, dtype=np.int64).reshape(-1)
+    coefficients = np.asarray(coefficients, dtype=float).reshape(-1)
+    if sites.ndim != 2 or orders.ndim != 1 or coefficients.ndim != 1:
+        raise ValueError("mixed p-spin term arrays must be rank-2 sites and rank-1 orders/coefficients.")
+    if not (sites.shape[0] == orders.shape[0] == coefficients.shape[0]):
+        raise ValueError("mixed p-spin term arrays have mismatched lengths.")
+    if int(np.min(orders)) < 1 or int(np.max(orders)) > sites.shape[1]:
+        raise ValueError("mixed p-spin body orders do not fit the padded site array.")
+    terms: list[tuple[tuple[int, ...], float]] = []
+    for row, coeff in enumerate(coefficients):
+        order = int(orders[row])
+        row_sites = tuple(int(v) for v in sites[row, :order])
+        if any(s < 0 for s in row_sites):
+            raise ValueError(f"mixed p-spin term {row} has padding inside order {order}.")
+        terms.append((row_sites, float(coeff)))
+    return terms
+
+
+def z_terms_from_mixed_p_spin_npz(path: Path | str) -> tuple[list[tuple[tuple[int, ...], float]], dict]:
+    """Load Z-string terms and scalar metadata from one mixed p-spin NPZ file."""
+    path = Path(path)
+    data = np.load(path)
+    required = ("sites", "orders", "coefficients", "num_spins")
+    missing = [key for key in required if key not in data.files]
+    if missing:
+        raise ValueError(f"{path.name} is missing arrays: {missing}")
+    num_spins = int(np.asarray(data["num_spins"]).reshape(-1)[0])
+    terms = z_terms_from_mixed_p_spin_arrays(data["sites"], data["orders"], data["coefficients"])
+    orders = np.asarray(data["orders"], dtype=np.int64).reshape(-1)
+    meta = {
+        "file": path.name,
+        "path": str(path),
+        "num_spins": num_spins,
+        "n_terms": len(terms),
+        "min_body_order": int(np.min(orders)),
+        "max_body_order": int(np.max(orders)),
+        "terms_by_order": {
+            str(int(order)): int(np.count_nonzero(orders == order))
+            for order in sorted(set(int(v) for v in orders))
+        },
+    }
+    if "sk_j" in data.files:
+        meta["sk_j"] = float(np.asarray(data["sk_j"]).reshape(-1)[0])
+    return terms, meta
+
+
+def energy_tensor_from_mixed_p_spin_npz(
+    path: Path | str,
+    nfocks: Sequence[int] = DEFAULT_NFOCKS,
+    partition: tuple[int, int, int] = (1, 3, 3),
+    identity: float = 0.0,
+) -> tuple[np.ndarray, list[tuple[tuple[int, ...], float]], dict]:
+    """Map one mixed p-spin NPZ onto the hybrid (2, L1, L2) energy tensor."""
+    terms, meta = z_terms_from_mixed_p_spin_npz(path)
+    if int(meta["num_spins"]) != N_QUBITS:
+        raise ValueError(
+            f"{meta['file']} has num_spins={meta['num_spins']}, "
+            f"but the hybrid encoding expects {N_QUBITS}."
+        )
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    n_nbits = int(round(math.log2(l1)))
+    m_nbits = int(round(math.log2(l2)))
+    if (1 << n_nbits) != l1 or (1 << m_nbits) != l2:
+        raise ValueError(f"Fock cutoffs {nfocks} must be powers of two for binary decoding.")
+    if partition != (1, n_nbits, m_nbits):
+        raise ValueError(
+            f"partition {partition} does not match nfocks={nfocks} "
+            f"(expected {(1, n_nbits, m_nbits)})."
+        )
+    tensor = energy_tensor_from_z_terms(terms, nfocks, partition, identity)
+    return tensor, terms, meta
+
+
+def load_mixed_p_spin_instances(
+    ham_dir: Path | str = DEFAULT_MIXED_P_SPIN_DIR,
+    *,
+    nfocks: Sequence[int] = DEFAULT_NFOCKS,
+    glob: str = MIXED_P_SPIN_NPZ_GLOB,
+    partition: tuple[int, int, int] = (1, 3, 3),
+    max_hamiltonians: int | None = None,
+) -> list[dict]:
+    """Load saved mixed p-spin NPZ files as hybrid energy-tensor instances."""
+    ham_dir = Path(ham_dir)
+    paths = sorted(ham_dir.glob(glob))
+    if not paths:
+        raise FileNotFoundError(f"no mixed p-spin files matching {glob} in {ham_dir}")
+    if max_hamiltonians is not None:
+        paths = paths[: max(int(max_hamiltonians), 0)]
+    instances: list[dict] = []
+    for path in paths:
+        tensor, terms, meta = energy_tensor_from_mixed_p_spin_npz(path, nfocks, partition)
+        spec = energy_spectrum_stats(tensor)
+        hid = int(path.stem.rsplit("_", 1)[-1])
+        gs_bits = bitstring_from_bits(bits_from_qnm(*spec["ground_qnm"], partition))
+        instances.append(
+            {
+                **meta,
+                "hamiltonian_id": hid,
+                "family": "mixed_p_spin",
+                "kind": "mixed_p_spin",
+                "max_pauli_weight": int(max_pauli_weight(terms)),
+                "ground_bitstring": gs_bits,
+                "energy_tensor": np.asarray(tensor, dtype=float),
+                **spec,
+            }
+        )
+    instances.sort(key=lambda rec: int(rec["hamiltonian_id"]))
+    return instances
 
 
 def max_pauli_weight(terms: Sequence[tuple[tuple[int, ...], float]]) -> int:

@@ -1,0 +1,14 @@
+# Energy ⟨H⟩ vs Gibbs  (same ansatz, same starts, BFGS)
+
+## Fig. 5  ECD-VQE  P(|0,6,0⟩)
+- energy: 0.0155  bits=0001000  E=15.405
+- Gibbs:  0.1470  bits=0110000  E=13.456  η=0.620765374682003
+- ΔP* (Gibbs − energy) = +0.1314  improved
+
+## Fig. 7  QAOA p=20  P(0110000)
+- published best: 0.1262
+- energy best / mean: 0.0001 / 0.0001
+- Gibbs  best / mean: 0.0154 / 0.0154
+- Δ best P* = +0.0152  improved
+- Δ mean P* = +0.0152  improved
+

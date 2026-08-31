@@ -1,0 +1,11 @@
+# Gibbs vs energy: most-likely bitstring is the knapsack optimum (0110000)
+
+## ECD-VQE (qumode), most-likely bitstring after BFGS
+- energy: 34%  (n=50)
+- Gibbs:  84%  (n=50)
+- paired: Gibbs-only 27, energy-only 2, both 15, neither 6
+
+## QAOA, most-likely bitstring after BFGS
+- energy: 10%  (n=50)
+- Gibbs:  70%  (n=50)
+

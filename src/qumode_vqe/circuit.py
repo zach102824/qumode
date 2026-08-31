@@ -15,7 +15,7 @@ from typing import Sequence
 import numpy as np
 import qutip as qt
 
-from .params import ParamLayout, UnpackedParams, unpack
+from .params import ParamLayout, UnpackedParams, UnpackedSnapParams, unpack
 
 # Real parameters of Ry(θ)|0⟩ ⊗ |α₁⟩ ⊗ |α₂⟩: (θ, Re α₁, Im α₁, Re α₂, Im α₂).
 N_PREP_PARAMS = 5
@@ -211,6 +211,69 @@ def project_prep_params(prep: np.ndarray | Sequence[float], nfocks: Sequence[int
     p[1], p[2] = _project_disk(p[1], p[2], coherent_radius_max(nfocks[0]))
     p[3], p[4] = _project_disk(p[3], p[4], coherent_radius_max(nfocks[1]))
     return p
+
+
+def snap_operator(phases: Sequence[float], n_fock: int) -> qt.Qobj:
+    """Number-basis SNAP: Σ_n exp(i θ_n) |n⟩⟨n| on one truncated oscillator."""
+    theta = np.asarray(phases, dtype=float).reshape(-1)
+    dim = int(n_fock)
+    if theta.size != dim:
+        raise ValueError(f"SNAP needs {dim} phases for n_fock={dim}, got {theta.size}.")
+    return qt.Qobj(np.diag(np.exp(1j * theta)), dims=[[dim], [dim]])
+
+
+def snap_gate(phases: Sequence[float], cind: int, nfocks: Sequence[int]) -> qt.Qobj:
+    """SNAP on one qumode, identity on the qubit and the other qumode."""
+    if cind not in (0, 1):
+        raise ValueError("cind must be 0 (first qumode) or 1 (second qumode).")
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    if cind == 0:
+        return qt.tensor(qt.qeye(2), snap_operator(phases, l1), qt.qeye(l2))
+    return qt.tensor(qt.qeye(2), qt.qeye(l1), snap_operator(phases, l2))
+
+
+def displacement_on_hybrid(alpha: complex, cind: int, nfocks: Sequence[int]) -> qt.Qobj:
+    """Unconditional displacement on one qumode of the hybrid register."""
+    if cind not in (0, 1):
+        raise ValueError("cind must be 0 (first qumode) or 1 (second qumode).")
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    if cind == 0:
+        return qt.tensor(qt.qeye(2), qt.displace(l1, complex(alpha)), qt.qeye(l2))
+    return qt.tensor(qt.qeye(2), qt.qeye(l1), qt.displace(l2, complex(alpha)))
+
+
+def snap_displacement_pair(
+    alpha: complex,
+    phases: Sequence[float],
+    cind: int,
+    nfocks: Sequence[int],
+) -> qt.Qobj:
+    """One SNAP–displacement pair: SNAP(θ) D(α) on qumode ``cind``."""
+    return snap_gate(phases, cind, nfocks) * displacement_on_hybrid(alpha, cind, nfocks)
+
+
+def snap_layer(
+    alpha: Sequence[complex],
+    phases: Sequence[Sequence[float]] | np.ndarray,
+    nfocks: Sequence[int],
+) -> qt.Qobj:
+    """One SNAP+D block: pair on qumode 1 followed by pair on qumode 2."""
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    ph = [np.asarray(phases[0], dtype=float).reshape(-1)[:l1], np.asarray(phases[1], dtype=float).reshape(-1)[:l2]]
+    pair0 = snap_displacement_pair(alpha[0], ph[0], 0, nfocks)
+    pair1 = snap_displacement_pair(alpha[1], ph[1], 1, nfocks)
+    return pair1 * pair0
+
+
+def snap_ansatz_unitary(params: UnpackedSnapParams, nfocks: Sequence[int]) -> qt.Qobj:
+    """Full depth-N_d SNAP+displacement unitary, mode 1 then mode 2 in each layer."""
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    ndepth = params.alpha.shape[0]
+    uni = None
+    for i in range(ndepth):
+        gate = snap_layer(params.alpha[i], params.phases[i], (l1, l2))
+        uni = gate if uni is None else gate * uni
+    return hybrid_identity(nfocks) if uni is None else uni
 
 
 def prepare_state(

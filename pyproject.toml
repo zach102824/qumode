@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "qumode-vqe"
 version = "0.1.0"
 description = "ECD-VQE simulator for hybrid qubit-qumode QUBO with a comprehensive cQED noise model"
-readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "qutip>=5.0",

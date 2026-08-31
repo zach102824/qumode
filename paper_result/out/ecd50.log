@@ -1,0 +1,119 @@
+paper_result  preset=paper  outdir=paper_result/out  reference notebook energy=-11.996059
+=== Fig. 5 ECD-VQE  N_d=5  trials=50  maxiter=200  workers=7  notebook Uniform init, shared starts ===
+[1/100] ecd t0  gibbs  P*=0.5096  E=9.692  bits=0110000  nit=6
+[2/100] ecd t3  energy  P*=0.0000  E=-8.644  bits=0011000  nit=129
+[3/100] ecd t1  gibbs  P*=0.9791  E=-11.339  bits=0110000  nit=147
+[4/100] ecd t2  gibbs  P*=0.9543  E=-10.460  bits=0110000  nit=146
+[5/100] ecd t4  gibbs  P*=0.1732  E=23.494  bits=0110000  nit=1
+[6/100] ecd t0  energy  P*=0.9902  E=-11.852  bits=0110000  nit=200
+[7/100] ecd t5  gibbs  P*=0.4635  E=11.926  bits=0110000  nit=6
+[8/100] ecd t6  gibbs  P*=0.0036  E=29.088  bits=0000101  nit=1
+[9/100] ecd t3  gibbs  P*=0.9984  E=-11.896  bits=0110000  nit=188
+[10/100] ecd t2  energy  P*=0.0000  E=-2.683  bits=1001010  nit=200
+[11/100] ecd t1  energy  P*=0.6584  E=-9.790  bits=0110000  nit=200
+[12/100] ecd t8  gibbs  P*=0.1313  E=28.408  bits=0110000  nit=1
+[13/100] ecd t4  energy  P*=0.0000  E=-9.401  bits=0011000  nit=102
+[14/100] ecd t9  gibbs  P*=0.5969  E=-2.161  bits=0110000  nit=26
+[15/100] ecd t6  energy  P*=0.0000  E=-0.226  bits=1000101  nit=94
+[16/100] ecd t5  energy  P*=0.0000  E=-0.596  bits=1000101  nit=125
+[17/100] ecd t7  gibbs  P*=0.9982  E=-11.959  bits=0110000  nit=157
+[18/100] ecd t11  gibbs  P*=0.1236  E=23.958  bits=0110000  nit=1
+[19/100] ecd t8  energy  P*=0.0000  E=-9.090  bits=0011000  nit=200
+[20/100] ecd t7  energy  P*=0.9917  E=-11.910  bits=0110000  nit=200
+[21/100] ecd t12  gibbs  P*=0.4487  E=13.634  bits=0110000  nit=6
+[22/100] ecd t13  gibbs  P*=0.0655  E=27.756  bits=1011000  nit=1
+[23/100] ecd t9  energy  P*=0.0000  E=-4.953  bits=1010000  nit=200
+[24/100] ecd t14  gibbs  P*=0.4787  E=6.963  bits=0110000  nit=11
+[25/100] ecd t11  energy  P*=1.0000  E=-12.000  bits=0110000  nit=135
+[26/100] ecd t12  energy  P*=0.0000  E=-9.327  bits=0011000  nit=119
+[27/100] ecd t10  energy  P*=0.9328  E=-11.703  bits=0110000  nit=152
+[28/100] ecd t16  gibbs  P*=0.0671  E=28.916  bits=1100000  nit=1
+[29/100] ecd t10  gibbs  P*=0.9551  E=-11.443  bits=0110000  nit=172
+[30/100] ecd t13  energy  P*=0.0000  E=-9.398  bits=0011000  nit=200
+[31/100] ecd t14  energy  P*=0.0000  E=-3.900  bits=1010000  nit=200
+[32/100] ecd t16  energy  P*=0.0000  E=-9.436  bits=0011000  nit=124
+[33/100] ecd t15  energy  P*=0.0000  E=-0.825  bits=1000101  nit=135
+[34/100] ecd t17  energy  P*=0.9868  E=-11.869  bits=0110000  nit=91
+[35/100] ecd t19  gibbs  P*=0.3693  E=16.464  bits=0110000  nit=6
+[36/100] ecd t17  gibbs  P*=0.9982  E=-11.879  bits=0110000  nit=147
+[37/100] ecd t15  gibbs  P*=0.9984  E=-11.907  bits=0110000  nit=200
+[38/100] ecd t20  gibbs  P*=0.9943  E=-11.766  bits=0110000  nit=87
+[39/100] ecd t19  energy  P*=0.0000  E=-9.470  bits=0011000  nit=177
+[40/100] ecd t21  energy  P*=0.9938  E=-11.924  bits=0110000  nit=112
+[41/100] ecd t20  energy  P*=0.9331  E=-11.698  bits=0110000  nit=133
+[42/100] ecd t18  gibbs  P*=0.9505  E=-11.506  bits=0110000  nit=200
+[43/100] ecd t18  energy  P*=0.0000  E=-1.458  bits=1000101  nit=186
+[44/100] ecd t24  gibbs  P*=0.3275  E=12.965  bits=0110000  nit=6
+[45/100] ecd t21  gibbs  P*=0.9992  E=-11.980  bits=0110000  nit=190
+[46/100] ecd t25  gibbs  P*=0.5288  E=-1.238  bits=0110000  nit=11
+[47/100] ecd t23  gibbs  P*=0.9965  E=-11.878  bits=0110000  nit=110
+[48/100] ecd t22  energy  P*=0.0000  E=-9.492  bits=0011000  nit=200
+[49/100] ecd t25  energy  P*=0.8349  E=-11.235  bits=0110000  nit=102
+[50/100] ecd t27  gibbs  P*=0.2807  E=30.504  bits=0110000  nit=16
+[51/100] ecd t23  energy  P*=0.0001  E=-2.234  bits=0001110  nit=200
+[52/100] ecd t24  energy  P*=0.0000  E=-9.462  bits=0011000  nit=200
+[53/100] ecd t22  gibbs  P*=0.9485  E=-11.489  bits=0110000  nit=200
+[54/100] ecd t26  energy  P*=0.9328  E=-11.703  bits=0110000  nit=165
+[55/100] ecd t26  gibbs  P*=0.9947  E=-11.839  bits=0110000  nit=200
+[56/100] ecd t28  energy  P*=0.0000  E=-9.413  bits=0011000  nit=103
+[57/100] ecd t27  energy  P*=0.0000  E=0.607  bits=0000011  nit=200
+[58/100] ecd t28  gibbs  P*=0.9483  E=-11.466  bits=0110000  nit=144
+[59/100] ecd t29  energy  P*=0.0000  E=-4.003  bits=0010110  nit=200
+[60/100] ecd t29  gibbs  P*=0.9461  E=-11.401  bits=0110000  nit=196
+[61/100] ecd t31  energy  P*=0.0000  E=-0.605  bits=1000101  nit=109
+[62/100] ecd t30  energy  P*=0.0000  E=-9.440  bits=0011000  nit=188
+[63/100] ecd t33  gibbs  P*=0.5448  E=-2.889  bits=0110000  nit=11
+[64/100] ecd t34  gibbs  P*=0.7063  E=-2.514  bits=0110000  nit=16
+[65/100] ecd t30  gibbs  P*=0.9558  E=-11.417  bits=0110000  nit=200
+[66/100] ecd t35  gibbs  P*=0.0089  E=27.882  bits=1010000  nit=1
+[67/100] ecd t32  energy  P*=0.0000  E=-9.453  bits=0011000  nit=137
+[68/100] ecd t36  gibbs  P*=0.0535  E=23.214  bits=0001000  nit=1
+[69/100] ecd t31  gibbs  P*=0.9480  E=-11.490  bits=0110000  nit=200
+[70/100] ecd t37  gibbs  P*=0.0695  E=24.417  bits=0110001  nit=1
+[71/100] ecd t32  gibbs  P*=0.9969  E=-11.804  bits=0110000  nit=200
+[72/100] ecd t38  gibbs  P*=0.4203  E=13.837  bits=0110000  nit=6
+[73/100] ecd t36  energy  P*=0.0000  E=-9.495  bits=0011000  nit=91
+[74/100] ecd t39  gibbs  P*=0.0458  E=26.753  bits=0111000  nit=1
+[75/100] ecd t33  energy  P*=0.0000  E=-9.105  bits=0011000  nit=200
+[76/100] ecd t37  energy  P*=0.9767  E=-11.702  bits=0110000  nit=106
+[77/100] ecd t38  energy  P*=0.9651  E=-11.581  bits=0110000  nit=115
+[78/100] ecd t34  energy  P*=0.9211  E=-11.638  bits=0110000  nit=200
+[79/100] ecd t35  energy  P*=0.0001  E=-0.888  bits=1000001  nit=200
+[80/100] ecd t42  gibbs  P*=0.0429  E=23.331  bits=0001000  nit=1
+[81/100] ecd t39  energy  P*=0.0000  E=-9.467  bits=0011000  nit=159
+[82/100] ecd t41  gibbs  P*=0.9460  E=-11.367  bits=0110000  nit=76
+[83/100] ecd t43  gibbs  P*=0.6307  E=11.127  bits=0110000  nit=11
+[84/100] ecd t44  gibbs  P*=0.4428  E=15.498  bits=0110000  nit=6
+[85/100] ecd t40  energy  P*=0.0000  E=-9.492  bits=0011000  nit=200
+[86/100] ecd t40  gibbs  P*=0.9991  E=-11.933  bits=0110000  nit=200
+[87/100] ecd t42  energy  P*=0.9958  E=-11.959  bits=0110000  nit=200
+[88/100] ecd t41  energy  P*=0.0000  E=-9.379  bits=0011000  nit=200
+[89/100] ecd t46  gibbs  P*=0.2884  E=25.090  bits=0110000  nit=6
+[90/100] ecd t43  energy  P*=0.0000  E=-0.705  bits=1000101  nit=130
+[91/100] ecd t45  energy  P*=0.0000  E=-0.194  bits=1000101  nit=107
+[92/100] ecd t48  gibbs  P*=0.5633  E=27.434  bits=0110000  nit=6
+[93/100] ecd t44  energy  P*=0.9407  E=-11.759  bits=0110000  nit=195
+[94/100] ecd t47  gibbs  P*=0.9595  E=-8.202  bits=0110000  nit=89
+[95/100] ecd t45  gibbs  P*=0.9988  E=-11.887  bits=0110000  nit=200
+[96/100] ecd t49  gibbs  P*=0.9903  E=-11.532  bits=0110000  nit=99
+[97/100] ecd t46  energy  P*=0.0001  E=-0.700  bits=0001110  nit=192
+[98/100] ecd t47  energy  P*=0.9875  E=-11.835  bits=0110000  nit=182
+[99/100] ecd t48  energy  P*=0.6731  E=-10.451  bits=0110000  nit=200
+[100/100] ecd t49  energy  P*=0.0000  E=-4.892  bits=0010110  nit=200
+  energy: 17/50 hit GS  best P*=1.0000  mean P*=0.3143
+  Gibbs:  42/50 hit GS  best P*=0.9992  mean P*=0.6168
+  paired: Gibbs-only 27  energy-only 2  both 15  neither 6
+  wall 2948.6s
+# Gibbs vs energy: most-likely bitstring is the knapsack optimum (0110000)
+
+## ECD-VQE (qumode), most-likely bitstring after BFGS
+- energy: 34%  (n=50)
+- Gibbs:  84%  (n=50)
+- paired: Gibbs-only 27, energy-only 2, both 15, neither 6
+
+## QAOA, most-likely bitstring after BFGS
+- energy: 10%  (n=50)
+- Gibbs:  70%  (n=50)
+
+Wrote paper_result/out/gibbs_vs_energy_bitstring.png
+Wrote figures and JSON under /Users/zacharyhe/qumode_machine/paper_result/out

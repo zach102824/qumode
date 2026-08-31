@@ -11,6 +11,7 @@ which avoids the |β| = 0 singularity and is used with L-BFGS-B.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Sequence
 from enum import Enum
 
 import numpy as np
@@ -129,3 +130,163 @@ def cartesian_bounds(ndepth: int) -> list[tuple[float, float]]:
         + [(0.0, np.pi)] * size
         + [(0.0, 2 * np.pi)] * size
     )
+
+
+@dataclass(frozen=True)
+class UnpackedSnapParams:
+    """SNAP+displacement parameters with θ_0 fixed at 0 on each oscillator.
+
+    ``alpha`` is complex with shape (ndepth, 2). ``phases`` has shape
+    (ndepth, 2, max(L1, L2)); unused trailing slots for the smaller cutoff
+    are zero, and ``phases[..., 0]`` is always the gauge-fixed zero.
+    """
+
+    alpha: np.ndarray
+    phases: np.ndarray
+
+
+def snap_phase_counts(nfocks: Sequence[int] | tuple[int, int] = (8, 8), *, gauge_fix: bool = True) -> tuple[int, int]:
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    shift = 1 if gauge_fix else 0
+    return l1 - shift, l2 - shift
+
+
+def n_snap_parameters(
+    ndepth: int,
+    nfocks: Sequence[int] | tuple[int, int] = (8, 8),
+    *,
+    gauge_fix: bool = True,
+) -> int:
+    """Real parameters of the two-mode displacement–SNAP ansatz.
+
+    Each layer is ``SNAP D`` on qumode 1 then ``SNAP D`` on qumode 2. Each
+    displacement contributes ``(|α|, arg α)`` and each SNAP contributes
+    ``L−1`` phases when the Fock-0 phase is gauge-fixed to zero.
+    """
+    n0, n1 = snap_phase_counts(nfocks, gauge_fix=gauge_fix)
+    return int(ndepth) * (4 + n0 + n1)
+
+
+def unpack_snap(
+    xvec: np.ndarray,
+    ndepth: int,
+    nfocks: Sequence[int] | tuple[int, int] = (8, 8),
+    *,
+    gauge_fix: bool = True,
+) -> UnpackedSnapParams:
+    x = np.asarray(xvec, dtype=float).reshape(-1)
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    expected = n_snap_parameters(ndepth, (l1, l2), gauge_fix=gauge_fix)
+    if x.size != expected:
+        raise ValueError(
+            f"Expected {expected} SNAP parameters for ndepth={ndepth}, nfocks={(l1, l2)}, got {x.size}."
+        )
+    n0, n1 = snap_phase_counts((l1, l2), gauge_fix=gauge_fix)
+    alpha = np.empty((int(ndepth), 2), dtype=complex)
+    phases = np.zeros((int(ndepth), 2, max(l1, l2)), dtype=float)
+    offset = 0
+    for i in range(int(ndepth)):
+        for cind, (n_phase, n_fock) in enumerate(((n0, l1), (n1, l2))):
+            mag = float(x[offset])
+            arg = float(x[offset + 1])
+            alpha[i, cind] = mag * np.exp(1j * arg)
+            offset += 2
+            start = 1 if gauge_fix else 0
+            phases[i, cind, start:n_fock] = x[offset : offset + n_phase]
+            offset += n_phase
+    return UnpackedSnapParams(alpha=alpha, phases=phases)
+
+
+def pack_snap(
+    alpha: np.ndarray,
+    phases: np.ndarray,
+    nfocks: Sequence[int] | tuple[int, int] = (8, 8),
+    *,
+    gauge_fix: bool = True,
+) -> np.ndarray:
+    alpha = np.asarray(alpha)
+    phases = np.asarray(phases, dtype=float)
+    ndepth = int(alpha.shape[0])
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    n0, n1 = snap_phase_counts((l1, l2), gauge_fix=gauge_fix)
+    parts: list[np.ndarray] = []
+    for i in range(ndepth):
+        for cind, (n_phase, n_fock) in enumerate(((n0, l1), (n1, l2))):
+            a = alpha[i, cind]
+            parts.append(np.array([np.abs(a), np.angle(a)], dtype=float))
+            start = 1 if gauge_fix else 0
+            parts.append(np.asarray(phases[i, cind, start:n_fock], dtype=float).reshape(-1))
+    return np.concatenate(parts)
+
+
+def random_snap_parameters(
+    ndepth: int,
+    nfocks: Sequence[int] | tuple[int, int] = (8, 8),
+    rng: np.random.Generator | None = None,
+    *,
+    gauge_fix: bool = True,
+) -> np.ndarray:
+    """Initialize SNAP+displacement with the same magnitude/angle ranges as ECD."""
+    rng = rng or np.random.default_rng()
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    n0, n1 = snap_phase_counts((l1, l2), gauge_fix=gauge_fix)
+    parts: list[np.ndarray] = []
+    for _ in range(int(ndepth)):
+        for n_phase in (n0, n1):
+            mag = rng.uniform(0.0, 3.0)
+            arg = rng.uniform(0.0, np.pi)
+            phases = rng.uniform(0.0, np.pi, size=n_phase)
+            parts.append(np.concatenate([[mag, arg], phases]))
+    return np.concatenate(parts)
+
+
+def snap_bounds(
+    ndepth: int,
+    nfocks: Sequence[int] | tuple[int, int] = (8, 8),
+    *,
+    gauge_fix: bool = True,
+) -> list[tuple[float, float]]:
+    n0, n1 = snap_phase_counts(nfocks, gauge_fix=gauge_fix)
+    per_layer: list[tuple[float, float]] = []
+    for n_phase in (n0, n1):
+        per_layer.extend([(0.0, 10.0), (0.0, 2 * np.pi)])
+        per_layer.extend([(0.0, 2 * np.pi)] * n_phase)
+    return per_layer * int(ndepth)
+
+
+def ansatz_inventory(
+    ansatz: str,
+    ndepth: int,
+    nfocks: Sequence[int] | tuple[int, int] = (8, 8),
+    n_prep_params: int = 5,
+) -> dict:
+    """Parameter and primitive-gate counts for one hybrid ansatz depth."""
+    kind = str(ansatz).lower()
+    nd = int(ndepth)
+    if kind == "ecd":
+        n_ansatz = n_parameters(nd)
+        params_per_layer = n_parameters(1)
+        primitive_gates = ("R", "ECD", "R", "ECD")
+        description = "one layer = R, ECD on mode 1, then R, ECD on mode 2"
+    elif kind == "snap":
+        n_ansatz = n_snap_parameters(nd, nfocks)
+        params_per_layer = n_snap_parameters(1, nfocks)
+        primitive_gates = ("D", "SNAP", "D", "SNAP")
+        description = "one layer = D, SNAP on mode 1, then D, SNAP on mode 2 (θ_0 = 0)"
+    else:
+        raise ValueError(f"unknown ansatz {ansatz!r}")
+    n_gates = 4 * nd
+    return {
+        "ansatz": kind,
+        "ndepth": nd,
+        "nfocks": [int(nfocks[0]), int(nfocks[1])],
+        "n_prep_params": int(n_prep_params),
+        "n_ansatz_params": int(n_ansatz),
+        "n_params": int(n_prep_params) + int(n_ansatz),
+        "n_primitive_gates": int(n_gates),
+        "n_scalar_controls": int(n_ansatz),
+        "params_per_layer": int(params_per_layer),
+        "gates_per_layer": 4,
+        "primitive_gates": list(primitive_gates),
+        "description": description,
+    }

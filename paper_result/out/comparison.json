@@ -1,0 +1,18 @@
+{
+  "plot": "paper_result/out/gibbs_vs_energy_bitstring.png",
+  "metric": {
+    "ecd": {
+      "energy": 0.34,
+      "gibbs": 0.84,
+      "n_energy": 50,
+      "n_gibbs": 50
+    },
+    "qaoa": {
+      "energy": 0.1,
+      "gibbs": 0.7,
+      "n_energy": 50,
+      "n_gibbs": 50
+    },
+    "plot": "paper_result/out/gibbs_vs_energy_bitstring.png"
+  }
+}

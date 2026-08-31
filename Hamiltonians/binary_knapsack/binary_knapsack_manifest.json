@@ -1,0 +1,382 @@
+[
+  {
+    "file": "binary_knapsack_000.npz",
+    "capacity": 6,
+    "penalty": 33.0,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      8,
+      5,
+      8,
+      9
+    ],
+    "weights": [
+      1,
+      5,
+      2,
+      2
+    ]
+  },
+  {
+    "file": "binary_knapsack_001.npz",
+    "capacity": 4,
+    "penalty": 26.400000000000002,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      9,
+      7,
+      2,
+      6
+    ],
+    "weights": [
+      1,
+      2,
+      3,
+      1
+    ]
+  },
+  {
+    "file": "binary_knapsack_002.npz",
+    "capacity": 7,
+    "penalty": 25.3,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      8,
+      5,
+      6,
+      4
+    ],
+    "weights": [
+      4,
+      4,
+      4,
+      2
+    ]
+  },
+  {
+    "file": "binary_knapsack_003.npz",
+    "capacity": 10,
+    "penalty": 34.1,
+    "num_items": 4,
+    "num_slack_bits": 4,
+    "values": [
+      6,
+      8,
+      7,
+      10
+    ],
+    "weights": [
+      5,
+      5,
+      2,
+      3
+    ]
+  },
+  {
+    "file": "binary_knapsack_004.npz",
+    "capacity": 5,
+    "penalty": 26.400000000000002,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      4,
+      1,
+      9,
+      10
+    ],
+    "weights": [
+      4,
+      2,
+      1,
+      5
+    ]
+  },
+  {
+    "file": "binary_knapsack_005.npz",
+    "capacity": 3,
+    "penalty": 24.200000000000003,
+    "num_items": 4,
+    "num_slack_bits": 2,
+    "values": [
+      10,
+      1,
+      3,
+      8
+    ],
+    "weights": [
+      1,
+      3,
+      1,
+      2
+    ]
+  },
+  {
+    "file": "binary_knapsack_006.npz",
+    "capacity": 5,
+    "penalty": 22.0,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      5,
+      8,
+      1,
+      6
+    ],
+    "weights": [
+      5,
+      3,
+      2,
+      3
+    ]
+  },
+  {
+    "file": "binary_knapsack_007.npz",
+    "capacity": 6,
+    "penalty": 22.0,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      4,
+      5,
+      1,
+      10
+    ],
+    "weights": [
+      4,
+      4,
+      1,
+      4
+    ]
+  },
+  {
+    "file": "binary_knapsack_008.npz",
+    "capacity": 7,
+    "penalty": 26.400000000000002,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      9,
+      1,
+      10,
+      4
+    ],
+    "weights": [
+      2,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "file": "binary_knapsack_009.npz",
+    "capacity": 6,
+    "penalty": 22.0,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      7,
+      8,
+      1,
+      4
+    ],
+    "weights": [
+      4,
+      1,
+      4,
+      5
+    ]
+  },
+  {
+    "file": "binary_knapsack_010.npz",
+    "capacity": 8,
+    "penalty": 15.400000000000002,
+    "num_items": 4,
+    "num_slack_bits": 4,
+    "values": [
+      2,
+      5,
+      1,
+      6
+    ],
+    "weights": [
+      2,
+      4,
+      4,
+      2
+    ]
+  },
+  {
+    "file": "binary_knapsack_011.npz",
+    "capacity": 4,
+    "penalty": 17.6,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      2,
+      1,
+      10,
+      3
+    ],
+    "weights": [
+      4,
+      2,
+      1,
+      2
+    ]
+  },
+  {
+    "file": "binary_knapsack_012.npz",
+    "capacity": 4,
+    "penalty": 33.0,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      9,
+      3,
+      10,
+      8
+    ],
+    "weights": [
+      2,
+      3,
+      3,
+      1
+    ]
+  },
+  {
+    "file": "binary_knapsack_013.npz",
+    "capacity": 7,
+    "penalty": 16.5,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      6,
+      1,
+      7,
+      1
+    ],
+    "weights": [
+      3,
+      3,
+      5,
+      4
+    ]
+  },
+  {
+    "file": "binary_knapsack_014.npz",
+    "capacity": 7,
+    "penalty": 25.3,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      6,
+      5,
+      8,
+      4
+    ],
+    "weights": [
+      5,
+      2,
+      1,
+      3
+    ]
+  },
+  {
+    "file": "binary_knapsack_015.npz",
+    "capacity": 9,
+    "penalty": 20.900000000000002,
+    "num_items": 4,
+    "num_slack_bits": 4,
+    "values": [
+      10,
+      4,
+      3,
+      2
+    ],
+    "weights": [
+      5,
+      3,
+      2,
+      3
+    ]
+  },
+  {
+    "file": "binary_knapsack_016.npz",
+    "capacity": 7,
+    "penalty": 33.0,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      3,
+      10,
+      10,
+      7
+    ],
+    "weights": [
+      2,
+      2,
+      3,
+      5
+    ]
+  },
+  {
+    "file": "binary_knapsack_017.npz",
+    "capacity": 8,
+    "penalty": 26.400000000000002,
+    "num_items": 4,
+    "num_slack_bits": 4,
+    "values": [
+      7,
+      5,
+      5,
+      7
+    ],
+    "weights": [
+      4,
+      3,
+      1,
+      4
+    ]
+  },
+  {
+    "file": "binary_knapsack_018.npz",
+    "capacity": 5,
+    "penalty": 16.5,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      2,
+      7,
+      2,
+      4
+    ],
+    "weights": [
+      2,
+      3,
+      5,
+      3
+    ]
+  },
+  {
+    "file": "binary_knapsack_019.npz",
+    "capacity": 6,
+    "penalty": 22.0,
+    "num_items": 4,
+    "num_slack_bits": 3,
+    "values": [
+      5,
+      1,
+      6,
+      8
+    ],
+    "weights": [
+      2,
+      2,
+      3,
+      2
+    ]
+  }
+]

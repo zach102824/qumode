@@ -1,0 +1,13 @@
+Hardware-efficient ansatz, 7 qubits, 42 parameters
+One layer: Ry on all qubits, then even CZ, then odd CZ. No Rz.
+Even CZ: (0,1) (2,3) (4,5)     Odd CZ: (1,2) (3,4) (5,6)
+
+q0: | Ry00 ●e    — Ry07 ●e    — Ry14 ●e    — Ry21 ●e    — Ry28 ●e    — Ry35 ●e    — |
+q1: | Ry01 ●e ●o — Ry08 ●e ●o — Ry15 ●e ●o — Ry22 ●e ●o — Ry29 ●e ●o — Ry36 ●e ●o — |
+q2: | Ry02 ●e ●o — Ry09 ●e ●o — Ry16 ●e ●o — Ry23 ●e ●o — Ry30 ●e ●o — Ry37 ●e ●o — |
+q3: | Ry03 ●e ●o — Ry10 ●e ●o — Ry17 ●e ●o — Ry24 ●e ●o — Ry31 ●e ●o — Ry38 ●e ●o — |
+q4: | Ry04 ●e ●o — Ry11 ●e ●o — Ry18 ●e ●o — Ry25 ●e ●o — Ry32 ●e ●o — Ry39 ●e ●o — |
+q5: | Ry05 ●e ●o — Ry12 ●e ●o — Ry19 ●e ●o — Ry26 ●e ●o — Ry33 ●e ●o — Ry40 ●e ●o — |
+q6: | Ry06    ●o — Ry13    ●o — Ry20    ●o — Ry27    ●o — Ry34    ●o — Ry41    ●o — |
+
+parameter count: 6 × 7 Ry = 42

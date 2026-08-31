@@ -19,6 +19,8 @@ from .circuit import (
     prep_bounds,
     prep_params_to_ket,
     project_prep_params,
+    snap_ansatz_unitary,
+    snap_displacement_pair,
     uer_layer,
     vacuum,
 )
@@ -33,7 +35,17 @@ from .hamiltonian import (
 )
 from .measurement import MeasurementConfig, MeasurementResult, joint_probabilities, measure
 from .noise import ChannelCache, LossModel, NoiseConfig, TimingMode
-from .params import ParamLayout, cartesian_bounds, paper_bounds, random_parameters, unpack
+from .params import (
+    ParamLayout,
+    cartesian_bounds,
+    n_parameters,
+    n_snap_parameters,
+    paper_bounds,
+    random_parameters,
+    snap_bounds,
+    unpack,
+    unpack_snap,
+)
 
 # Fallback η for HybridSimulator.cost when Gibbs is evaluated outside
 # optimize_gibbs_adaptive (which always sets η via sampled_tail).
@@ -107,7 +119,12 @@ class HybridSimulator:
         gibbs_eta: float | None = None,
         pair_mask: np.ndarray | None = None,
         initial_state: qt.Qobj | np.ndarray | None = None,
+        ansatz: str = "ecd",
     ) -> None:
+        kind = str(ansatz).lower()
+        if kind not in ("ecd", "snap"):
+            raise ValueError(f"Unknown ansatz {ansatz!r}")
+        self.ansatz = kind
         self.ndepth = int(ndepth)
         self.nfocks = (int(nfocks[0]), int(nfocks[1]))
         self.dims = (2, self.nfocks[0], self.nfocks[1])
@@ -159,7 +176,14 @@ class HybridSimulator:
         return self._channel_cache
 
     def unpack(self, xvec: np.ndarray):
+        if self.ansatz == "snap":
+            return unpack_snap(xvec, self.ndepth, self.nfocks)
         return unpack(xvec, self.ndepth, self.layout)
+
+    def n_ansatz_params(self) -> int:
+        if self.ansatz == "snap":
+            return n_snap_parameters(self.ndepth, self.nfocks)
+        return n_parameters(self.ndepth)
 
     def _errored_params(self, xvec: np.ndarray):
         p = self.unpack(xvec)
@@ -182,6 +206,9 @@ class HybridSimulator:
         return beta, theta, phi
 
     def statevector(self, xvec: np.ndarray) -> qt.Qobj:
+        if self.ansatz == "snap":
+            params = unpack_snap(xvec, self.ndepth, self.nfocks)
+            return snap_ansatz_unitary(params, self.nfocks) * self._initial_ket
         beta, theta, phi = self._errored_params(xvec)
         from .params import UnpackedParams
 
@@ -189,6 +216,8 @@ class HybridSimulator:
         return ecd_ansatz_unitary(params, self.nfocks, pair_mask=self.pair_mask) * self._initial_ket
 
     def density_matrix(self, xvec: np.ndarray) -> np.ndarray:
+        if self.ansatz == "snap":
+            return self._snap_density_matrix(xvec)
         beta, theta, phi = self._errored_params(xvec)
         rho = ket_to_dm(self._initial_ket)
         cache = self.channel_cache
@@ -227,6 +256,36 @@ class HybridSimulator:
                         rho = cache.apply(rho)
                 if do_channel and self.noise.timing is TimingMode.PER_UER_LAYER:
                     rho = cache.apply(rho)
+        return rho
+
+    def _snap_density_matrix(self, xvec: np.ndarray) -> np.ndarray:
+        params = unpack_snap(xvec, self.ndepth, self.nfocks)
+        rho = ket_to_dm(self._initial_ket)
+        cache = self.channel_cache
+        do_channel = (
+            self.noise.loss_model is not LossModel.NONE
+            or self.noise.enable_transmon
+            or abs(self.noise.kerr)
+            or abs(self.noise.cross_kerr)
+            or abs(self.noise.chi_dispersive)
+        )
+        l1, l2 = self.nfocks
+        for i in range(self.ndepth):
+            for cind, n_fock in ((0, l1), (1, l2)):
+                u = np.asarray(
+                    snap_displacement_pair(
+                        params.alpha[i, cind],
+                        params.phases[i, cind, :n_fock],
+                        cind,
+                        self.nfocks,
+                    ).full(),
+                    dtype=complex,
+                )
+                rho = apply_full_unitary(rho, u)
+                if do_channel and self.noise.timing is TimingMode.PER_ECD_PAIR:
+                    rho = cache.apply(rho)
+            if do_channel and self.noise.timing is TimingMode.PER_UER_LAYER:
+                rho = cache.apply(rho)
         return rho
 
     def evaluate(self, xvec: np.ndarray, *, include_ideal: bool = False) -> EvalResult:
@@ -567,6 +626,8 @@ def _spsa(
 
 
 def _ansatz_bounds(sim: HybridSimulator) -> list[tuple[float, float]]:
+    if sim.ansatz == "snap":
+        return list(snap_bounds(sim.ndepth, sim.nfocks))
     if sim.layout is ParamLayout.PAPER:
         return list(paper_bounds(sim.ndepth))
     return list(cartesian_bounds(sim.ndepth))
@@ -598,6 +659,7 @@ def optimize_gibbs_adaptive(
     prep_step_scale: float = 1.0,
     energy_tensor: np.ndarray | None = None,
     hamiltonian: qt.Qobj | None = None,
+    ansatz: str = "ecd",
 ) -> AdaptiveGibbsResult:
     """Joint prep+ansatz SPSA (default: 70 steps, prep never frozen).
 
@@ -606,6 +668,9 @@ def optimize_gibbs_adaptive(
     for the whole budget. ``spsa_iter>0`` is an optional ablation that
     freezes prep after the joint stage and continues the **same** ansatz
     vector (not a new seed) for ``spsa_iter`` more steps.
+
+    ``ansatz`` is ``"ecd"`` (8 parameters per UER layer) or ``"snap"``
+    (gauge-fixed SNAP+displacement, 18 parameters per layer at nfocks=(8,8)).
 
     ``prep_step_scale`` multiplies the SPSA update on the five preparation
     coordinates during the joint stage (ansatz coordinates keep gain 1).
@@ -618,6 +683,12 @@ def optimize_gibbs_adaptive(
     nfocks = (int(nfocks[0]), int(nfocks[1]))
     prep0 = project_prep_params(prep0, nfocks)
     x0 = np.asarray(x0, dtype=float).reshape(-1)
+    ansatz = str(ansatz).lower()
+    expected = n_snap_parameters(ndepth, nfocks) if ansatz == "snap" else n_parameters(ndepth)
+    if x0.size != expected:
+        raise ValueError(
+            f"Expected {expected} {ansatz} ansatz parameters for ndepth={ndepth}, got {x0.size}."
+        )
     ham_kw: dict = {}
     if energy_tensor is not None:
         tensor = np.asarray(energy_tensor, dtype=float)
@@ -634,6 +705,7 @@ def optimize_gibbs_adaptive(
         cost_kind="gibbs",
         target_qnm=None,
         initial_state=prep_params_to_ket(prep0, nfocks),
+        ansatz=ansatz,
         **ham_kw,
     )
     policy = SampledTailEta()

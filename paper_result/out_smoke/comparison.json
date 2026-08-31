@@ -1,0 +1,31 @@
+{
+  "fig5": {
+    "metric": "ECD-VQE P(|0,6,0\u27e9)",
+    "energy": 0.015538877630366146,
+    "gibbs": 0.14696317464393935,
+    "gibbs_minus_energy": 0.1314242970135732,
+    "improved": true,
+    "tied": false,
+    "worse": false
+  },
+  "fig7": {
+    "best_pstar": {
+      "metric": "QAOA best P(0110000)",
+      "energy": 0.00014357222230899764,
+      "gibbs": 0.015368162362818879,
+      "gibbs_minus_energy": 0.015224590140509881,
+      "improved": true,
+      "tied": false,
+      "worse": false
+    },
+    "mean_pstar": {
+      "metric": "QAOA mean P(0110000)",
+      "energy": 0.00014357222230899764,
+      "gibbs": 0.015368162362818879,
+      "gibbs_minus_energy": 0.015224590140509881,
+      "improved": true,
+      "tied": false,
+      "worse": false
+    }
+  }
+}
