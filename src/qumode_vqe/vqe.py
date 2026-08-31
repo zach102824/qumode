@@ -334,6 +334,7 @@ class AdaptiveGibbsResult:
     eta_history: list[dict] = field(default_factory=list)
     n_eta_clamps: int = 0
     n_eta_fallbacks: int = 0
+    first_success_step: int | None = None
 
 
 def _history_record(sim: HybridSimulator, x: np.ndarray, iteration: int) -> dict:
@@ -644,15 +645,29 @@ def optimize_gibbs_adaptive(
     x0 = _clip_bounds(x0, ansatz_bounds)
     joint_bounds = list(prep_bounds(nfocks)) + ansatz_bounds
     total_steps = max(int(outer_iter) + int(spsa_iter), 1)
+    first_success_step: int | None = None
+    emin = float(np.min(sim.energy_tensor))
 
     def current_probs(x_ansatz: np.ndarray) -> np.ndarray:
         ev = sim.evaluate(x_ansatz)
         return np.asarray(ev.measurement.physical_probs, dtype=float)
 
+    def _note_success(probs: np.ndarray, after_step: int) -> None:
+        nonlocal first_success_step
+        if first_success_step is not None:
+            return
+        tensor = np.asarray(sim.energy_tensor, dtype=float)
+        p = np.asarray(probs, dtype=float)
+        ml = np.unravel_index(int(np.argmax(p.reshape(-1))), tensor.shape)
+        found = float(tensor[ml])
+        if np.isclose(found, emin, atol=1e-8, rtol=0.0):
+            first_success_step = int(after_step)
+
     init_probs = current_probs(x0)
     st0 = policy.initialize(sim.energy_tensor, init_probs)
     sim.gibbs_eta = float(st0.eta)
     eta0 = float(st0.eta)
+    _note_success(init_probs, 0)
 
     def project_joint(z: np.ndarray) -> np.ndarray:
         z = np.asarray(z, dtype=float).copy()
@@ -668,6 +683,7 @@ def optimize_gibbs_adaptive(
         z = np.asarray(z, dtype=float)
         sim.initial_state = prep_params_to_ket(z[:N_PREP_PARAMS], nfocks)
         probs = current_probs(z[N_PREP_PARAMS:])
+        _note_success(probs, 0 if int(k) == 1 else int(k) - 1)
         st = policy.maybe_update(k, total_steps, sim.energy_tensor, probs)
         sim.gibbs_eta = float(st.eta)
 
@@ -710,6 +726,8 @@ def optimize_gibbs_adaptive(
 
     def before_ansatz(k: int, x: np.ndarray) -> None:
         probs = current_probs(x)
+        after = int(outer_iter) + (0 if int(k) == 1 else int(k) - 1)
+        _note_success(probs, after)
         st = policy.maybe_update(int(outer_iter) + k, total_steps, sim.energy_tensor, probs)
         sim.gibbs_eta = float(st.eta)
 
@@ -738,6 +756,11 @@ def optimize_gibbs_adaptive(
         nit = 0
 
     eval_final = sim.evaluate(x_final).as_dict()
+    if first_success_step is None:
+        ml = [int(v) for v in eval_final["most_likely"]]
+        found = float(sim.energy_tensor[tuple(ml)])
+        if np.isclose(found, emin, atol=1e-8, rtol=0.0):
+            first_success_step = total_steps
     snap = policy.snapshot()
     return AdaptiveGibbsResult(
         prep=prep,
@@ -760,6 +783,7 @@ def optimize_gibbs_adaptive(
         eta_history=list(snap["history"]),
         n_eta_clamps=int(snap["n_clamps"]),
         n_eta_fallbacks=int(snap["n_fallbacks"]),
+        first_success_step=first_success_step,
     )
 
 

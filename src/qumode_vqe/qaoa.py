@@ -444,6 +444,7 @@ class QubitVQEResult:
     eta_history: list[dict] = field(default_factory=list)
     n_eta_clamps: int = 0
     n_eta_fallbacks: int = 0
+    first_success_step: int | None = None
     message: str = ""
     success_opt: bool = True
 
@@ -465,6 +466,7 @@ class QubitVQEResult:
             "success": ev.success,
             "nfev": int(self.nfev),
             "nit": int(self.nit),
+            "first_success_step": self.first_success_step,
             "eta": None if self.eta is None else float(self.eta),
             "eta0": None if self.eta0 is None else float(self.eta0),
         }
@@ -519,6 +521,15 @@ def optimize_qubit_ansatz(
     probs_at = _probs_factory(ansatz, p=p, n_qubits=n_qubits, n_layers=n_layers, energies=e)
     policy: SampledTailEta | None = None
     eta0: float | None = None
+    first_success_step: int | None = None
+
+    def _note_success(k: int, probs: np.ndarray) -> None:
+        nonlocal first_success_step
+        if first_success_step is not None:
+            return
+        if evaluate_histogram(probs, e).success:
+            first_success_step = 0 if int(k) == 1 else int(k) - 1
+
     if kind == "gibbs":
         policy = SampledTailEta()
         st0 = policy.initialize(e, probs_at(x0))
@@ -528,14 +539,16 @@ def optimize_qubit_ansatz(
             return gibbs_objective(probs_at(x), e, float(policy.eta))
 
         def before(k: int, x: np.ndarray) -> None:
-            policy.maybe_update(k, int(maxiter), e, probs_at(x))
+            probs = probs_at(x)
+            policy.maybe_update(k, int(maxiter), e, probs)
+            _note_success(k, probs)
 
     else:
         def fun(x: np.ndarray) -> float:
             return float(np.dot(probs_at(x), e))
 
         def before(k: int, x: np.ndarray) -> None:
-            del k, x
+            _note_success(k, probs_at(x))
 
     opt: OptimizeResult = run_spsa(
         fun,
@@ -548,10 +561,12 @@ def optimize_qubit_ansatz(
         A=A,
         alpha=alpha,
         gamma=gamma,
-        on_before_step=before if kind == "gibbs" else None,
+        on_before_step=before,
     )
     eta_final = None if policy is None else float(policy.eta)
     ev = evaluate_histogram(probs_at(opt.x), e, eta=eta_final if kind == "gibbs" else None)
+    if first_success_step is None and ev.success:
+        first_success_step = int(maxiter)
     snap = policy.snapshot() if policy is not None else None
     return QubitVQEResult(
         fun=float(opt.fun),
@@ -566,6 +581,7 @@ def optimize_qubit_ansatz(
         eta_history=[] if snap is None else list(snap["history"]),
         n_eta_clamps=0 if snap is None else int(snap["n_clamps"]),
         n_eta_fallbacks=0 if snap is None else int(snap["n_fallbacks"]),
+        first_success_step=first_success_step,
         message=str(opt.message),
         success_opt=bool(opt.success),
     )
