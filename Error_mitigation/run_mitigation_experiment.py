@@ -698,7 +698,7 @@ def run(args: argparse.Namespace) -> dict:
         for pset, xvec in param_sets.items():
             rng_tw = np.random.default_rng(case_seed("twins", ansatz, pset, args.seed))
             print(f"  building {n_train} Gaussian twins for {pset} ...")
-            twin_design = getattr(args, "twin_design", "span") or "span"
+            twin_design = getattr(args, "twin_design", "adaptive") or "adaptive"
             if twin_design == "adaptive":
                 twin_design = "span" if pset == "random" else "default"
             if twin_design == "span":
@@ -914,9 +914,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--twin-design",
         choices=("default", "span", "adaptive"),
-        default="span",
+        default="adaptive",
         dest="twin_design",
-        help="span: log-spaced |α|. default: U(0.5,1) PR #6 mix. adaptive: span on random, default on optimized.",
+        help="adaptive: span on random, U(0.5,1) on optimized. span: log |α|. default: PR #6 mix.",
     )
     return p.parse_args(argv)
 

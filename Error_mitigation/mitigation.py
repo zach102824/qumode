@@ -1063,15 +1063,11 @@ def select_research_method(
     hops = None if residual_hops is None else float(residual_hops)
     kind = None if circuit_kind is None else str(circuit_kind).lower()
     if kind == "optimized":
-        extra["reason"] = "optimized_residual"
-        if (
-            afterburn_tfree is not None
-            and residual_tfree is not None
-            and float(afterburn_tfree) < float(residual_tfree) - 1e-12
-        ):
-            extra["reason"] = "optimized_afterburn"
-            return "gdr_afterburn", extra
-        return "gdr_residual", extra
+        # Default / adaptive twins already recover the PR #6 optimized floor.
+        # Blind residual hurts comprehensive and SNAP high-κτ on those twins
+        # (ECD comprehensive κτ=0.1: residual 0.41 vs gdr_param 0.34).
+        extra["reason"] = "optimized_gdr"
+        return "gdr_param", extra
     if (
         hops is not None
         and hops <= hop_cap

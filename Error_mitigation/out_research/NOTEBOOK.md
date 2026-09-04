@@ -156,7 +156,46 @@ Regressions to not hide: span `gdr_param` is a bit worse than PR #6 on ECD/SNAP 
 
 ## Phase 4
 
-Wired into `run_mitigation_experiment.py` (default `--twin-design span`):
+Wired into `run_mitigation_experiment.py` (default `--twin-design span` at this point):
 `gdr_damped`, `gdr_mid`, `gdr_residual`, `gdr_select`, `readout_then_zne`.
 README methods/caveats updated. `--twin-design default` restores the PR #6 U(0.5,1) mix.
 No `src/` edits. Tests: 16 mitigation + full non-slow suite green.
+
+## Phase 5 — leftover regressions (cache replay + default twins)
+
+### `phase3_v2` — same 8192/40 span cache, new methods
+
+`gdr_afterburn` ≈ `gdr_residual` on every cell that matters (30 afterburn wins vs gdr are the same residual wins). `gdr_blend` is not a keep.
+
+`gdr_select` with a Gaussian / t_free holdout still **never** picked residual (0/23). Rank-2 twins are too close to end-of-circuit GDR. A hop-cap also blocked the high-κτ optimized cells where residual hops grow with noise (0.11–0.16) even though residual is best there.
+
+Blind `optimized → residual` would catch those 23 span cells, but the next run shows that rule is twin-design specific.
+
+### `opt_default` — optimized only, PR #6 U(0.5,1) twins, 8192/40, 54 cells
+
+This is the span regression. Default `gdr_param` vs span `gdr_param`: **35 better, 19 tie, 0 worse**.
+
+| cell | PR #6 gdr | span gdr | default gdr | default residual |
+|------|----------:|---------:|------------:|-----------------:|
+| ECD opt comprehensive κτ=0.1 ideal | **0.343** | 0.416 | **0.343** | 0.414 (≈ oracle) |
+| ECD opt comprehensive κτ=0.1 strong | 0.351 | 0.403 | **0.338** | 0.406 |
+| ECD opt thermal κτ=0.1 ideal | 0.270 | 0.318 | **0.277** | 0.261 |
+| ECD opt loss κτ=0.1 ideal | 0.202 | 0.230 | **0.201** | 0.195 |
+| SNAP opt comprehensive κτ=0.1 ideal | 0.632 | 0.662 | **0.611** | 0.747 |
+
+Span twins learned a map close to the physical oracle (~0.41), which is the *wrong* end-of-circuit map for interleaved comprehensive noise. The narrower PR #6 mix luckily fits a better effective kernel. Residual-on-optimized is then harmful once default twins are used.
+
+### Shipped recipe (evidence)
+
+1. **`--twin-design adaptive` (new official default):** span on random, U(0.5,1) on optimized.
+2. Always report `gdr_param`.
+3. `gdr_damped` on random / leftover over-correction.
+4. `gdr_residual` as an extra on optimized **loss / thermal** (not the select default).
+5. `readout_then_zne` whenever reporting ZNE under readout.
+6. `gdr_select`: `gdr_param` on optimized; holdout among `{safe, gdr, mid, damped}` on random.
+
+Post-hoc adaptive hybrid (span+damped on random, default `gdr_param` on optimized): beats PR #6 `gdr_param` on **86/108**, beats raw on **107/108**, worse than raw on **1/108** (SNAP random comprehensive κτ=0.003 ideal, +0.003).
+
+`gdr_afterburn` / `gdr_blend` stay in the ablation driver; afterburn is not a default.
+
+No `src/` edits. `out/` and `out_smoke/` untouched.

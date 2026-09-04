@@ -57,7 +57,7 @@ python Error_mitigation/run_mitigation_experiment.py --preset smoke
 python Error_mitigation/run_mitigation_experiment.py --preset full --ansatz both
 ```
 
-Useful flags: `--ansatz ecd|snap|both`, `--instance 0`, `--outdir Error_mitigation/out`, `--shots`, `--n-train`, `--seed`, `--readout ideal|readout_realistic|readout_strong|all`, `--families`, `--kappa-tau`, `--params`, `--twin-design span|default|adaptive`.
+Useful flags: `--ansatz ecd|snap|both`, `--instance 0`, `--outdir Error_mitigation/out`, `--shots`, `--n-train`, `--seed`, `--readout ideal|readout_realistic|readout_strong|all`, `--families`, `--kappa-tau`, `--params`, `--twin-design adaptive|span|default`.
 
 Cheap research loops (writes only under `out_research/`)::
 
@@ -102,7 +102,7 @@ Same gate count and depth as the target.
 
 - **ECD:** snap each qubit angle \(\theta\) onto \(\{0,\pi\}\). Then every ECD is an unconditional displacement plus a bit flip, and the ideal state is \(\lvert q\rangle\lvert\alpha_1\rangle\lvert\alpha_2\rangle\). The analytic histogram is the truncated 1-mode product evolution (ECD reduced to unconditional \(D(\pm\beta/2)\); SNAP is already local). Asserted against `statevector` at TVD \(<10^{-6}\) for every \(t_{\mathrm{free}}=0\) twin. A Poisson formula in the tracked \(|\alpha|^2\) is stored as a diagnostic: truncated \(D(\alpha)\) is not an ideal coherent state at large \(|\alpha|\), so Poisson TVD is allowed to be larger for SNAP.
 - **SNAP:** replace each SNAP phase list \(\theta_n\) by its least-squares affine fit \(b n\) (\(\theta_0=0\)). Affine SNAP is a rotation.
-- Default (`--twin-design span`): \(\lvert\beta\rvert\) / \(\lvert\alpha\rvert\) log-spaced in \([0.25, 1.35]\) (capped so \(\lvert\alpha\rvert\) stays inside the Fock grid). Wider \(\lvert\alpha\rvert^2\) span improves Fisher information for \((\eta, p_{nn})\). PR #6 used `U(0.5, 1)` (`--twin-design default`). `--twin-design adaptive` uses span on random circuits and the PR #6 mix on optimized ones (span regresses on some optimized comprehensive / high-κτ cells).
+- Default (`--twin-design adaptive`): log-spaced \(\lvert\alpha\rvert\in[0.25,1.35]\) on **random** circuits (Fisher for \((\eta,p_{nn})\)); PR #6 `U(0.5,1)` mix on **optimized** circuits. Span-only regresses on optimized comprehensive κτ=0.1 (ECD 0.416 vs PR #6 0.343). `--twin-design span` / `default` force one mix.
 - Default mix: 75% fully Gaussian (\(t_{\mathrm{free}}=0\)), 25% with \(t_{\mathrm{free}}=2\) non-Gaussian gates left in (Gaussian rank \(2^t\)).
 
 Twins are measured with the **same** readout level and shot count as the target. The Poisson check uses physical probabilities, never the readout-corrupted histogram.
@@ -120,7 +120,7 @@ Twins are measured with the **same** readout level and shot count as the target.
 | `gdr_residual` | yes | Oracle end-of-circuit kernel composed with a small extra hop/leak fitted on twins (especially \(t_{\mathrm{free}}>0\)). Aimed at ECD interleaving residual. |
 | `gdr_afterburn` | yes | Richer residual: oracle plus extra thermal-loss / hops / leak, fitted on \(t_{\mathrm{free}}>0\) twins. |
 | `gdr_blend` | yes | Convex mix of the `gdr_param` and `oracle_binomial` unfolds; mix weight chosen on twins. |
-| `gdr_select` | yes | Circuit-class recipe plus holdout. On **optimized** parameters pick `gdr_residual` (or `gdr_afterburn` if it wins the rank-2 twins). On **random** circuits, Gaussian holdout among `{safe, gdr_param, gdr_mid, gdr_damped}` — residual overfits random twins. |
+| `gdr_select` | yes | Circuit-class recipe plus holdout. On **optimized** parameters keep `gdr_param` (residual is reported separately; it hurts comprehensive / SNAP high-κτ once default twins are used). On **random** circuits, Gaussian holdout among `{safe, gdr_param, gdr_mid, gdr_damped}`. |
 | `gdr_full` | yes | Unstructured column-stochastic \(C_q\otimes C_1\otimes C_2\), alternating NNLS, initialized from `gdr_param`. Shows the cost of over-parametrization. |
 | `scalar_cdr` | no | Classic CDR on the energy only: \(E_{\mathrm{ideal}}\approx a_1 E_{\mathrm{noisy}}+a_0\). |
 | `zne_idle` | yes | Target at noise scales \((1,2,3)\); Richardson extrapolate each bin; clip and renormalize. Readout not scaled. |

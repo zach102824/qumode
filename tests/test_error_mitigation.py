@@ -246,8 +246,8 @@ def test_select_research_method_uses_optimized_recipe():
         gdr_tfree=0.04,
         circuit_kind="optimized",
     )
-    assert name == "gdr_residual"
-    assert extra["reason"] == "optimized_residual"
+    assert name == "gdr_param"
+    assert extra["reason"] == "optimized_gdr"
 
 
 def test_select_research_method_rejects_large_residual_hops():
