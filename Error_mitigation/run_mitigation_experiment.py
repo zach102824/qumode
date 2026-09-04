@@ -46,6 +46,15 @@ from qumode_vqe.noise import LossModel, NoiseConfig, noise_as_dict
 from qumode_vqe.params import random_parameters, random_snap_parameters
 from qumode_vqe.vqe import HybridSimulator, optimize_vqe
 
+from Error_mitigation.advanced import (
+    DEFAULT_VARIANTS,
+    GdrRegConfig,
+    fit_gdr_two_stage,
+    gdr_independent_registers,
+    readout_then_zne,
+    run_gdr_variant,
+    zne_then_readout,
+)
 from Error_mitigation.metrics import compare_histograms
 from Error_mitigation.mitigation import (
     apply_scalar_cdr,
@@ -107,18 +116,51 @@ PRESETS = {
         "fit_maxiter": 200,
         "zne_scales": (1, 2, 3),
     },
+    "diag": {
+        "shots": 4096,
+        "n_train": 12,
+        "kappa_tau": (0.003, 0.03),
+        "readout": ("ideal", "readout_realistic"),
+        "families": ("loss", "loss_thermal_dephasing"),
+        "opt_maxiter": 200,
+        "opt_restarts": 3,
+        "fit_maxiter": 80,
+        "zne_scales": (1, 2, 3),
+    },
 }
 
-HIST_METHODS = ("raw", "readout_only", "oracle_binomial", "gdr_param", "gdr_full", "zne_idle")
-BAR_METHODS = ("raw", "readout_only", "gdr_param", "oracle_binomial", "zne_idle")
+HIST_METHODS = (
+    "raw",
+    "readout_only",
+    "oracle_binomial",
+    "gdr_param",
+    "gdr_param_reg",
+    "gdr_eta",
+    "gdr_eta_nth",
+    "gdr_two_stage",
+    "gdr_indep",
+    "gdr_full",
+    "zne_idle",
+    "readout_then_zne",
+    "zne_then_readout",
+)
+BAR_METHODS = ("raw", "readout_only", "gdr_param", "gdr_param_reg", "gdr_eta", "oracle_binomial", "zne_idle", "readout_then_zne")
 METHOD_COLORS = {
     "ideal": "black",
     "raw": "0.55",
     "readout_only": "#e67e22",
     "oracle_binomial": "#27ae60",
     "gdr_param": "#2980b9",
+    "gdr_param_reg": "#1abc9c",
+    "gdr_eta": "#16a085",
+    "gdr_eta_nth": "#0e6655",
+    "gdr_two_stage": "#5dade2",
+    "gdr_indep": "#48c9b0",
+    "gdr_energy": "#148f77",
     "gdr_full": "#8e44ad",
     "zne_idle": "#c0392b",
+    "readout_then_zne": "#922b21",
+    "zne_then_readout": "#e74c3c",
     "scalar_cdr": "#7f8c8d",
 }
 READOUT_STYLES = {
@@ -317,7 +359,7 @@ def plot_summary(path: Path, records: list[dict], ansatz: str) -> None:
     families = list(dict.fromkeys(r["family"] for r in records if r["ansatz"] == ansatz))
     param_sets = ("random", "optimized")
     fig, axes = plt.subplots(len(families), 4, figsize=(13.5, 3.0 * max(len(families), 1)), squeeze=False)
-    methods = ("raw", "readout_only", "oracle_binomial", "gdr_param", "gdr_full", "zne_idle", "scalar_cdr")
+    methods = ("raw", "readout_only", "oracle_binomial", "gdr_param", "gdr_param_reg", "gdr_eta", "gdr_full", "zne_idle", "readout_then_zne", "scalar_cdr")
     for i, fam in enumerate(families):
         for j, pset in enumerate(param_sets):
             for k, metric in enumerate(("tvd", "dE")):
@@ -371,14 +413,15 @@ def _fmt(val, digits=4):
 def write_summary_txt(path: Path, records: list[dict], headline_kt: float) -> None:
     lines = [
         "Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)",
-        "Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_full, scalar_cdr, zne_idle",
+        "Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_param_reg, gdr_eta, "
+        "gdr_two_stage, gdr_full, scalar_cdr, zne_idle, readout_then_zne, zne_then_readout",
         "",
         "Headline at κτ = "
         + str(headline_kt)
         + "  (readout_only vs gdr_param vs oracle_binomial)",
         "",
     ]
-    head_methods = ("raw", "readout_only", "oracle_binomial", "gdr_param")
+    head_methods = ("raw", "readout_only", "oracle_binomial", "gdr_param", "gdr_param_reg", "gdr_eta", "readout_then_zne")
     for rec in records:
         if abs(float(rec["kappa_tau"]) - float(headline_kt)) > 1e-12:
             continue
@@ -407,6 +450,10 @@ def write_summary_txt(path: Path, records: list[dict], headline_kt: float) -> No
     path.write_text("\n".join(lines) + "\n")
 
 
+def _wanted(methods: tuple[str, ...] | None, name: str) -> bool:
+    return methods is None or name in methods
+
+
 def mitigate_target(
     *,
     p_ideal: np.ndarray,
@@ -421,51 +468,116 @@ def mitigate_target(
     energy_tensor: np.ndarray,
     hist_by_scale: dict[int, np.ndarray],
     fit_maxiter: int,
+    methods: tuple[str, ...] | None = None,
+    twin_t_free: list[int] | None = None,
 ) -> dict:
-    """Run every mitigation method on one (target, readout) histogram."""
+    """Run selected mitigation methods on one (target, readout) histogram."""
     out: dict = {}
     e_obs = energy_from_histogram(q_obs, energy_tensor)
-    out["raw"] = {"hist": q_obs, "energy": e_obs}
+    if _wanted(methods, "raw"):
+        out["raw"] = {"hist": q_obs, "energy": e_obs}
 
-    ro = run_readout_only(q_obs, spec, DIMS)
-    if ro is not None:
-        out["readout_only"] = {"hist": ro.histogram, "energy": energy_from_histogram(ro.histogram, energy_tensor)}
+    if _wanted(methods, "readout_only"):
+        ro = run_readout_only(q_obs, spec, DIMS)
+        if ro is not None:
+            out["readout_only"] = {"hist": ro.histogram, "energy": energy_from_histogram(ro.histogram, energy_tensor)}
 
-    cq_o, c1_o, c2_o = oracle_kernels(cfg, spec, ndepth, DIMS)
-    p_oracle = unfold(q_obs, cq_o, c1_o, c2_o)
-    out["oracle_binomial"] = {
-        "hist": p_oracle,
-        "energy": energy_from_histogram(p_oracle, energy_tensor),
-        "residual_tvd": oracle_residual(p_ideal, q_obs, cq_o, c1_o, c2_o),
-        "true_eta": float(np.exp(-cfg.cumulative_kappa_t(ndepth))),
-    }
+    if _wanted(methods, "oracle_binomial"):
+        cq_o, c1_o, c2_o = oracle_kernels(cfg, spec, ndepth, DIMS)
+        p_oracle = unfold(q_obs, cq_o, c1_o, c2_o)
+        out["oracle_binomial"] = {
+            "hist": p_oracle,
+            "energy": energy_from_histogram(p_oracle, energy_tensor),
+            "residual_tvd": oracle_residual(p_ideal, q_obs, cq_o, c1_o, c2_o),
+            "true_eta": float(np.exp(-cfg.cumulative_kappa_t(ndepth))),
+        }
 
-    theta, fit_info = fit_gdr_param(
-        p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
-    )
-    cq, c1, c2 = params_to_kernels(theta, DIMS)
-    p_gdr = unfold(q_obs, cq, c1, c2)
-    p_gdr_nnls = unfold(q_obs, cq, c1, c2, method="nnls")
-    out["gdr_param"] = {
-        "hist": p_gdr,
-        "hist_nnls": p_gdr_nnls,
-        "energy": energy_from_histogram(p_gdr, energy_tensor),
-        "fit": fit_info,
-        "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
-    }
+    theta = None
+    cq = c1 = c2 = None
+    if _wanted(methods, "gdr_param") or _wanted(methods, "gdr_full"):
+        theta, fit_info = fit_gdr_param(
+            p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
+        )
+        cq, c1, c2 = params_to_kernels(theta, DIMS)
+        if _wanted(methods, "gdr_param"):
+            p_gdr = unfold(q_obs, cq, c1, c2)
+            p_gdr_nnls = unfold(q_obs, cq, c1, c2, method="nnls")
+            out["gdr_param"] = {
+                "hist": p_gdr,
+                "hist_nnls": p_gdr_nnls,
+                "energy": energy_from_histogram(p_gdr, energy_tensor),
+                "fit": fit_info,
+                "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
+            }
 
-    cq_f, c1_f, c2_f = fit_gdr_full(p_twin_ideal, q_twin_obs, cq, c1, c2)
-    p_full = unfold(q_obs, cq_f, c1_f, c2_f)
-    out["gdr_full"] = {
-        "hist": p_full,
-        "energy": energy_from_histogram(p_full, energy_tensor),
-        "residual_tvd": oracle_residual(p_ideal, q_obs, cq_f, c1_f, c2_f),
-    }
+    for vname, vreg in DEFAULT_VARIANTS.items():
+        if not _wanted(methods, vname):
+            continue
+        reg = vreg
+        if vreg.energy_weight:
+            from dataclasses import replace as _dc_replace
 
-    a1, a0 = fit_scalar_cdr(e_twin_ideal, e_twin_noisy)
-    out["scalar_cdr"] = {"hist": None, "energy": apply_scalar_cdr(e_obs, a1, a0), "a1": a1, "a0": a0}
+            reg = _dc_replace(vreg, energy_tensor=energy_tensor)
+        out[vname] = run_gdr_variant(
+            q_obs,
+            p_twin_ideal,
+            q_twin_obs,
+            cfg,
+            spec,
+            ndepth,
+            DIMS,
+            energy_tensor,
+            name=vname,
+            maxiter=fit_maxiter,
+            reg=reg,
+        )
 
-    if hist_by_scale and 1 in hist_by_scale and 2 in hist_by_scale:
+    if _wanted(methods, "gdr_two_stage"):
+        tfree = twin_t_free if twin_t_free is not None else [0] * len(p_twin_ideal)
+        th2, info2 = fit_gdr_two_stage(
+            p_twin_ideal, q_twin_obs, tfree, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
+        )
+        cq2, c12, c22 = params_to_kernels(th2, DIMS)
+        p2 = unfold(q_obs, cq2, c12, c22)
+        out["gdr_two_stage"] = {
+            "hist": p2,
+            "energy": energy_from_histogram(p2, energy_tensor),
+            "fit": info2,
+            "residual_tvd": oracle_residual(p_ideal, q_obs, cq2, c12, c22),
+        }
+
+    if _wanted(methods, "gdr_indep"):
+        thi, infoi = gdr_independent_registers(
+            p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
+        )
+        cqi, c1i, c2i = params_to_kernels(thi, DIMS)
+        pi = unfold(q_obs, cqi, c1i, c2i)
+        out["gdr_indep"] = {
+            "hist": pi,
+            "energy": energy_from_histogram(pi, energy_tensor),
+            "fit": infoi,
+            "residual_tvd": oracle_residual(p_ideal, q_obs, cqi, c1i, c2i),
+        }
+
+    if _wanted(methods, "gdr_full"):
+        if cq is None:
+            theta, _ = fit_gdr_param(p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter)
+            cq, c1, c2 = params_to_kernels(theta, DIMS)
+        cq_f, c1_f, c2_f = fit_gdr_full(p_twin_ideal, q_twin_obs, cq, c1, c2)
+        p_full = unfold(q_obs, cq_f, c1_f, c2_f)
+        out["gdr_full"] = {
+            "hist": p_full,
+            "energy": energy_from_histogram(p_full, energy_tensor),
+            "fit": {"note": "unstructured Kronecker ALS"},
+            "residual_tvd": oracle_residual(p_ideal, q_obs, cq_f, c1_f, c2_f),
+        }
+
+    if _wanted(methods, "scalar_cdr"):
+        a1, a0 = fit_scalar_cdr(e_twin_ideal, e_twin_noisy)
+        out["scalar_cdr"] = {"hist": None, "energy": apply_scalar_cdr(e_obs, a1, a0), "a1": a1, "a0": a0}
+
+    have_zne = bool(hist_by_scale) and 1 in hist_by_scale and 2 in hist_by_scale
+    if have_zne and _wanted(methods, "zne_idle"):
         p_lin = zne_histogram(hist_by_scale, degree=1)
         extra = {"hist_linear": p_lin}
         if 3 in hist_by_scale:
@@ -476,6 +588,16 @@ def mitigate_target(
             extra["hist"] = p_lin
         extra["energy"] = energy_from_histogram(extra["hist"], energy_tensor)
         out["zne_idle"] = extra
+
+    if have_zne and _wanted(methods, "readout_then_zne"):
+        deg = 2 if 3 in hist_by_scale else 1
+        hist = readout_then_zne(hist_by_scale, spec, DIMS, degree=deg)
+        out["readout_then_zne"] = {"hist": hist, "energy": energy_from_histogram(hist, energy_tensor)}
+
+    if have_zne and _wanted(methods, "zne_then_readout"):
+        deg = 2 if 3 in hist_by_scale else 1
+        hist = zne_then_readout(hist_by_scale, spec, DIMS, degree=deg)
+        out["zne_then_readout"] = {"hist": hist, "energy": energy_from_histogram(hist, energy_tensor)}
     return out
 
 
@@ -498,10 +620,24 @@ def run(args: argparse.Namespace) -> dict:
         else ((args.readout,) if args.readout else preset["readout"])
     )
     families = tuple(preset["families"])
+    if getattr(args, "families", None):
+        families = tuple(args.families)
     kappas = tuple(preset["kappa_tau"])
+    if getattr(args, "kappa_tau", None):
+        kappas = tuple(float(x) for x in args.kappa_tau)
     ansätze = ("ecd", "snap") if args.ansatz == "both" else (args.ansatz,)
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
+    method_filter = None
+    if getattr(args, "methods", None):
+        method_filter = tuple(args.methods)
+    param_filter = None
+    if getattr(args, "param_set", None) and args.param_set != "both":
+        param_filter = args.param_set
+    skip_zne = bool(getattr(args, "skip_zne", False))
+    alpha_policy = str(getattr(args, "alpha_policy", None) or "uniform")
+    n_rank2 = getattr(args, "n_rank2", None)
+    t_free_rank = int(getattr(args, "t_free_rank", None) or 2)
 
     inst = load_instance(int(args.instance))
     energy_tensor = np.asarray(inst["energy_tensor"], dtype=float)
@@ -532,12 +668,22 @@ def run(args: argparse.Namespace) -> dict:
             n_restarts=int(preset["opt_restarts"]),
         )
         param_sets = {"random": x_random, "optimized": x_opt}
+        if param_filter:
+            param_sets = {param_filter: param_sets[param_filter]}
         sim_ideal = make_sim(ansatz, ndepth, energy_tensor, ground_qnm)
 
         for pset, xvec in param_sets.items():
-            rng_tw = np.random.default_rng(case_seed("twins", ansatz, pset, args.seed))
-            print(f"  building {n_train} Gaussian twins for {pset} ...")
-            twins = build_twins(sim_ideal, xvec, rng_tw, n_train=n_train)
+            rng_tw = np.random.default_rng(case_seed("twins", ansatz, pset, args.seed, alpha_policy, n_rank2, t_free_rank))
+            print(f"  building {n_train} Gaussian twins for {pset} (alpha={alpha_policy}) ...")
+            twins = build_twins(
+                sim_ideal,
+                xvec,
+                rng_tw,
+                n_train=n_train,
+                n_rank2=n_rank2,
+                alpha_policy=alpha_policy,
+                t_free_rank=t_free_rank,
+            )
             poisson_tvds.extend(t.poisson_tvd for t in twins if t.poisson_tvd is not None)
             product_tvds.extend(t.product_tvd for t in twins if t.product_tvd is not None)
             p_ideal = physical_probs(sim_ideal, xvec)
@@ -554,7 +700,8 @@ def run(args: argparse.Namespace) -> dict:
                     p_phys = physical_probs(sim_noisy, xvec)
                     twin_phys = [physical_probs(sim_noisy, tw.x) for tw in twins]
                     hist_phys_scale = {1: p_phys}
-                    for s in preset["zne_scales"]:
+                    zne_scales = () if skip_zne else tuple(preset["zne_scales"])
+                    for s in zne_scales:
                         if int(s) == 1:
                             continue
                         cfg_s = scale_noise(cfg, float(s))
@@ -601,6 +748,8 @@ def run(args: argparse.Namespace) -> dict:
                             energy_tensor=energy_tensor,
                             hist_by_scale=hist_by_scale,
                             fit_maxiter=int(preset["fit_maxiter"]),
+                            methods=method_filter,
+                            twin_t_free=[int(t.t_free) for t in twins],
                         )
                         metrics = {}
                         for name, blob in mitigated.items():
@@ -625,6 +774,8 @@ def run(args: argparse.Namespace) -> dict:
                             "metrics": metrics,
                             "oracle_residual_tvd": mitigated.get("oracle_binomial", {}).get("residual_tvd"),
                             "gdr_fit": mitigated.get("gdr_param", {}).get("fit"),
+                            "gdr_param_reg_fit": (mitigated.get("gdr_param_reg") or {}).get("fit"),
+                            "gdr_eta_fit": (mitigated.get("gdr_eta") or {}).get("fit"),
                             "scalar_cdr": {
                                 "a1": mitigated.get("scalar_cdr", {}).get("a1"),
                                 "a0": mitigated.get("scalar_cdr", {}).get("a0"),
@@ -633,11 +784,14 @@ def run(args: argparse.Namespace) -> dict:
                             "energy_ideal": e_ideal,
                         }
                         records.append(rec)
-                        tvd_raw = metrics["raw"]["tvd"]
+                        tvd_raw = metrics["raw"]["tvd"] if "raw" in metrics else None
                         tvd_gdr = (metrics.get("gdr_param") or {}).get("tvd")
+                        tvd_reg = (metrics.get("gdr_param_reg") or {}).get("tvd")
+                        tvd_eta = (metrics.get("gdr_eta") or {}).get("tvd")
                         print(
-                            f"    {ro:<20}  raw TVD={tvd_raw:.4f}  "
-                            f"gdr={_fmt(tvd_gdr)}  oracle={_fmt((metrics.get('oracle_binomial') or {}).get('tvd'))}"
+                            f"    {ro:<20}  raw={_fmt(tvd_raw)}  "
+                            f"gdr={_fmt(tvd_gdr)}  reg={_fmt(tvd_reg)}  eta={_fmt(tvd_eta)}  "
+                            f"oracle={_fmt((metrics.get('oracle_binomial') or {}).get('tvd'))}"
                         )
                         hists = {name: blob["hist"] for name, blob in mitigated.items() if blob.get("hist") is not None}
                         plot_rows.setdefault((family, ro), []).append(
@@ -685,7 +839,11 @@ def run(args: argparse.Namespace) -> dict:
         "family_descriptions": {f: family_description(f) for f in families},
         "kappa_tau": list(kappas),
         "readout_levels": list(readout_levels),
-        "methods": list(HIST_METHODS) + ["scalar_cdr"],
+        "alpha_policy": alpha_policy,
+        "n_rank2": n_rank2,
+        "t_free_rank": t_free_rank,
+        "skip_zne": skip_zne,
+        "methods": list(method_filter) if method_filter else list(HIST_METHODS) + ["scalar_cdr", "gdr_energy"],
         "poisson_tvd_max": None if not poisson_tvds else float(max(poisson_tvds)),
         "poisson_tvd_mean": None if not poisson_tvds else float(np.mean(poisson_tvds)),
         "product_tvd_max": None if not product_tvds else float(max(product_tvds)),
@@ -703,6 +861,18 @@ def run(args: argparse.Namespace) -> dict:
     return result
 
 
+def _csv_strs(value: str | None) -> tuple[str, ...] | None:
+    if not value:
+        return None
+    return tuple(part.strip() for part in str(value).split(",") if part.strip())
+
+
+def _csv_floats(value: str | None) -> tuple[float, ...] | None:
+    if not value:
+        return None
+    return tuple(float(part.strip()) for part in str(value).split(",") if part.strip())
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--preset", choices=tuple(PRESETS), default="smoke")
@@ -718,6 +888,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Override the preset readout levels.",
     )
+    p.add_argument("--families", type=_csv_strs, default=None, help="Comma-separated circuit families.")
+    p.add_argument("--kappa-tau", dest="kappa_tau", type=_csv_floats, default=None, help="Comma-separated κτ values.")
+    p.add_argument("--param-set", dest="param_set", choices=("random", "optimized", "both"), default="both")
+    p.add_argument("--methods", type=_csv_strs, default=None, help="Comma-separated method names.")
+    p.add_argument("--skip-zne", action="store_true", help="Skip idle-time scale simulations.")
+    p.add_argument(
+        "--alpha-policy",
+        dest="alpha_policy",
+        choices=("uniform", "wide", "stratified"),
+        default="uniform",
+    )
+    p.add_argument("--n-rank2", dest="n_rank2", type=int, default=None)
+    p.add_argument("--t-free-rank", dest="t_free_rank", type=int, default=2)
     return p.parse_args(argv)
 
 
