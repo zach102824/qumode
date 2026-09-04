@@ -856,6 +856,113 @@ def fit_gdr_residual(
     return (cq0, c1, c2), info
 
 
+def fit_gdr_split(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cq0: np.ndarray,
+    c10: np.ndarray,
+    c20: np.ndarray,
+    n_shots: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 80,
+    lam: float = 0.05,
+) -> tuple[tuple[np.ndarray, np.ndarray, np.ndarray], dict]:
+    """Per-register extra hops on top of a fitted GDR map, L2 toward zero.
+
+    Structured middle vs ``gdr_full``: five knobs instead of unconstrained
+    Kronecker ALS. Strong ridge keeps random-circuit hops from blowing up.
+    """
+    shots = max(int(n_shots), 1)
+    n_eff = max(len(p_ideals), 1)
+
+    def nll(x):
+        d1, u1, d2, u2, eps = (float(np.clip(v, 0.0, 0.3)) for v in x)
+        c1 = _normalize_columns(leak_kernel(shift_kernel(dims[1], u1, +1) @ shift_kernel(dims[1], d1, -1) @ c10, eps))
+        c2 = _normalize_columns(leak_kernel(shift_kernel(dims[2], u2, +1) @ shift_kernel(dims[2], d2, -1) @ c20, eps))
+        pen = 0.5 * float(lam) * shots * n_eff * (d1 * d1 + u1 * u1 + d2 * d2 + u2 * u2 + eps * eps)
+        return _kernel_nll(p_ideals, q_obs, shots, cq0, c1, c2) + pen
+
+    result = optimize.minimize(
+        nll,
+        np.zeros(5),
+        method="L-BFGS-B",
+        bounds=[(0.0, 0.3)] * 5,
+        options={"maxiter": int(maxiter), "ftol": 1e-10},
+    )
+    d1, u1, d2, u2, eps = (float(np.clip(v, 0.0, 0.3)) for v in result.x)
+    c1 = _normalize_columns(leak_kernel(shift_kernel(dims[1], u1, +1) @ shift_kernel(dims[1], d1, -1) @ c10, eps))
+    c2 = _normalize_columns(leak_kernel(shift_kernel(dims[2], u2, +1) @ shift_kernel(dims[2], d2, -1) @ c20, eps))
+    info = {
+        "kind": "gdr_split",
+        "p_down1": d1,
+        "p_up1": u1,
+        "p_down2": d2,
+        "p_up2": u2,
+        "eps": eps,
+        "hops": float(d1 + u1 + d2 + u2 + eps),
+        "lam": float(lam),
+        "nll": float(result.fun),
+    }
+    return (cq0, c1, c2), info
+
+
+def _band_residual(matrix: np.ndarray, sub: float, sup: float) -> np.ndarray:
+    dim = int(matrix.shape[0])
+    r = np.eye(dim, dtype=float)
+    s = float(np.clip(sub, -0.2, 0.2))
+    p = float(np.clip(sup, -0.2, 0.2))
+    for n in range(dim):
+        if n > 0:
+            r[n - 1, n] += s
+        if n + 1 < dim:
+            r[n + 1, n] += p
+    return _normalize_columns(r @ matrix)
+
+
+def fit_gdr_band(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cq0: np.ndarray,
+    c10: np.ndarray,
+    c20: np.ndarray,
+    n_shots: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 80,
+    lam: float = 0.05,
+) -> tuple[tuple[np.ndarray, np.ndarray, np.ndarray], dict]:
+    """Low-bandwidth residual: signed n±1 mix on top of the GDR kernels."""
+    shots = max(int(n_shots), 1)
+    n_eff = max(len(p_ideals), 1)
+
+    def nll(x):
+        sub1, sup1, sub2, sup2 = (float(v) for v in x)
+        c1 = _band_residual(c10, sub1, sup1)
+        c2 = _band_residual(c20, sub2, sup2)
+        pen = 0.5 * float(lam) * shots * n_eff * float(np.dot(x, x))
+        return _kernel_nll(p_ideals, q_obs, shots, cq0, c1, c2) + pen
+
+    result = optimize.minimize(
+        nll,
+        np.zeros(4),
+        method="L-BFGS-B",
+        bounds=[(-0.2, 0.2)] * 4,
+        options={"maxiter": int(maxiter), "ftol": 1e-10},
+    )
+    sub1, sup1, sub2, sup2 = (float(v) for v in result.x)
+    info = {
+        "kind": "gdr_band",
+        "sub1": sub1,
+        "sup1": sup1,
+        "sub2": sub2,
+        "sup2": sup2,
+        "lam": float(lam),
+        "nll": float(result.fun),
+    }
+    return (cq0, _band_residual(c10, sub1, sup1), _band_residual(c20, sub2, sup2)), info
+
+
 def _compose_afterburn(c0: np.ndarray, eta_x: float, nth_x: float, p_down: float, p_up: float, eps: float) -> np.ndarray:
     dim = int(c0.shape[0])
     k = thermal_loss_kernel(eta_x, nth_x, dim)

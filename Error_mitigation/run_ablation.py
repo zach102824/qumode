@@ -46,6 +46,8 @@ from Error_mitigation.mitigation import (
     fit_gdr_param,
     fit_gdr_residual,
     fit_gdr_ridge,
+    fit_gdr_split,
+    fit_gdr_band,
     fit_gdr_tfree,
     choose_mix_alpha,
     select_research_method,
@@ -110,6 +112,8 @@ ALL_METHODS = (
     "gdr_blend",
     "gdr_energy",
     "gdr_select",
+    "gdr_split",
+    "gdr_band",
     "scalar_cdr",
     "zne_idle",
     "readout_then_zne",
@@ -133,6 +137,8 @@ CHEAP_METHODS = (
     "gdr_interleave",
     "gdr_blend",
     "gdr_select",
+    "gdr_split",
+    "gdr_band",
     "zne_idle",
     "readout_then_zne",
     "zne_then_readout",
@@ -168,8 +174,19 @@ def twin_tag(args: argparse.Namespace) -> str:
     )
 
 
-def cache_key(ansatz: str, pset: str, family: str, kt: float, n_train: int, tag: str) -> str:
-    return f"{ansatz}_{pset}_{family}_kt{kt:g}_n{n_train}_{tag}"
+def cache_key(
+    ansatz: str,
+    pset: str,
+    family: str,
+    kt: float,
+    n_train: int,
+    tag: str,
+    hid: int = 0,
+) -> str:
+    key = f"{ansatz}_{pset}_{family}_kt{kt:g}_n{n_train}_{tag}"
+    if int(hid) != 0:
+        key += f"_h{int(hid):03d}"
+    return key
 
 
 def save_cache(path: Path, blob: dict) -> None:
@@ -204,7 +221,8 @@ def build_or_load_physics(
     cache_dir: Path,
 ) -> dict:
     tag = twin_tag(args)
-    key = cache_key(ansatz, pset, family, kt, n_train, tag)
+    hid = int(getattr(args, "instance", 0) or 0)
+    key = cache_key(ansatz, pset, family, kt, n_train, tag, hid=hid)
     path = cache_dir / f"{key}.npz"
     cached = None if args.no_cache else load_cache(path)
     if cached is not None:
@@ -366,7 +384,19 @@ def mitigate_research(
             }
 
     theta_base = fit_info_base = None
-    if any(m in methods for m in ("gdr_param", "gdr_damped", "gdr_floor", "gdr_reg", "gdr_full", "gdr_select")):
+    if any(
+        m in methods
+        for m in (
+            "gdr_param",
+            "gdr_damped",
+            "gdr_floor",
+            "gdr_reg",
+            "gdr_full",
+            "gdr_select",
+            "gdr_split",
+            "gdr_band",
+        )
+    ):
         theta_base, fit_info_base = fit_gdr_param(
             p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
         )
@@ -510,6 +540,42 @@ def mitigate_research(
             "hist": p_b,
             "energy": energy_from_histogram(p_b, energy_tensor),
             "fit": {**(fit_info_base or {}), **binfo, "kind": "gdr_blend"},
+        }
+
+    if "gdr_split" in methods and "gdr_param" in kernels:
+        (cq, c1, c2), info_sp = fit_gdr_split(
+            p_twin,
+            q_twins,
+            *kernels["gdr_param"],
+            spec.n_shots,
+            DIMS,
+            maxiter=min(fit_maxiter, 80),
+        )
+        kernels["gdr_split"] = (cq, c1, c2)
+        p = unfold(q_obs, cq, c1, c2)
+        out["gdr_split"] = {
+            "hist": p,
+            "energy": energy_from_histogram(p, energy_tensor),
+            "fit": info_sp,
+            "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
+        }
+
+    if "gdr_band" in methods and "gdr_param" in kernels:
+        (cq, c1, c2), info_bd = fit_gdr_band(
+            p_twin,
+            q_twins,
+            *kernels["gdr_param"],
+            spec.n_shots,
+            DIMS,
+            maxiter=min(fit_maxiter, 80),
+        )
+        kernels["gdr_band"] = (cq, c1, c2)
+        p = unfold(q_obs, cq, c1, c2)
+        out["gdr_band"] = {
+            "hist": p,
+            "energy": energy_from_histogram(p, energy_tensor),
+            "fit": info_bd,
+            "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
         }
 
     if "gdr_energy" in methods:

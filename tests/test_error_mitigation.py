@@ -28,6 +28,8 @@ from Error_mitigation.mitigation import (
     select_research_method,
     choose_mix_alpha,
     fit_gdr_afterburn,
+    fit_gdr_band,
+    fit_gdr_split,
     oracle_kernels,
     readout_then_zne,
     richardson_lucy,
@@ -331,3 +333,23 @@ def test_afterburn_kernels_column_stochastic():
     assert is_column_stochastic(c2)
     assert info["kind"] == "gdr_afterburn"
     assert 0.5 <= info["eta_extra"] <= 1.0
+
+
+def test_split_and_band_kernels_column_stochastic():
+    rng = np.random.default_rng(2)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    q = 0.9 * p + 0.1 * rng.random((2, 8, 8))
+    q = q / q.sum()
+    cq0, c10, c20 = np.eye(2), np.eye(8), np.eye(8)
+    (cq, c1, c2), info = fit_gdr_split([p], [q], cq0, c10, c20, 200, (2, 8, 8), maxiter=15)
+    assert is_column_stochastic(cq)
+    assert is_column_stochastic(c1)
+    assert is_column_stochastic(c2)
+    assert info["kind"] == "gdr_split"
+    assert info["hops"] >= 0.0
+    (cq, c1, c2), info = fit_gdr_band([p], [q], cq0, c10, c20, 200, (2, 8, 8), maxiter=15)
+    assert is_column_stochastic(cq)
+    assert is_column_stochastic(c1)
+    assert is_column_stochastic(c2)
+    assert info["kind"] == "gdr_band"
