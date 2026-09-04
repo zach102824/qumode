@@ -50,7 +50,9 @@ from Error_mitigation.metrics import compare_histograms, total_variation
 from Error_mitigation.mitigation import (
     apply_scalar_cdr,
     choose_damp_alpha,
+    choose_mix_alpha,
     damp_histogram,
+    fit_gdr_afterburn,
     fit_gdr_full,
     fit_gdr_holdout,
     fit_gdr_mid,
@@ -67,7 +69,8 @@ from Error_mitigation.mitigation import (
     run_readout_only,
     safe_histogram,
     score_unfold_tvd,
-    select_by_holdout,
+    select_research_method,
+    tfree_indices,
     unfold,
     zne_histogram,
 )
@@ -127,6 +130,8 @@ HIST_METHODS = (
     "gdr_damped",
     "gdr_mid",
     "gdr_residual",
+    "gdr_afterburn",
+    "gdr_blend",
     "gdr_select",
     "gdr_full",
     "zne_idle",
@@ -142,6 +147,8 @@ METHOD_COLORS = {
     "gdr_damped": "#1abc9c",
     "gdr_mid": "#16a085",
     "gdr_residual": "#8e44ad",
+    "gdr_afterburn": "#6c3483",
+    "gdr_blend": "#5dade2",
     "gdr_select": "#2c3e50",
     "gdr_full": "#9b59b6",
     "zne_idle": "#c0392b",
@@ -352,6 +359,8 @@ def plot_summary(path: Path, records: list[dict], ansatz: str) -> None:
         "gdr_damped",
         "gdr_mid",
         "gdr_residual",
+        "gdr_afterburn",
+        "gdr_blend",
         "gdr_select",
         "gdr_full",
         "zne_idle",
@@ -412,7 +421,8 @@ def write_summary_txt(path: Path, records: list[dict], headline_kt: float) -> No
     lines = [
         "Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)",
         "Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, "
-        "gdr_residual, gdr_select, gdr_full, scalar_cdr, zne_idle, readout_then_zne",
+        "gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, "
+        "zne_idle, readout_then_zne",
         "",
         "Headline at κτ = "
         + str(headline_kt)
@@ -527,26 +537,71 @@ def mitigate_target(
         "residual_tvd": oracle_residual(p_ideal, q_obs, cq_r, c1_r, c2_r),
     }
 
+    (cq_ab, c1_ab, c2_ab), info_ab = fit_gdr_afterburn(
+        p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=min(int(fit_maxiter), 120), t_free=t_free
+    )
+    kernels["gdr_afterburn"] = (cq_ab, c1_ab, c2_ab)
+    p_ab = unfold(q_obs, cq_ab, c1_ab, c2_ab)
+    out["gdr_afterburn"] = {
+        "hist": p_ab,
+        "energy": energy_from_histogram(p_ab, energy_tensor),
+        "fit": info_ab,
+        "residual_tvd": oracle_residual(p_ideal, q_obs, cq_ab, c1_ab, c2_ab),
+    }
+
+    gdr_u = [unfold(q, cq, c1, c2) for q in q_twin_obs]
+    ora_u = [unfold(q, cq_o, c1_o, c2_o) for q in q_twin_obs]
+    beta, binfo = choose_mix_alpha(p_twin_ideal, gdr_u, ora_u)
+    p_blend = damp_histogram(p_gdr, p_oracle, beta)
+    out["gdr_blend"] = {
+        "hist": p_blend,
+        "energy": energy_from_histogram(p_blend, energy_tensor),
+        "fit": {**fit_info, **binfo, "kind": "gdr_blend"},
+    }
+
     theta_h, info_h = fit_gdr_holdout(p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter)
     kernels["gdr_holdout"] = params_to_kernels(theta_h, DIMS)
     train_i, hold_i = holdout_indices(len(p_twin_ideal), 0.25)
     if hold_i.size == 0:
         hold_i = train_i
+    tf_i = tfree_indices(t_free)
+    if tf_i.size == 0:
+        tf_i = hold_i
     cand = [("safe", float(np.mean([total_variation(p_safe_twins[int(i)], p_twin_ideal[int(i)]) for i in hold_i])))]
     for name, (kcq, kc1, kc2) in kernels.items():
         cand.append((name, score_unfold_tvd(p_twin_ideal, q_twin_obs, kcq, kc1, kc2, hold_i)))
-    chosen, score, ranked = select_by_holdout(cand)
-    oracle_hold = next((c[1] for c in cand if c[0] == "oracle_binomial"), None)
-    if oracle_hold is not None and oracle_hold <= 1.05 * score + 1e-12:
-        chosen, score = "oracle_binomial", oracle_hold
+    # damp is an explicit candidate (do not apply it after another pick)
+    alpha_sel, _ = choose_damp_alpha(
+        [p_twin_ideal[int(i)] for i in hold_i],
+        [q_twin_obs[int(i)] for i in hold_i],
+        cq,
+        c1,
+        c2,
+        [p_safe_twins[int(i)] for i in hold_i],
+    )
+    d_tvds = []
+    for i in hold_i:
+        mix = damp_histogram(unfold(q_twin_obs[int(i)], cq, c1, c2), p_safe_twins[int(i)], alpha_sel)
+        d_tvds.append(total_variation(mix, p_twin_ideal[int(i)]))
+    cand.append(("gdr_damped", float(np.mean(d_tvds))))
+    chosen, extra = select_research_method(
+        cand,
+        residual_hops=float(info_r.get("hops", 0.0)),
+        residual_tfree=score_unfold_tvd(p_twin_ideal, q_twin_obs, cq_r, c1_r, c2_r, tf_i),
+        afterburn_tfree=score_unfold_tvd(p_twin_ideal, q_twin_obs, cq_ab, c1_ab, c2_ab, tf_i),
+        gdr_tfree=score_unfold_tvd(p_twin_ideal, q_twin_obs, cq, c1, c2, tf_i),
+        oracle_tfree=score_unfold_tvd(p_twin_ideal, q_twin_obs, cq_o, c1_o, c2_o, tf_i),
+    )
     if chosen == "safe":
         hist_sel = p_safe
+    elif chosen == "gdr_damped":
+        hist_sel = damp_histogram(p_gdr, p_safe, alpha_sel)
     else:
         hist_sel = unfold(q_obs, *kernels[chosen])
     out["gdr_select"] = {
         "hist": hist_sel,
         "energy": energy_from_histogram(hist_sel, energy_tensor),
-        "fit": {"kind": "gdr_select", "chosen": chosen, "hold_tvd": score, "ranked": ranked, **info_h},
+        "fit": {"kind": "gdr_select", "chosen": chosen, "damp_alpha": float(alpha_sel), **extra, **info_h},
     }
 
     cq_f, c1_f, c2_f = fit_gdr_full(p_twin_ideal, q_twin_obs, cq, c1, c2)
@@ -642,6 +697,8 @@ def run(args: argparse.Namespace) -> dict:
             rng_tw = np.random.default_rng(case_seed("twins", ansatz, pset, args.seed))
             print(f"  building {n_train} Gaussian twins for {pset} ...")
             twin_design = getattr(args, "twin_design", "span") or "span"
+            if twin_design == "adaptive":
+                twin_design = "span" if pset == "random" else "default"
             if twin_design == "span":
                 t_list, scales = designed_twin_plan(
                     n_train,
@@ -853,10 +910,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--mag-scale-max", type=float, default=None, dest="mag_scale_max")
     p.add_argument(
         "--twin-design",
-        choices=("default", "span"),
+        choices=("default", "span", "adaptive"),
         default="span",
         dest="twin_design",
-        help="span: log-spaced |α| (research default). default: U(0.5,1) PR #6 mix.",
+        help="span: log-spaced |α|. default: U(0.5,1) PR #6 mix. adaptive: span on random, default on optimized.",
     )
     return p.parse_args(argv)
 

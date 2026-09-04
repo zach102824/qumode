@@ -849,10 +849,99 @@ def fit_gdr_residual(
         "p_down": p_down,
         "p_up": p_up,
         "eps": eps,
+        "hops": float(p_down + p_up + eps),
         "success": bool(result.success),
         "nll": float(result.fun),
     }
     return (cq0, c1, c2), info
+
+
+def _compose_afterburn(c0: np.ndarray, eta_x: float, nth_x: float, p_down: float, p_up: float, eps: float) -> np.ndarray:
+    dim = int(c0.shape[0])
+    k = thermal_loss_kernel(eta_x, nth_x, dim)
+    k = shift_kernel(dim, p_down, -1) @ k
+    k = shift_kernel(dim, p_up, +1) @ k
+    k = leak_kernel(k, eps)
+    return _normalize_columns(k @ c0)
+
+
+def fit_gdr_afterburn(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 120,
+    t_free: list[int] | None = None,
+) -> tuple[tuple[np.ndarray, np.ndarray, np.ndarray], dict]:
+    """Oracle kernel plus extra thermal-loss / hops / leak (D, richer residual).
+
+    Interleaving on non-Gaussian states is not a pure n-independent hop. A
+    small extra η after the known-model map absorbs leftover loss that the
+    end-of-circuit binomial misses. Fitted on t_free>0 twins when present.
+    """
+    cq0, c10, c20 = oracle_kernels(cfg, spec, ndepth, dims)
+    if t_free is not None and any(int(t) > 0 for t in t_free):
+        keep = [i for i, t in enumerate(t_free) if int(t) > 0]
+        p_use, q_use = _select(p_ideals, np.asarray(keep)), _select(q_obs, np.asarray(keep))
+    else:
+        p_use, q_use = p_ideals, q_obs
+
+    def nll(x):
+        eta_x = float(np.clip(x[0], 0.5, 1.0))
+        nth_x = float(np.clip(x[1], 0.0, 0.3))
+        p_down, p_up, eps = (float(np.clip(v, 0.0, 0.3)) for v in x[2:])
+        c1 = _compose_afterburn(c10, eta_x, nth_x, p_down, p_up, eps)
+        c2 = _compose_afterburn(c20, eta_x, nth_x, p_down, p_up, eps)
+        return _kernel_nll(p_use, q_use, spec.n_shots, cq0, c1, c2)
+
+    result = optimize.minimize(
+        nll,
+        np.array([1.0, 0.0, 0.0, 0.0, 0.0]),
+        method="L-BFGS-B",
+        bounds=[(0.5, 1.0), (0.0, 0.3), (0.0, 0.3), (0.0, 0.3), (0.0, 0.3)],
+        options={"maxiter": int(maxiter), "ftol": 1e-10},
+    )
+    eta_x = float(np.clip(result.x[0], 0.5, 1.0))
+    nth_x = float(np.clip(result.x[1], 0.0, 0.3))
+    p_down, p_up, eps = (float(np.clip(v, 0.0, 0.3)) for v in result.x[2:])
+    c1 = _compose_afterburn(c10, eta_x, nth_x, p_down, p_up, eps)
+    c2 = _compose_afterburn(c20, eta_x, nth_x, p_down, p_up, eps)
+    info = {
+        "kind": "gdr_afterburn",
+        "eta_extra": eta_x,
+        "nth_extra": nth_x,
+        "p_down": p_down,
+        "p_up": p_up,
+        "eps": eps,
+        "hops": float(p_down + p_up + eps),
+        "success": bool(result.success),
+        "nll": float(result.fun),
+    }
+    return (cq0, c1, c2), info
+
+
+def choose_mix_alpha(
+    p_ideals: list[np.ndarray],
+    hists_a: list[np.ndarray],
+    hists_b: list[np.ndarray],
+    *,
+    alphas: np.ndarray | None = None,
+) -> tuple[float, dict]:
+    """Pick mix (1-α) a + α b that best matches twin ideals."""
+    grid = np.linspace(0.0, 1.0, 21) if alphas is None else np.asarray(alphas, dtype=float)
+    best_a, best_tvd = 0.0, None
+    for a in grid:
+        tvds = [
+            total_variation((1.0 - float(a)) * np.asarray(ha) + float(a) * np.asarray(hb), p)
+            for p, ha, hb in zip(p_ideals, hists_a, hists_b)
+        ]
+        mean = float(np.mean(tvds)) if tvds else 0.0
+        if best_tvd is None or mean < best_tvd:
+            best_tvd, best_a = mean, float(a)
+    return float(best_a), {"alpha": float(best_a), "hold_tvd": best_tvd}
 
 
 def _kernel_nll(p_ideals, q_obs, n_shots, cq, c1, c2) -> float:
@@ -934,6 +1023,63 @@ def select_by_holdout(candidates: list[tuple[str, float]]) -> tuple[str, float, 
         if score < best_score - 1e-12:
             best_name, best_score = name, score
     return best_name, float(best_score), ranked
+
+
+def tfree_indices(t_free: list[int] | None) -> np.ndarray:
+    if not t_free:
+        return np.array([], dtype=int)
+    return np.asarray([i for i, t in enumerate(t_free) if int(t) > 0], dtype=int)
+
+
+def select_research_method(
+    cand_hold: list[tuple[str, float]],
+    *,
+    residual_hops: float | None = None,
+    residual_tfree: float | None = None,
+    afterburn_tfree: float | None = None,
+    gdr_tfree: float | None = None,
+    oracle_tfree: float | None = None,
+    hop_cap: float = 0.06,
+    tfree_margin: float = 0.005,
+) -> tuple[str, dict]:
+    """Pick a method using t_free twins for interleaving, else Gaussian holdout.
+
+    End-of-circuit GDR always wins a Gaussian-only holdout, so a Gauss holdout
+    never selects ``gdr_residual``. Rank-2 twins carry interleaving; a *small*
+    residual hop/leak (the optimized-circuit signature) is required so random
+    circuits that overfit ``p_up≈0.15`` stay on ``gdr_param`` / ``gdr_damped``.
+    """
+    extra: dict = {
+        "residual_hops": None if residual_hops is None else float(residual_hops),
+        "residual_tfree": residual_tfree,
+        "afterburn_tfree": afterburn_tfree,
+        "gdr_tfree": gdr_tfree,
+        "oracle_tfree": oracle_tfree,
+        "hop_cap": float(hop_cap),
+    }
+    hops = None if residual_hops is None else float(residual_hops)
+    if (
+        hops is not None
+        and hops <= hop_cap
+        and residual_tfree is not None
+        and gdr_tfree is not None
+        and float(residual_tfree) <= float(gdr_tfree) - tfree_margin
+    ):
+        extra["reason"] = "tfree_residual"
+        return "gdr_residual", extra
+    if (
+        afterburn_tfree is not None
+        and hops is not None
+        and hops <= hop_cap
+        and gdr_tfree is not None
+        and float(afterburn_tfree) <= float(gdr_tfree) - tfree_margin
+        and (residual_tfree is None or float(afterburn_tfree) < float(residual_tfree) - 1e-12)
+    ):
+        extra["reason"] = "tfree_afterburn"
+        return "gdr_afterburn", extra
+    name, score, ranked = select_by_holdout(cand_hold)
+    extra.update({"reason": "holdout", "hold_tvd": float(score), "ranked": ranked})
+    return name, extra
 
 
 def damp_histogram(p_unfold: np.ndarray, p_safe: np.ndarray, alpha: float) -> np.ndarray:

@@ -24,6 +24,9 @@ from Error_mitigation.mitigation import (
     holdout_indices,
     observe_histogram,
     select_by_holdout,
+    select_research_method,
+    choose_mix_alpha,
+    fit_gdr_afterburn,
     oracle_kernels,
     readout_then_zne,
     richardson_lucy,
@@ -221,3 +224,53 @@ def test_designed_twin_plan_spans_magnitude():
     assert t_free.count(2) == 3
     assert min(scales) == pytest.approx(0.25)
     assert max(scales) == pytest.approx(1.35)
+
+
+def test_select_research_method_picks_residual_on_small_hops():
+    name, extra = select_research_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.035)],
+        residual_hops=0.02,
+        residual_tfree=0.03,
+        gdr_tfree=0.05,
+        oracle_tfree=0.04,
+    )
+    assert name == "gdr_residual"
+    assert extra["reason"] == "tfree_residual"
+
+
+def test_select_research_method_rejects_large_residual_hops():
+    name, extra = select_research_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.035)],
+        residual_hops=0.15,
+        residual_tfree=0.01,
+        gdr_tfree=0.05,
+        oracle_tfree=0.04,
+    )
+    assert name == "gdr_damped"
+    assert extra["reason"] == "holdout"
+
+
+def test_choose_mix_alpha_picks_better_end():
+    p = np.zeros((2, 2, 2))
+    p[0, 0, 0] = 1.0
+    a = np.zeros_like(p)
+    a[1, 1, 1] = 1.0
+    alpha, info = choose_mix_alpha([p], [a], [p], alphas=np.linspace(0, 1, 5))
+    assert alpha == pytest.approx(1.0)
+    assert info["hold_tvd"] == pytest.approx(0.0)
+
+
+def test_afterburn_kernels_column_stochastic():
+    cfg = circuit_noise("loss", 0.03)
+    spec = readout_spec("ideal", n_shots=200)
+    rng = np.random.default_rng(0)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    q = 0.9 * p + 0.1 * rng.random((2, 8, 8))
+    q = q / q.sum()
+    (cq, c1, c2), info = fit_gdr_afterburn([p], [q], cfg, spec, ndepth=5, dims=(2, 8, 8), maxiter=20)
+    assert is_column_stochastic(cq)
+    assert is_column_stochastic(c1)
+    assert is_column_stochastic(c2)
+    assert info["kind"] == "gdr_afterburn"
+    assert 0.5 <= info["eta_extra"] <= 1.0

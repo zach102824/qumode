@@ -39,13 +39,16 @@ from Error_mitigation.mitigation import (
     energy_weights,
     holdout_indices,
     score_unfold_tvd,
-    select_by_holdout,
+    fit_gdr_afterburn,
     fit_gdr_holdout,
     fit_gdr_mid,
     fit_gdr_param,
     fit_gdr_residual,
     fit_gdr_ridge,
     fit_gdr_tfree,
+    choose_mix_alpha,
+    select_research_method,
+    tfree_indices,
     fit_scalar_cdr,
     observe_histogram,
     oracle_kernels,
@@ -100,6 +103,8 @@ ALL_METHODS = (
     "gdr_mid",
     "gdr_tfree",
     "gdr_residual",
+    "gdr_afterburn",
+    "gdr_blend",
     "gdr_energy",
     "gdr_select",
     "scalar_cdr",
@@ -120,6 +125,8 @@ CHEAP_METHODS = (
     "gdr_mid",
     "gdr_tfree",
     "gdr_residual",
+    "gdr_afterburn",
+    "gdr_blend",
     "gdr_select",
     "zne_idle",
     "readout_then_zne",
@@ -422,17 +429,46 @@ def mitigate_research(
         p = unfold(q_obs, cq, c1, c2)
         out["gdr_tfree"] = {"hist": p, "energy": energy_from_histogram(p, energy_tensor), "fit": info}
 
-    if "gdr_residual" in methods:
-        (cq, c1, c2), info = fit_gdr_residual(
+    info_res: dict | None = None
+    if "gdr_residual" in methods or "gdr_select" in methods:
+        (cq, c1, c2), info_res = fit_gdr_residual(
             p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=min(fit_maxiter, 120), t_free=t_free
         )
         kernels["gdr_residual"] = (cq, c1, c2)
         p = unfold(q_obs, cq, c1, c2)
-        out["gdr_residual"] = {
-            "hist": p,
-            "energy": energy_from_histogram(p, energy_tensor),
-            "fit": info,
-            "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
+        if "gdr_residual" in methods:
+            out["gdr_residual"] = {
+                "hist": p,
+                "energy": energy_from_histogram(p, energy_tensor),
+                "fit": info_res,
+                "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
+            }
+
+    if "gdr_afterburn" in methods or "gdr_select" in methods:
+        (cq, c1, c2), info_ab = fit_gdr_afterburn(
+            p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=min(fit_maxiter, 120), t_free=t_free
+        )
+        kernels["gdr_afterburn"] = (cq, c1, c2)
+        p = unfold(q_obs, cq, c1, c2)
+        if "gdr_afterburn" in methods:
+            out["gdr_afterburn"] = {
+                "hist": p,
+                "energy": energy_from_histogram(p, energy_tensor),
+                "fit": info_ab,
+                "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
+            }
+
+    if "gdr_blend" in methods and "gdr_param" in kernels and "oracle_binomial" in kernels:
+        gdr_u = [unfold(q, *kernels["gdr_param"]) for q in q_twins]
+        ora_u = [unfold(q, *kernels["oracle_binomial"]) for q in q_twins]
+        beta, binfo = choose_mix_alpha(p_twin, gdr_u, ora_u)
+        p_g = unfold(q_obs, *kernels["gdr_param"])
+        p_o = unfold(q_obs, *kernels["oracle_binomial"])
+        p_b = damp_histogram(p_g, p_o, beta)
+        out["gdr_blend"] = {
+            "hist": p_b,
+            "energy": energy_from_histogram(p_b, energy_tensor),
+            "fit": {**(fit_info_base or {}), **binfo, "kind": "gdr_blend"},
         }
 
     if "gdr_energy" in methods:
@@ -466,6 +502,9 @@ def mitigate_research(
         train_i, hold_i = holdout_indices(len(p_twin), 0.25)
         if hold_i.size == 0:
             hold_i = train_i
+        tf_i = tfree_indices(t_free)
+        if tf_i.size == 0:
+            tf_i = hold_i
         cand_scores: list[tuple[str, float]] = []
         safe_hold = float(
             np.mean([total_variation(p_safe_twins[int(i)], p_twin[int(i)]) for i in hold_i])
@@ -490,12 +529,35 @@ def mitigate_research(
                 mix = damp_histogram(p_u, p_safe_twins[int(i)], damp_alpha)
                 d_tvds.append(total_variation(mix, p_twin[int(i)]))
             cand_scores.append(("gdr_damped", float(np.mean(d_tvds))))
-        chosen, score, ranked = select_by_holdout(cand_scores)
-        # Prefer the known-model map when it is within 5% of the best twin score
-        # (Gaussian twins otherwise over-prefer a fitted map that misses target interleaving).
-        oracle_hold = next((c[1] for c in cand_scores if c[0] == "oracle_binomial"), None)
-        if oracle_hold is not None and oracle_hold <= 1.05 * score + 1e-12:
-            chosen, score = "oracle_binomial", oracle_hold
+        res_hops = None if info_res is None else float(info_res.get("hops", 0.0))
+        res_tf = (
+            score_unfold_tvd(p_twin, q_twins, *kernels["gdr_residual"], tf_i)
+            if "gdr_residual" in kernels
+            else None
+        )
+        ab_tf = (
+            score_unfold_tvd(p_twin, q_twins, *kernels["gdr_afterburn"], tf_i)
+            if "gdr_afterburn" in kernels
+            else None
+        )
+        gdr_tf = (
+            score_unfold_tvd(p_twin, q_twins, *kernels["gdr_param"], tf_i)
+            if "gdr_param" in kernels
+            else None
+        )
+        ora_tf = (
+            score_unfold_tvd(p_twin, q_twins, *kernels["oracle_binomial"], tf_i)
+            if "oracle_binomial" in kernels
+            else None
+        )
+        chosen, extra = select_research_method(
+            cand_scores,
+            residual_hops=res_hops,
+            residual_tfree=res_tf,
+            afterburn_tfree=ab_tf,
+            gdr_tfree=gdr_tf,
+            oracle_tfree=ora_tf,
+        )
         if chosen == "safe":
             hist = p_safe_target
         elif chosen == "gdr_damped":
@@ -510,9 +572,8 @@ def mitigate_research(
             "fit": {
                 "kind": "gdr_select",
                 "chosen": chosen,
-                "hold_tvd": score,
                 "damp_alpha": float(damp_alpha),
-                "ranked": ranked,
+                **extra,
             },
         }
 
@@ -754,7 +815,6 @@ def run(args: argparse.Namespace) -> dict:
     (run_dir / "results.json").write_text(json.dumps(json_ready(result), indent=2))
     write_summary_txt(run_dir / "summary.txt", records, float(kappas[0]))
     write_ablation_md(run_dir / "ablation_summary.md", records, baseline, header)
-    write_ablation_md(outdir / "ablation_summary.md", records, baseline, header)
     print(f"\nwrote {run_dir / 'results.json'}")
     print(f"wrote {run_dir / 'ablation_summary.md'}")
     return result
