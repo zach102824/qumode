@@ -1081,17 +1081,21 @@ def choose_damp_alpha(
     *,
     alphas: np.ndarray | None = None,
     slack: float = 0.0,
+    safe_gap: float | None = None,
 ) -> tuple[float, dict]:
     """Pick mix p = (1-α) unfold(q) + α p_safe that best matches twin ideals.
 
     ``slack>0`` takes the *largest* α whose twin TVD is within ``slack`` of
-    the best (conservative floor). Used to refuse a tiny unfold gain that
-    over-corrects the target (SNAP random comprehensive κτ=0.003).
+    the best (conservative floor). If ``safe_gap`` is set, that conservatism
+    only applies when the safe histogram is already within ``safe_gap`` of
+    the best twin TVD — i.e. unfold barely helps on twins. Otherwise a flat
+    minimum would push α up and give back mid-κτ ECD wins.
     """
     grid = np.linspace(0.0, 1.0, 21) if alphas is None else np.asarray(alphas, dtype=float)
     unfolded = [unfold(q, cq, c1, c2) for q in q_obs]
     scores = []
     best_tvd = None
+    tvd_safe = None
     for a in grid:
         tvds = []
         for p_id, p_u, p_s in zip(p_ideals, unfolded, p_safe):
@@ -1099,14 +1103,27 @@ def choose_damp_alpha(
             tvds.append(total_variation(mix, p_id))
         mean = float(np.mean(tvds)) if tvds else 0.0
         scores.append((float(a), mean))
+        if abs(float(a) - 1.0) < 1e-12:
+            tvd_safe = mean
         if best_tvd is None or mean < best_tvd:
             best_tvd = mean
     sl = max(float(slack), 0.0)
+    gated = False
+    if safe_gap is not None and tvd_safe is not None and best_tvd is not None:
+        if float(tvd_safe) > float(best_tvd) + float(safe_gap):
+            sl = 0.0
+            gated = True
     best_a = 0.0
     for a, mean in scores:
         if mean <= float(best_tvd) + sl + 1e-15:
             best_a = a
-    return float(best_a), {"alpha": float(best_a), "hold_tvd": best_tvd, "slack": sl}
+    return float(best_a), {
+        "alpha": float(best_a),
+        "hold_tvd": best_tvd,
+        "slack": sl,
+        "tvd_safe": tvd_safe,
+        "safe_gated": gated,
+    }
 
 
 def score_unfold_tvd(

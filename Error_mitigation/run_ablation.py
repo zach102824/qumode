@@ -388,7 +388,7 @@ def mitigate_research(
             }
         if "gdr_floor" in methods:
             alpha_f, finfo = choose_damp_alpha(
-                p_twin, q_twins, cq, c1, c2, p_safe_twins, slack=0.003
+                p_twin, q_twins, cq, c1, c2, p_safe_twins, slack=0.003, safe_gap=0.01
             )
             p_f = damp_histogram(p_gdr, p_safe_target, alpha_f)
             out["gdr_floor"] = {
