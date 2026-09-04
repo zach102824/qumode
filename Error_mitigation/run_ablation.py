@@ -473,14 +473,10 @@ def mitigate_research(
         cand_scores.append(("safe", safe_hold))
         for name, (cq, c1, c2) in kernels.items():
             cand_scores.append((name, score_unfold_tvd(p_twin, q_twins, cq, c1, c2, hold_i)))
-        chosen, score, ranked = select_by_holdout(cand_scores)
-        if chosen == "safe":
-            hist = p_safe_target
-        else:
-            cq, c1, c2 = kernels[chosen]
-            p_u = unfold(q_obs, cq, c1, c2)
-            # If unfold wins on holdout but is close to safe, still allow a little damp.
-            alpha, _ = choose_damp_alpha(
+        damp_alpha = 0.0
+        if "gdr_param" in kernels:
+            cq, c1, c2 = kernels["gdr_param"]
+            damp_alpha, _ = choose_damp_alpha(
                 [p_twin[int(i)] for i in hold_i],
                 [q_twins[int(i)] for i in hold_i],
                 cq,
@@ -488,11 +484,36 @@ def mitigate_research(
                 c2,
                 [p_safe_twins[int(i)] for i in hold_i],
             )
-            hist = damp_histogram(p_u, p_safe_target, alpha) if alpha > 0.05 else p_u
+            d_tvds = []
+            for i in hold_i:
+                p_u = unfold(q_twins[int(i)], cq, c1, c2)
+                mix = damp_histogram(p_u, p_safe_twins[int(i)], damp_alpha)
+                d_tvds.append(total_variation(mix, p_twin[int(i)]))
+            cand_scores.append(("gdr_damped", float(np.mean(d_tvds))))
+        chosen, score, ranked = select_by_holdout(cand_scores)
+        # Prefer the known-model map when it is within 5% of the best twin score
+        # (Gaussian twins otherwise over-prefer a fitted map that misses target interleaving).
+        oracle_hold = next((c[1] for c in cand_scores if c[0] == "oracle_binomial"), None)
+        if oracle_hold is not None and oracle_hold <= 1.05 * score + 1e-12:
+            chosen, score = "oracle_binomial", oracle_hold
+        if chosen == "safe":
+            hist = p_safe_target
+        elif chosen == "gdr_damped":
+            cq, c1, c2 = kernels["gdr_param"]
+            hist = damp_histogram(unfold(q_obs, cq, c1, c2), p_safe_target, damp_alpha)
+        else:
+            cq, c1, c2 = kernels[chosen]
+            hist = unfold(q_obs, cq, c1, c2)
         out["gdr_select"] = {
             "hist": hist,
             "energy": energy_from_histogram(hist, energy_tensor),
-            "fit": {"kind": "gdr_select", "chosen": chosen, "hold_tvd": score, "ranked": ranked},
+            "fit": {
+                "kind": "gdr_select",
+                "chosen": chosen,
+                "hold_tvd": score,
+                "damp_alpha": float(damp_alpha),
+                "ranked": ranked,
+            },
         }
 
     return out

@@ -1,0 +1,31 @@
+ablation tag=micro_span  H000  shots=4096 n_train=20 twins=span  methods=raw,readout_only,oracle_binomial,gdr_param,gdr_ridge,gdr_holdout,gdr_damped,gdr_reg,gdr_mid,gdr_tfree,gdr_residual,gdr_select,zne_idle,readout_then_zne,zne_then_readout
+
+=== ecd N_d=5 ===
+  loaded optimized ecd params from optimized_params_ecd_h000_nd5.json
+    sim loss κτ=0.003 random  target+20 twins ...
+      physical histograms in 4.1s
+      wrote cache ecd_random_loss_kt0.003_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.003 ideal                raw=0.0618  gdr=0.0678
+    random    loss                   kt=0.003 readout_realistic    raw=0.0760  gdr=0.0640
+    random    loss                   kt=0.003 readout_strong       raw=0.1156  gdr=0.0905
+    sim loss κτ=0.1 random  target+20 twins ...
+      physical histograms in 6.0s
+      wrote cache ecd_random_loss_kt0.1_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.1 ideal                raw=0.3169  gdr=0.2367
+    random    loss                   kt=0.1 readout_realistic    raw=0.3024  gdr=0.2331
+    random    loss                   kt=0.1 readout_strong       raw=0.3190  gdr=0.2680
+    sim loss κτ=0.003 optimized  target+20 twins ...
+      physical histograms in 5.9s
+      wrote cache ecd_optimized_loss_kt0.003_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.003 ideal                raw=0.0373  gdr=0.0095
+    optimized loss                   kt=0.003 readout_realistic    raw=0.0835  gdr=0.0131
+    optimized loss                   kt=0.003 readout_strong       raw=0.1624  gdr=0.0133
+    sim loss κτ=0.1 optimized  target+20 twins ...
+      physical histograms in 4.7s
+      wrote cache ecd_optimized_loss_kt0.1_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.1 ideal                raw=0.7139  gdr=0.2130
+    optimized loss                   kt=0.1 readout_realistic    raw=0.7000  gdr=0.2073
+    optimized loss                   kt=0.1 readout_strong       raw=0.7144  gdr=0.2195
+
+wrote /workspace/Error_mitigation/out_research/micro_span/results.json
+wrote /workspace/Error_mitigation/out_research/micro_span/ablation_summary.md

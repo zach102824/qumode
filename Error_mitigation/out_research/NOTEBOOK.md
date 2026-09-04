@@ -87,3 +87,20 @@ See `out_research/<tag>/ablation_summary.md` for numbers. Same-run `gdr_param` i
 Random mild ideal is still tiny (raw 0.0618, gdr 0.0639, damped 0.0622) — next lever is twin span (C), not more regularization.
 
 PR #6 numbers on these cells differ by shot count (8192/40 vs 4096/20) but ranking matches.
+
+`gdr_select` v1 leaked an extra damp step and *hurt* optimized κτ=0.1 (0.30 vs gdr 0.20). Fixed: damp is now an explicit holdout candidate; oracle is preferred when within 5% of the best twin score.
+
+### `micro_span` — same grid, log-spaced |α| ∈ [0.25, 1.35], 5 rank-2 twins
+
+**C is a keep.** Same-run target histograms (same raw TVD); only the training twins changed.
+
+| cell | default `gdr_param` | span `gdr_param` | note |
+|------|--------------------:|-----------------:|------|
+| ECD random κτ=0.1 ideal | 0.362 (worse than raw 0.317) | **0.237** | flips the overfit failure |
+| ECD random κτ=0.1 realistic | 0.390 | **0.233** | + damped 0.220 |
+| ECD random κτ=0.1 strong | 0.405 | **0.268** | + damped 0.254 |
+| ECD random κτ=0.003 ideal | 0.064 | 0.068 | still tiny / slightly worse; `gdr_select`→safe 0.062 |
+| ECD opt κτ=0.003 ideal | 0.0114 | **0.0095** | residual/oracle still 0.0093 |
+| ECD opt κτ=0.1 | 0.197–0.213 | 0.207–0.220 | residual still best (~0.192–0.204) |
+
+Working recipe so far: **span twins + `gdr_param`**, plus `gdr_damped` on noisy random, `gdr_residual`/`oracle` on optimized, `readout_then_zne` when reporting ZNE under readout.
