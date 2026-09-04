@@ -1,0 +1,247 @@
+{
+  "tag": "leftover_auto_snap",
+  "shots": 8192,
+  "n_train": 40,
+  "fit_n_train": null,
+  "seed": 2026,
+  "twin_design": "default",
+  "twin_tag": "default_nr10_lo0.25_hi1.35_x0",
+  "families": [
+    "comprehensive"
+  ],
+  "kappa_tau": [
+    0.1
+  ],
+  "readout_levels": [
+    "ideal"
+  ],
+  "methods": [
+    "raw",
+    "gdr_param",
+    "gdr_damped",
+    "gdr_select"
+  ],
+  "hamiltonian_id": 0,
+  "records": [
+    {
+      "tag": "leftover_auto_snap",
+      "ansatz": "snap",
+      "ndepth": 2,
+      "params": "optimized",
+      "circuit_kind": "random",
+      "auto": {
+        "recipe": "random",
+        "e_opt": -5.177779985445292,
+        "e0": -7.110659991944239,
+        "deficit": 1.932880006498947,
+        "gap": 0.7780579835000001,
+        "abs_tol": 0.5,
+        "rel_gap": 0.2,
+        "thresh": 0.5
+      },
+      "family": "comprehensive",
+      "kappa_tau": 0.1,
+      "readout": "ideal",
+      "n_shots": 8192,
+      "n_train": 40,
+      "n_train_phys": 40,
+      "twin_design": "span",
+      "twin_tag": "span_nr10_lo0.25_hi1.35_x0",
+      "noise": {
+        "timing": "per_ecd_pair",
+        "loss_model": "lindblad",
+        "kappa_tau_used": 0.1,
+        "tau_application_s": 6.5e-07,
+        "cumulative_kappa_t_nd5": 1.0,
+        "nth_cav": 0.01,
+        "kappa_phi": 0.0,
+        "t1_cav": 0.000436,
+        "tau_ecd": 6.5e-07,
+        "enable_transmon": true,
+        "t1_q": 5e-05,
+        "t2_q": 3e-05,
+        "nth_q": 0.0,
+        "rotation_rel_error": 0.01,
+        "ecd_amp_rel_error": 0.01,
+        "ecd_phase_error": 0.0,
+        "kerr": 3141.592653589793,
+        "cross_kerr": 0.0,
+        "chi_dispersive": 0.0
+      },
+      "readout_spec": {
+        "level": "ideal",
+        "p01": 0.0,
+        "p10": 0.0,
+        "p_nn": 0.0,
+        "n_shots": 8192,
+        "seed": null
+      },
+      "metrics": {
+        "raw": {
+          "tvd": 0.7914449531131519,
+          "hellinger": 0.7696768012281427,
+          "energy_ideal": -5.177779985445281,
+          "energy_mit": -1.6872152124099347,
+          "dE": 3.4905647730353464,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 0.0,
+          "dPgs": 0.0,
+          "gibbs_ideal": -5.72360252671864,
+          "gibbs_mit": -3.9595249622720425,
+          "dGibbs": 1.7640775644465974,
+          "has_histogram": true
+        },
+        "gdr_param": {
+          "tvd": 0.6618958726312115,
+          "hellinger": 0.6516807716782416,
+          "energy_ideal": -5.177779985445281,
+          "energy_mit": -2.9235774446088145,
+          "dE": 2.2542025408364665,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 0.0,
+          "dPgs": 0.0,
+          "gibbs_ideal": -5.72360252671864,
+          "gibbs_mit": -5.033888661103456,
+          "dGibbs": 0.6897138656151842,
+          "has_histogram": true
+        },
+        "gdr_damped": {
+          "tvd": 0.6832623626796215,
+          "hellinger": 0.6574197925169745,
+          "energy_ideal": -5.177779985445281,
+          "energy_mit": -2.6763049981690386,
+          "dE": 2.5014749872762425,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 0.0,
+          "dPgs": 0.0,
+          "gibbs_ideal": -5.72360252671864,
+          "gibbs_mit": -4.892674112497252,
+          "dGibbs": 0.830928414221388,
+          "has_histogram": true
+        },
+        "gdr_select": {
+          "tvd": 0.688644854627845,
+          "hellinger": 0.6600480309848419,
+          "energy_ideal": -5.177779985445281,
+          "energy_mit": -2.6144868865590944,
+          "dE": 2.5632930988861866,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 0.0,
+          "dPgs": 0.0,
+          "gibbs_ideal": -5.72360252671864,
+          "gibbs_mit": -4.85401859472039,
+          "dGibbs": 0.8695839319982497,
+          "has_histogram": true
+        }
+      },
+      "fits": {
+        "gdr_param": {
+          "success": true,
+          "nll": 1055404.3770764654,
+          "nfev": 504,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "fitted": {
+            "eta1": 0.6371686058918047,
+            "eta2": 0.8397593998495683,
+            "nth1": 0.0,
+            "nth2": 0.23411075304333717,
+            "p_down": 0.0,
+            "p_up": 0.09968115396474865,
+            "eps": 0.0006318873719510547,
+            "p01": 0.0,
+            "p10": 0.0,
+            "p_nn1": 0.0,
+            "p_nn2": 0.4
+          },
+          "true_eta": 0.6703200460356393,
+          "true_nth": 0.01,
+          "true_p01": 0.0,
+          "true_p10": 0.0,
+          "true_p_nn": 0.0,
+          "d_eta1": 0.03315144014383464,
+          "d_eta2": 0.16943935381392894,
+          "d_p01": 0.0,
+          "d_p10": 0.0,
+          "d_p_nn1": 0.0,
+          "d_p_nn2": 0.4
+        },
+        "gdr_damped": {
+          "success": true,
+          "nll": 1055404.3770764654,
+          "nfev": 504,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "fitted": {
+            "eta1": 0.6371686058918047,
+            "eta2": 0.8397593998495683,
+            "nth1": 0.0,
+            "nth2": 0.23411075304333717,
+            "p_down": 0.0,
+            "p_up": 0.09968115396474865,
+            "eps": 0.0006318873719510547,
+            "p01": 0.0,
+            "p10": 0.0,
+            "p_nn1": 0.0,
+            "p_nn2": 0.4
+          },
+          "true_eta": 0.6703200460356393,
+          "true_nth": 0.01,
+          "true_p01": 0.0,
+          "true_p10": 0.0,
+          "true_p_nn": 0.0,
+          "d_eta1": 0.03315144014383464,
+          "d_eta2": 0.16943935381392894,
+          "d_p01": 0.0,
+          "d_p10": 0.0,
+          "d_p_nn1": 0.0,
+          "d_p_nn2": 0.4,
+          "alpha": 0.2,
+          "hold_tvd": 0.2096127170284478,
+          "slack": 0.0,
+          "tvd_safe": 0.3325716449274415,
+          "safe_gated": false,
+          "kind": "gdr_damped"
+        },
+        "gdr_select": {
+          "kind": "gdr_select",
+          "chosen": "gdr_damped",
+          "damp_alpha": 0.25,
+          "residual_hops": 0.4931208551257896,
+          "residual_tfree": 0.6443621680372942,
+          "afterburn_tfree": 0.6443621613580153,
+          "gdr_tfree": 0.44897281845620096,
+          "oracle_tfree": 0.6365004039750957,
+          "hop_cap": 0.06,
+          "circuit_kind": "random",
+          "reason": "holdout",
+          "hold_tvd": 0.19155936507427862,
+          "ranked": [
+            {
+              "name": "safe",
+              "hold_tvd": 0.31516879845941814
+            },
+            {
+              "name": "oracle_binomial",
+              "hold_tvd": 0.46100026928204746
+            },
+            {
+              "name": "gdr_param",
+              "hold_tvd": 0.20452753442575228
+            },
+            {
+              "name": "gdr_residual",
+              "hold_tvd": 0.5213976881894766
+            },
+            {
+              "name": "gdr_afterburn",
+              "hold_tvd": 0.5213976853020287
+            },
+            {
+              "name": "gdr_damped",
+              "hold_tvd": 0.19155936507427862
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

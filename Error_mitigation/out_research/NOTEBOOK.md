@@ -350,3 +350,42 @@ Zero twin bins below 0.5/shots or 2/shots, refit `gdr_param` (25 s). Occupancy a
 ### Phase 8 ship
 
 No official-recipe change. Tests: 26 `test_error_mitigation`. Stop new ideas.
+
+## Phase 9 — `params=auto`, SNAP, bootstrap
+
+Adaptive / gated damped / optimized `gdr_param` / `n_train=40` unchanged. No `src/` edits.
+
+### `params=auto` (drop as a default)
+
+`classify_opt_quality(E_opt, E0, gap)` treats the **optimized circuit** as random (span twins + holdout/damped select) if `E_opt - E0 > max(abs_tol, rel_gap * gap)` with defaults `abs_tol=0.5`, `rel_gap=0.2`. Ablation flag `--params auto` (not an official default).
+
+H000 ECD: E_opt=−6.230, E0=−7.111, deficit=**0.881**, gap=0.778 → default thresh 0.5 **fires**.  
+H001 ECD: deficit=**2.110** → fires.  
+SNAP H000: E_opt=−5.178, deficit=**1.933** → fires.
+
+| cell | recipe | raw | gdr_param | select | vs keep-bar |
+|------|--------|----:|----------:|-------:|-------------|
+| H001 opt comprehensive 0.1 (must flip lose→win) | auto=random | **0.788** | 0.829 | 0.817 (damped) | **still lose** |
+| H000 opt comprehensive 0.1 (must keep 0.343) | auto=random | 0.909 | 0.416 | 0.589 (damped) | **regress** |
+| H000 same, `abs_tol=1.0` | optimized | 0.909 | **0.343** | **0.343** | no regress, H001 still lose |
+| SNAP opt comprehensive 0.1 | auto=random | 0.791 | 0.662 | 0.689 | worse than default ~0.61 |
+
+No threshold both flips H001 and preserves the H000 0.343 cell: H001’s lose is the mid-quality VQE under comprehensive κτ=0.1 (Phase 8), not the recipe label. **Drop as a default.** `--params auto` stays research-only, default unused.
+
+### Bootstrap ±TVD (keep as notebook error bars)
+
+8 independent 8192-shot resamples, official recipe, H000 caches, 145 s.
+
+| cell | raw | gdr_param | select |
+|------|----:|----------:|-------:|
+| ECD random loss 0.1 | 0.301 ± 0.006 | 0.213 ± 0.012 | **0.208 ± 0.012** |
+| ECD random comprehensive 0.1 | 0.407 ± 0.005 | 0.337 ± 0.015 | **0.314 ± 0.013** |
+| ECD opt comprehensive 0.1 | 0.908 ± 0.003 | **0.346 ± 0.008** | **0.346 ± 0.008** |
+| ECD opt loss 0.1 | 0.697 ± 0.006 | **0.202 ± 0.003** | **0.202 ± 0.003** |
+| SNAP random comprehensive 0.003 | 0.039 ± 0.002 | 0.036 ± 0.004 | **0.036 ± 0.004** |
+
+Single-draw headlines sit inside these bands (ECD opt comprehensive 0.343 vs 0.346 ± 0.008). SNAP mild comprehensive select mean 0.036 still beats raw 0.039; the gated 0.0369 draw is typical, not a one-seed fluke.
+
+### Phase 9 ship
+
+Official defaults frozen. Tests: 27 `test_error_mitigation`.
