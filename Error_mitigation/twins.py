@@ -319,6 +319,36 @@ def statevector_histogram(sim, xvec: np.ndarray) -> np.ndarray:
     return probabilities_from_ket(np.asarray(psi.full()).reshape(-1), sim.dims)
 
 
+def mag_scale_range_for_twin(
+    index: int,
+    n_train: int,
+    policy: str,
+    default: tuple[float, float],
+) -> tuple[float, float]:
+    """Amplitude policy for identifiability of (η, p_nn).
+
+    ``uniform`` is the original U(lo, hi) draw.
+    ``wide`` stretches the interval so |α|² spans more of the Fock grid.
+    ``stratified`` splits twins into small / mid / large |β| buckets, which
+    breaks the loss-vs-readout degeneracy (loss scales with n, p_nn does not).
+    """
+    pol = str(policy).lower()
+    if pol in ("uniform", "default"):
+        return default
+    if pol == "wide":
+        return (0.20, 1.55)
+    if pol != "stratified":
+        raise ValueError(f"unknown alpha policy {policy!r}")
+    n = max(int(n_train), 1)
+    i = int(index) % n
+    third = max(n // 3, 1)
+    if i < third:
+        return (0.12, 0.40)
+    if i < 2 * third:
+        return (0.50, 1.00)
+    return (1.00, 1.60)
+
+
 def build_twins(
     sim,
     x_target: np.ndarray,
@@ -328,6 +358,8 @@ def build_twins(
     n_rank2: int | None = None,
     mag_scale_range: tuple[float, float] = (0.5, 1.0),
     product_tol: float = PRODUCT_TVD_TOL,
+    alpha_policy: str = "uniform",
+    t_free_rank: int = 2,
 ) -> list[Twin]:
     """Build ``n_train`` twins of ``x_target`` on a noiseless ``sim``.
 
@@ -336,6 +368,10 @@ def build_twins(
     asserted against ``sim.statevector`` at TVD ``product_tol``. A Poisson
     formula is stored as a diagnostic; it need not match at 1e-6 once
     truncated D(α) departs from an ideal coherent state.
+
+    ``alpha_policy`` controls the |α|² span (see :func:`mag_scale_range_for_twin`).
+    ``t_free_rank`` is the number of non-Gaussian gates left in the rank-2
+    slice (capped at ``2 * ndepth``).
     """
     ansatz = str(sim.ansatz).lower()
     ndepth = int(sim.ndepth)
@@ -344,14 +380,16 @@ def build_twins(
     if n_rank2 is None:
         n_rank2 = max(0, n_train // 4)
     n_gauss = n_train - int(n_rank2)
-    t_list = [0] * n_gauss + [min(2, ndepth * 2)] * int(n_rank2)
+    t_ng = min(int(t_free_rank), ndepth * 2)
+    t_list = [0] * n_gauss + [t_ng] * int(n_rank2)
     twins: list[Twin] = []
-    for t_free in t_list:
+    for i_tw, t_free in enumerate(t_list):
+        scale_range = mag_scale_range_for_twin(i_tw, n_train, alpha_policy, mag_scale_range)
         if ansatz == "ecd":
-            x = make_ecd_twin(x_target, ndepth, rng, t_free=t_free, mag_scale_range=mag_scale_range)
+            x = make_ecd_twin(x_target, ndepth, rng, t_free=t_free, mag_scale_range=scale_range)
         else:
             x = make_snap_twin(
-                x_target, ndepth, rng, t_free=t_free, nfocks=sim.nfocks, mag_scale_range=mag_scale_range
+                x_target, ndepth, rng, t_free=t_free, nfocks=sim.nfocks, mag_scale_range=scale_range
             )
         p_sv = statevector_histogram(sim, x)
         p_analytic = None

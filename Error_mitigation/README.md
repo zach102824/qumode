@@ -57,12 +57,20 @@ python Error_mitigation/run_mitigation_experiment.py --preset smoke
 python Error_mitigation/run_mitigation_experiment.py --preset full --ansatz both
 ```
 
-Useful flags: `--ansatz ecd|snap|both`, `--instance 0`, `--outdir Error_mitigation/out`, `--shots`, `--n-train`, `--seed`, `--readout ideal|readout_realistic|readout_strong|all`.
+Useful flags: `--ansatz ecd|snap|both`, `--instance 0`, `--outdir Error_mitigation/out`, `--shots`, `--n-train`, `--seed`, `--readout ideal|readout_realistic|readout_strong|all`, `--families`, `--kappa-tau`, `--param-set random|optimized|both`, `--methods`, `--skip-zne`, `--alpha-policy uniform|wide|stratified`, `--n-rank2`, `--t-free-rank`.
+
+Cheap research loops (do **not** write to `out_smoke/` or `out/`; those belong to the baseline agent):
+
+```bash
+python Error_mitigation/run_mitigation_experiment.py --preset diag --ansatz ecd --param-set random \
+  --outdir Error_mitigation/out_research/diag_ecd_random
+```
 
 | preset | shots | twins | κτ | readout | optimizer |
 |--------|------:|------:|----|---------|-----------|
 | `smoke` | 4000 | 12 | 0.003 | ideal + realistic | 1× L-BFGS-B, 5 iter |
 | `full` | 20000 | 40 | 0.003, 0.03, 0.1 | all three | 3× L-BFGS-B, 200 iter |
+| `diag` | 4096 | 12 | 0.003, 0.03 | ideal + realistic | 3× L-BFGS-B, 200 iter (only if optimized params are requested) |
 
 Each ansatz is run at **random** parameters and at the **noiselessly optimized** parameters. ECD uses \(N_d=5\) (40 params); SNAP uses \(N_d=2\) (36 params). Vacuum start.
 
@@ -109,9 +117,15 @@ Twins are measured with the **same** readout level and shot count as the target.
 | `readout_only` | yes | Invert only the calibrated readout confusion (Maciejewski et al., Quantum 4, 257). Skipped when readout is ideal. |
 | `oracle_binomial` | yes | Known-model end-of-circuit thermal-loss kernel with the true cumulative \(\eta=e^{-\sum\kappa\tau}\), composed with the **true** readout confusion. No learning. Residual TVD\((M p_{\mathrm{ideal}}, q_{\mathrm{noisy}})\) is the interleaved-vs-end-of-circuit error plus shot noise. |
 | `gdr_param` | yes | Fit \(M(\eta_1,\eta_2,n_{\mathrm{th}},p_\downarrow,p_\uparrow,\varepsilon,p_{01},p_{10},p_{nn})\) by multinomial MLE on the twins, then Richardson–Lucy unfold. Loss and readout are fitted **jointly**. |
+| `gdr_param_reg` | yes | Same kernel with L2 pull of η toward 1, extras toward 0, readout toward the calibrated spec; holdout CV on λ_η; identity-aware (shrink) unfolding so mild noise is not over-corrected. |
+| `gdr_eta` / `gdr_eta_nth` | yes | Freeze calibrated readout and extra hops; fit only circuit η (and \(n_{\mathrm{th}}\)). |
+| `gdr_two_stage` | yes | Gaussian (\(t_{\mathrm{free}}=0\)) twins identify η; leftover non-Gaussian twins identify leak/hops. |
+| `gdr_indep` | yes | Per-mode η, \(n_{\mathrm{th}}\) with frozen readout — structured middle ground vs `gdr_full`. |
 | `gdr_full` | yes | Unstructured column-stochastic \(C_q\otimes C_1\otimes C_2\), alternating NNLS, initialized from `gdr_param`. Shows the cost of over-parametrization. |
 | `scalar_cdr` | no | Classic CDR on the energy only: \(E_{\mathrm{ideal}}\approx a_1 E_{\mathrm{noisy}}+a_0\). |
 | `zne_idle` | yes | Target at noise scales \((1,2,3)\); Richardson extrapolate each bin; clip and renormalize. Readout not scaled. |
+| `readout_then_zne` | yes | Invert calibrated readout **at each idle-time scale**, then extrapolate. Fixes the detector-not-stretched failure of `zne_idle`. |
+| `zne_then_readout` | yes | Extrapolate first, then invert readout on the result (usually weaker than `readout_then_zne`). |
 
 Unfolding is Richardson–Lucy on the simplex; NNLS is stored as a `gdr_param` cross-check.
 
@@ -130,7 +144,8 @@ Unfolding is Richardson–Lucy on the simplex; NNLS is stored as a `gdr_param` c
 - **`loss` family, `oracle_binomial` residual:** should sit near the shot-noise floor. If it does not, interleaved loss (not the readout model) is the culprit.
 - **Heating:** \(g_k^{\mathrm{noisy}}/g_k^{\mathrm{ideal}}\) vs \(\eta^k\) should fail for `loss_thermal_dephasing`.
 - **Identifiability:** loss \(n\to n-1\) and readout \(n\to n\pm 1\) look the same on a single circuit. Twins that span a range of \(\lvert\alpha\rvert^2\) break the degeneracy because loss scales with \(n\) and \(p_{nn}\) does not. Check fitted \(\eta\) vs true cumulative \(\eta\), and fitted \(p_{nn}\) vs the `MeasurementConfig`.
-- **`zne_idle` under readout:** circuit noise is scaled, the detector is not, so extrapolation is biased.
+- **`zne_idle` under readout:** circuit noise is scaled, the detector is not, so extrapolation is biased. Prefer `readout_then_zne`.
+- **Mild loss (κτ=0.003):** physical TVD is ~0.02; 4k-shot TVD is ~0.06. Unconstrained `gdr_param` can lose to `raw` by unfolding shot noise. `gdr_param_reg` / `gdr_eta` exist for that.
 
 ## Caveats (known, not bugs)
 
@@ -139,3 +154,4 @@ Unfolding is Richardson–Lucy on the simplex; NNLS is stored as a `gdr_param` c
 3. Readout is a static uncorrelated per-register confusion. Real bitwise photon-number readout has correlated multi-bit errors and loss *during* the readout sequence (the HMM treatment of Curtis et al. is out of scope).
 4. `comprehensive` coherent ECD errors change the circuit, not a stochastic histogram kernel. GDR can only absorb them as an effective leak.
 5. Sampling overhead of binomial unfolding grows as \((2/\eta-1)^{n_{\max}}\). Keep mean photon number inside the Fock grid; the twins are amplitude-capped for that reason.
+6. Twin `--alpha-policy stratified` widens \(|\alpha|^2\) to identify \((\eta,p_{nn})\). Product-state TVD \(<10^{-6}\) is still asserted for every \(t_{\mathrm{free}}=0\) twin.
