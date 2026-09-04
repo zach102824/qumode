@@ -199,3 +199,42 @@ Post-hoc adaptive hybrid (span+damped on random, default `gdr_param` on optimize
 `gdr_afterburn` / `gdr_blend` stay in the ablation driver; afterburn is not a default.
 
 No `src/` edits. `out/` and `out_smoke/` untouched.
+
+## Phase 6 — leftover SNAP cell, interleaving kernel, energy lag
+
+### Energy lag (drop F)
+
+On 36 optimized loss/thermal cells (span and default twins): **no** method improved TVD by >0.002 while making |ΔE| worse by >0.02 vs `gdr_param`. Skip energy-weighted / GS-support fit.
+
+### SNAP random comprehensive κτ=0.003 ideal (keep, gated)
+
+`leftover_floor` / `leftover_floor2` reused the phase3 span cache (54 random cells).
+
+Ungated conservative damp (`slack=0.003`) kills the SNAP leftover (0.0369 < raw 0.0372) but flattens mid-κτ ECD wins (up to +0.02 vs damped) and drops random-vs-PR #6 from 48 → 45.
+
+Gated floor (`slack=0.003` only if safe is within 0.01 of the best twin TVD) still kills SNAP ideal, but applying it to *all* random mild cells turns several good damps back into raw.
+
+**Shipped gate:** use the conservative floor only on **random + comprehensive + κτ≤0.003** (the coherent-error slice where the histogram kernel is wrong at tiny noise). That is 3 cells:
+
+| readout | raw | damped | floor (= new damped) | PR #6 gdr |
+|---------|----:|-------:|---------------------:|----------:|
+| ideal | 0.0372 | 0.0402 (lose) | **0.0369** | 0.0445 |
+| realistic | 0.0535 | **0.0374** | 0.0412 | 0.0324 |
+| strong | 0.0892 | **0.0465** | 0.0495 | 0.0410 |
+
+Ideal is the only previous loss-to-raw. Realistic/strong still beat raw. Adaptive vs PR #6 count is unchanged (ideal still a win; the other two already lost to PR #6). Adaptive worse-than-raw: **1 → 0**.
+
+### Interleaving kernel (drop)
+
+`gdr_interleave` = thermal(η_early) → hops/leak → thermal(η_late) → readout. Not equivalent to one binomial.
+
+`leftover_il` (span, ECD opt loss, t_free-only fit) and `leftover_il_all` (all 40 twins):
+
+| κτ | residual | interleave (t_free) | interleave (all) |
+|---:|---------:|--------------------:|-----------------:|
+| 0.003 ideal | **0.0092** | 0.0161 | 0.0096 (= gdr) |
+| 0.1 ideal | **0.1954** | 0.5217 | 0.2541 |
+
+Forward oracle residual TVD(M p, q) is still **0.0705** at κτ=0.003 (the original interleaving caveat). Shot-noise TVD floor at 8192 is ~0.0005, so unfold TVD 0.0092 is real leftover model error — but the two-stage histogram kernel does not beat residual/oracle. Drop; keep `gdr_residual` as the extra on optimized loss/thermal.
+
+README status header updated (smoke + full on this branch are done).

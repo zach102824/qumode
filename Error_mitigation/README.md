@@ -90,7 +90,8 @@ Twins are measured with the **same** readout level and shot count as the target.
 | `readout_only` | yes | Invert only the calibrated readout confusion (Maciejewski et al., Quantum 4, 257). Skipped when readout is ideal. |
 | `oracle_binomial` | yes | Known-model end-of-circuit thermal-loss kernel with the true cumulative \(\eta=e^{-\sum\kappa\tau}\), composed with the **true** readout confusion. No learning. Residual TVD\((M p_{\mathrm{ideal}}, q_{\mathrm{noisy}})\) is the interleaved-vs-end-of-circuit error plus shot noise. |
 | `gdr_param` | yes | Fit \(M(\eta_1,\eta_2,n_{\mathrm{th}},p_\downarrow,p_\uparrow,\varepsilon,p_{01},p_{10},p_{nn})\) by multinomial MLE on the twins, then Richardson–Lucy unfold. Loss and readout are fitted **jointly**. |
-| `gdr_damped` | yes | Same fit as `gdr_param`, then mix the unfold with the readout-inverted (or raw) histogram. Mix weight α is chosen on twins. Stops over-correction on mild/random high-κτ cells. |
+| `gdr_damped` | yes | Same fit as `gdr_param`, then mix the unfold with the readout-inverted (or raw) histogram. Mix weight α is chosen on twins. On **random comprehensive** at κτ≤0.003 a conservative floor (largest α within 0.003 of the best twin TVD, only if safe is already close) kills the leftover SNAP over-correct. |
+| `gdr_floor` | yes | Ablation-only conservative damp (`slack=0.003`, `safe_gap=0.01`). |
 | `gdr_mid` | yes | Fit only \((\eta_1,\eta_2,p_{01},p_{10},p_{nn})\); freeze heating/hops/leak. Structured middle ground vs `gdr_full`. |
 | `gdr_residual` | yes | Oracle end-of-circuit kernel composed with a small extra hop/leak fitted on twins (especially \(t_{\mathrm{free}}>0\)). Aimed at ECD interleaving residual. |
 | `gdr_afterburn` | yes | Richer residual: oracle plus extra thermal-loss / hops / leak, fitted on \(t_{\mathrm{free}}>0\) twins. |

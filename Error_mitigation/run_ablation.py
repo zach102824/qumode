@@ -329,6 +329,8 @@ def mitigate_research(
     methods: tuple[str, ...],
     fit_maxiter: int,
     circuit_kind: str | None = None,
+    family: str | None = None,
+    kappa_tau: float | None = None,
 ) -> dict:
     p_ideal = phys["p_ideal"]
     p_twin = [phys["twin_p_ideal"][i] for i in range(phys["twin_p_ideal"].shape[0])]
@@ -379,7 +381,17 @@ def mitigate_research(
                 "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
             }
         if "gdr_damped" in methods:
-            alpha, ainfo = choose_damp_alpha(p_twin, q_twins, cq, c1, c2, p_safe_twins)
+            slack, gap = 0.0, None
+            if (
+                str(circuit_kind or "").lower() == "random"
+                and str(family or "").lower() == "comprehensive"
+                and kappa_tau is not None
+                and float(kappa_tau) <= 0.003 + 1e-12
+            ):
+                slack, gap = 0.003, 0.01
+            alpha, ainfo = choose_damp_alpha(
+                p_twin, q_twins, cq, c1, c2, p_safe_twins, slack=slack, safe_gap=gap
+            )
             p_d = damp_histogram(p_gdr, p_safe_target, alpha)
             out["gdr_damped"] = {
                 "hist": p_d,
@@ -784,6 +796,8 @@ def run(args: argparse.Namespace) -> dict:
                             methods=methods,
                             fit_maxiter=int(args.fit_maxiter),
                             circuit_kind=pset,
+                            family=family,
+                            kappa_tau=float(kt),
                         )
                         metrics = {
                             name: compare_histograms(

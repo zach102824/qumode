@@ -175,6 +175,20 @@ def test_damp_histogram_endpoints():
     assert mix.sum() == pytest.approx(1.0)
 
 
+def test_choose_damp_alpha_safe_gap_keeps_unfold_when_it_clearly_wins():
+    p = np.zeros((2, 4, 4))
+    p[0, 0, 0] = 1.0
+    q = np.zeros_like(p)
+    q[0, 0, 0] = 1.0
+    eye2, eye4 = np.eye(2), np.eye(4)
+    # identity kernels: unfold = q = p, safe = wrong
+    safe = np.zeros_like(p)
+    safe[1, 1, 1] = 1.0
+    a, info = choose_damp_alpha([p], [q], eye2, eye4, eye4, [safe], alphas=np.linspace(0, 1, 5), slack=0.2, safe_gap=0.01)
+    assert a == pytest.approx(0.0)
+    assert info["safe_gated"] is True
+
+
 def test_choose_damp_alpha_slack_picks_safer_mix():
     p = np.zeros((2, 4, 4))
     p[0, 0, 0] = 1.0
