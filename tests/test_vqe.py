@@ -177,6 +177,23 @@ def test_optimize_gibbs_adaptive_defaults_are_joint_seventy():
     assert sig.parameters["spsa_iter"].default == DEFAULT_ANSATZ_STEPS
 
 
+def test_optimize_gibbs_adaptive_defaults_to_vacuum_prep():
+    from qumode_vqe.circuit import vacuum_prep_params
+
+    rec = optimize_gibbs_adaptive(
+        None,
+        np.zeros(8),
+        ndepth=1,
+        nfocks=(4, 4),
+        outer_iter=0,
+        spsa_iter=0,
+        rng=np.random.default_rng(0),
+        energy_tensor=hybrid_energy_tensor((4, 4)),
+    )
+    np.testing.assert_allclose(rec.prep0, vacuum_prep_params())
+    np.testing.assert_allclose(rec.prep, vacuum_prep_params())
+
+
 def test_sampled_tail_is_shift_invariant_and_falls_back_on_a_peak():
     from qumode_vqe.eta import SampledTailEta, clamp_eta, weighted_quantile
 
@@ -275,3 +292,25 @@ def test_prep_step_scale_shrinks_warmup_prep_motion():
     d_tiny = float(np.linalg.norm(tiny.prep - prep0))
     assert d_tiny < d_full
     assert d_tiny > 0.0
+
+
+def test_optimize_vqe_snap_default_x0_matches_ndepth():
+    from qumode_vqe.params import n_snap_parameters
+
+    sim = HybridSimulator(ndepth=1, ansatz="snap")
+    opt = optimize_vqe(sim, method="BFGS", maxiter=1, record_every=0)
+    assert opt.x.shape == (n_snap_parameters(1, sim.nfocks),)
+    assert np.isfinite(opt.fun)
+
+
+def test_snap_bfgs_runs_on_paper_knapsack():
+    from qumode_vqe.params import n_snap_parameters, random_snap_parameters
+
+    sim = HybridSimulator(ndepth=2, ansatz="snap")
+    x0 = random_snap_parameters(2, sim.nfocks, np.random.default_rng(0))
+    opt = optimize_vqe(sim, x0, method="BFGS", maxiter=1, record_every=0)
+    ev = sim.evaluate(opt.x)
+    assert opt.x.shape == (n_snap_parameters(2, sim.nfocks),)
+    assert n_snap_parameters(2, sim.nfocks) == 36
+    assert np.isfinite(opt.fun)
+    assert len(ev.most_likely_bitstring) == 7

@@ -1,0 +1,34 @@
+# Gibbs η ablation: same starts, only the inverse temperature changes
+
+Cost is −ln⟨e^{−ηE}⟩ except the energy arm, which minimizes ⟨H⟩.
+sampled_tail sets η = ln(20)/(q25−q05) from the current Born histogram.
+Paper BKP formula: η = 1/(0.05|E_min|) = 1.666667 using E_min=−12.
+
+## R_y product  (20 mixed p-spin × 1 starts, 4 SPSA)
+
+policy               hits   rate  rel-gap     ⟨P*⟩      η0      η*
+energy             0/20    0.000    0.397      —     nan     nan
+fixed_soft         0/20    0.000    0.413      —   0.100   0.100
+fixed_paper        0/20    0.000    0.408      —   1.667   1.667
+fixed_oracle       0/20    0.000    0.389      —   3.176   3.176
+fixed_sharp        0/20    0.000    0.451      —  26.000  26.000
+tail_frozen        0/20    0.000    0.385      —   2.519   2.519
+tail_adaptive      0/20    0.000    0.385      —   2.519   2.519
+
+paired frozen vs adaptive: both 0, frozen-only 0, adaptive-only 0, neither 20
+paired energy vs adaptive: both 0, energy-only 0, adaptive-only 0, neither 20
+
+## QAOA p=2  (1 starts, 4 BFGS)
+
+policy               hits   rate  rel-gap     ⟨P*⟩      η0      η*
+energy             0/1     0.000    0.047   0.0154     nan     nan
+fixed_soft         0/1     0.000    0.017   0.0078   0.100   0.100
+fixed_paper        1/1     1.000    0.000   0.0521   1.667   1.667
+fixed_oracle       1/1     1.000    0.000   0.0521   1.667   1.667
+fixed_sharp        1/1     1.000    0.000   0.0650  26.000  26.000
+tail_frozen        0/1     0.000    0.171   0.0136   0.501   0.501
+tail_adaptive      0/1     0.000    0.194   0.0103   0.501   0.523
+
+paired frozen vs adaptive: both 0, frozen-only 0, adaptive-only 0, neither 1
+paired energy vs adaptive: both 0, energy-only 0, adaptive-only 0, neither 1
+

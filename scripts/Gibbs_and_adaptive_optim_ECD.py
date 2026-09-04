@@ -3,8 +3,7 @@
 
 Does **not** use a known ground-state label during optimization. Each trial:
 
-1. Draws one uniform random preparation ``(θ, α₁, α₂)`` that covers the qubit
-   Bloch interval and both cavity Fock ranges.
+1. Starts from the hybrid vacuum ``|0⟩⊗|0⟩⊗|0⟩`` (prep ``(θ, α₁, α₂) = 0``).
 2. Jointly SPSA-optimizes those five preparation variables **and** a random
    ECD ansatz. Prep is not frozen unless ``--spsa-iter N`` with ``N>0``.
 
@@ -27,7 +26,7 @@ from pathlib import Path
 
 import numpy as np
 
-from qumode_vqe.circuit import N_PREP_PARAMS, coherent_radius_max
+from qumode_vqe.circuit import N_PREP_PARAMS, coherent_radius_max, vacuum_prep_params
 from qumode_vqe.hamiltonian import (
     DEFAULT_NFOCKS,
     BKPInstance,
@@ -158,6 +157,12 @@ def random_prep(nfocks: tuple[int, int], seed: int) -> tuple[np.ndarray, np.ndar
     rng = np.random.default_rng(int(seed))
     unit = rng.random(N_PREP_PARAMS)
     return unit, unit_to_prep(unit, nfocks)
+
+
+def vacuum_start() -> tuple[np.ndarray, np.ndarray]:
+    """Hybrid vacuum |0,0,0⟩ as (unit cube, prep). Used for every Gibbs trial."""
+    zeros = vacuum_prep_params()
+    return zeros.copy(), zeros.copy()
 
 
 def _prep_unit_from(obj: dict) -> np.ndarray:
@@ -448,7 +453,7 @@ def run_knapsack_hamiltonian_sweep(
             flush=True,
         )
         for t in range(n_trials):
-            unit, prep0 = random_prep(nfocks, seed_base + PREP_SEED_OFFSET + 100 * h + t)
+            unit, prep0 = vacuum_start()
             jobs.append(
                 {
                     "trial": t,
@@ -633,7 +638,7 @@ def run_mixed_suite(
             flush=True,
         )
         for t in range(n_t):
-            unit, prep0 = random_prep(nfocks, seed_base + PREP_SEED_OFFSET + 100 * h + t)
+            unit, prep0 = vacuum_start()
             jobs.append(
                 {
                     "trial": t,
@@ -672,9 +677,7 @@ def run_mixed_suite(
             flush=True,
         )
         for t in range(n_t):
-            unit, prep0 = random_prep(
-                nfocks, seed_base + PREP_SEED_OFFSET + 10_000 + 100 * h + t
-            )
+            unit, prep0 = vacuum_start()
             jobs.append(
                 {
                     "trial": t,
@@ -1064,8 +1067,8 @@ def _jobs_from_saved_starts(
                 "family": family,
                 "kind": str(meta.get("kind", family)),
                 "seed_base": job_seed,
-                "prep0": np.asarray(start["prep0"], dtype=float),
-                "prep_unit": _prep_unit_from(start),
+                "prep0": vacuum_start()[1],
+                "prep_unit": vacuum_start()[0],
                 "x0": np.asarray(start["x0"], dtype=float),
                 "energy_tensor": np.asarray(meta["energy_tensor"], dtype=float),
                 "ndepth": ndepth,
@@ -1160,8 +1163,8 @@ def run_prep_schedule_compare(
                 "family": family,
                 "kind": str(meta.get("kind", family)),
                 "seed_base": job_seed,
-                "prep0": np.asarray(start["prep0"], dtype=float),
-                "prep_unit": _prep_unit_from(start),
+                "prep0": vacuum_start()[1],
+                "prep_unit": vacuum_start()[0],
                 "x0": np.asarray(start["x0"], dtype=float),
                 "energy_tensor": np.asarray(meta["energy_tensor"], dtype=float),
                 "ndepth": ndepth,
@@ -1423,7 +1426,7 @@ def run_experiment(
 ) -> dict:
     jobs = []
     for t in range(n_trials):
-        unit, prep0 = random_prep(nfocks, seed_base + PREP_SEED_OFFSET + t)
+        unit, prep0 = vacuum_start()
         jobs.append(
             {
                 "trial": t,
@@ -1554,9 +1557,7 @@ def run_mixed_p_spin_suite(
         hid = int(inst["hamiltonian_id"])
         for depth in depths:
             for t in range(n_t):
-                unit, prep0 = random_prep(
-                    nfocks, seed_base + PREP_SEED_OFFSET + 1000 * depth + 100 * hid + t
-                )
+                unit, prep0 = vacuum_start()
                 job = {
                     **spsa_fields,
                     "trial": t,
@@ -1598,7 +1599,7 @@ def run_mixed_p_spin_suite(
         "ansatz": ansatz,
         "objective": "gibbs",
         "eta_policy": "sampled_tail",
-        "initial_state": "Ry(theta)|0> ⊗ |α1> ⊗ |α2>",
+        "initial_state": "vacuum",
         "n_hamiltonians": len(instances),
         "n_trials_per_hamiltonian": n_t,
         "ndepths": [int(d) for d in depths],

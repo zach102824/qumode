@@ -1,2 +1,67 @@
 ECD init ablation  preset=paper  trials=50  maxiter=200  objectives=('energy',)  workers=7
 reusing vacuum ('energy',) from paper_result/out/fig5.json  (n=50)
+[1/50] t0  random_product  energy  P*=0.5943  E=-8.118  bits=0110000  nit=200
+[2/50] t2  random_product  energy  P*=0.0968  E=-6.009  bits=0110100  nit=200
+[3/50] t6  random_product  energy  P*=0.0000  E=-7.382  bits=1010000  nit=200
+[4/50] t5  random_product  energy  P*=0.9916  E=-11.964  bits=0110000  nit=200
+[5/50] t3  random_product  energy  P*=0.8881  E=-11.654  bits=0110000  nit=200
+[6/50] t4  random_product  energy  P*=0.9371  E=-11.714  bits=0110000  nit=200
+[7/50] t1  random_product  energy  P*=0.9207  E=-11.625  bits=0110000  nit=200
+[8/50] t9  random_product  energy  P*=0.0000  E=-6.521  bits=1010000  nit=200
+[9/50] t10  random_product  energy  P*=0.9788  E=-11.779  bits=0110000  nit=200
+[10/50] t8  random_product  energy  P*=0.0006  E=-7.946  bits=1010000  nit=200
+[11/50] t11  random_product  energy  P*=0.9877  E=-11.952  bits=0110000  nit=200
+[12/50] t13  random_product  energy  P*=0.9649  E=-11.783  bits=0110000  nit=200
+[13/50] t12  random_product  energy  P*=0.0000  E=-0.388  bits=1000101  nit=200
+[14/50] t7  random_product  energy  P*=0.0000  E=-6.841  bits=1010000  nit=177
+[15/50] t18  random_product  energy  P*=0.4719  E=-9.798  bits=0110000  nit=200
+[16/50] t14  random_product  energy  P*=0.0000  E=-5.571  bits=1001100  nit=200
+[17/50] t15  random_product  energy  P*=0.9599  E=-11.797  bits=0110000  nit=200
+[18/50] t16  random_product  energy  P*=0.0000  E=-8.365  bits=1010000  nit=200
+[19/50] t17  random_product  energy  P*=0.0000  E=-6.120  bits=0010110  nit=200
+[20/50] t20  random_product  energy  P*=0.0000  E=-1.444  bits=1000101  nit=200
+[21/50] t19  random_product  energy  P*=0.0000  E=-1.203  bits=1000101  nit=175
+ECD init ablation  preset=paper  trials=50  maxiter=200  objectives=('energy',)  workers=7
+reusing vacuum ('energy',) from paper_result/out/fig5.json  (n=50)
+resume: 20 trials from init_vacuum_vs_random.partial.json, 30 remaining of 50
+[1/30] t26  random_product  energy  P*=0.9744  E=-11.775  bits=0110000  nit=200
+[2/30] t23  random_product  energy  P*=0.0003  E=-2.688  bits=1001100  nit=200
+[3/30] t25  random_product  energy  P*=0.0004  E=-1.258  bits=0010010  nit=200
+[4/30] t24  random_product  energy  P*=0.0000  E=-1.838  bits=0010001  nit=200
+[5/30] t21  random_product  energy  P*=0.0040  E=-1.017  bits=1010100  nit=200
+[6/30] t22  random_product  energy  P*=0.9643  E=-11.820  bits=0110000  nit=200
+[7/30] t19  random_product  energy  P*=0.0000  E=-1.203  bits=1000101  nit=175
+[8/30] t29  random_product  energy  P*=0.0000  E=-0.198  bits=1000101  nit=133
+[9/30] t28  random_product  energy  P*=0.0000  E=-8.811  bits=1010000  nit=200
+[10/30] t32  random_product  energy  P*=0.0000  E=-8.148  bits=1010000  nit=200
+[11/30] t27  random_product  energy  P*=0.0000  E=-5.471  bits=1010000  nit=178
+[12/30] t31  random_product  energy  P*=0.0000  E=-5.320  bits=1010000  nit=200
+[13/30] t30  random_product  energy  P*=0.0000  E=-1.455  bits=1010110  nit=200
+[14/30] t39  random_product  energy  P*=0.0000  E=-0.689  bits=1000101  nit=101
+[15/30] t33  random_product  energy  P*=0.0001  E=-2.006  bits=1010010  nit=192
+[16/30] t34  random_product  energy  P*=0.0000  E=-5.996  bits=1010000  nit=200
+[17/30] t36  random_product  energy  P*=0.0026  E=-3.232  bits=1010100  nit=200
+[18/30] t35  random_product  energy  P*=0.0000  E=-6.191  bits=1010000  nit=200
+[19/30] t37  random_product  energy  P*=0.9465  E=-11.746  bits=0110000  nit=184
+[20/30] t38  random_product  energy  P*=0.0000  E=-2.779  bits=1100100  nit=200
+[21/30] t40  random_product  energy  P*=0.9830  E=-11.840  bits=0110000  nit=200
+[22/30] t41  random_product  energy  P*=0.0000  E=-0.585  bits=1000101  nit=200
+[23/30] t42  random_product  energy  P*=0.0000  E=-5.348  bits=1010000  nit=200
+[24/30] t43  random_product  energy  P*=0.0000  E=-4.844  bits=1010000  nit=200
+[25/30] t44  random_product  energy  P*=0.0000  E=-1.430  bits=1000101  nit=200
+[26/30] t45  random_product  energy  P*=0.0000  E=-5.779  bits=1010000  nit=200
+[27/30] t46  random_product  energy  P*=0.9566  E=-11.785  bits=0110000  nit=200
+[28/30] t47  random_product  energy  P*=0.0001  E=-8.927  bits=0011000  nit=200
+[29/30] t48  random_product  energy  P*=0.0001  E=-1.131  bits=0001110  nit=200
+[30/30] t49  random_product  energy  P*=0.0053  E=-1.514  bits=1010100  nit=200
+  energy: vacuum 17/50  random 15/50  mean P* 0.314 vs 0.273
+  wall 1267.5s
+# ECD-VQE initial state: vacuum vs random product (frozen prep)
+
+Same notebook ECD x0 and BFGS. Prep is not optimized.
+
+## energy ⟨H⟩
+- vacuum: 34%  (n=50)  mean P*=0.314
+- random: 30%  (n=50)  mean P*=0.273
+- paired: random-only 9, vacuum-only 11, both 6, neither 24
+Wrote paper_result/out/init_vacuum_vs_random.png

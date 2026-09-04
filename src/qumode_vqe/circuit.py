@@ -122,6 +122,11 @@ def vacuum(nfocks: Sequence[int]) -> qt.Qobj:
     return qt.tensor(qt.basis(2, 0), qt.basis(l1, 0), qt.basis(l2, 0))
 
 
+def vacuum_prep_params() -> np.ndarray:
+    """Prep vector for the hybrid vacuum: Ry(0)|0⟩ ⊗ |0⟩ ⊗ |0⟩."""
+    return np.zeros(N_PREP_PARAMS, dtype=float)
+
+
 def coherent_radius_max(n_fock: int) -> float:
     """Largest |α| whose mean occupation |α|² still fits in a length-``n_fock`` grid."""
     return float(np.sqrt(max(int(n_fock) - 1, 0)))

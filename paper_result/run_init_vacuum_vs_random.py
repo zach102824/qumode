@@ -344,6 +344,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Rebuild the figure from saved JSON.",
     )
+    parser.add_argument(
+        "--fresh",
+        action="store_true",
+        help="Ignore init_vacuum_vs_random.partial.json and rerun every job.",
+    )
     args = parser.parse_args(argv)
 
     preset = PRESETS[args.preset]
@@ -412,14 +417,45 @@ def main(argv: list[str] | None = None) -> int:
                 )
 
     partial = outdir / "init_vacuum_vs_random.partial.json"
+    already: list[dict] = []
+    if not args.fresh and partial.exists():
+        saved = json.loads(partial.read_text(encoding="utf-8"))
+        already = list(saved.get("records") or [])
+        done_keys = {
+            (int(r["trial"]), str(r.get("init")), str(r["objective"])) for r in already
+        }
+        n_before = len(jobs)
+        jobs = [
+            j
+            for j in jobs
+            if (
+                int(j["trial"]),
+                "vacuum" if j.get("prep") is None else "random_product",
+                str(j["objective"]),
+            )
+            not in done_keys
+        ]
+        print(
+            f"resume: {len(already)} trials from {partial.name}, "
+            f"{len(jobs)} remaining of {n_before}",
+            flush=True,
+        )
 
     def _ckpt(recs: list[dict]) -> None:
-        if len(recs) % 5 != 0:
+        combined = already + recs
+        if len(recs) % 5 != 0 and len(recs) != len(jobs):
             return
-        _save_json(partial, {"n_done": len(recs), "n_jobs": len(jobs), "records": [_trial_out(r) for r in recs]})
+        _save_json(
+            partial,
+            {
+                "n_done": len(combined),
+                "n_jobs": len(already) + len(jobs),
+                "records": [_trial_out(r) for r in combined],
+            },
+        )
 
     t0 = time.perf_counter()
-    records = _run_jobs(jobs, args.workers, checkpoint=_ckpt)
+    records = already + (_run_jobs(jobs, args.workers, checkpoint=_ckpt) if jobs else [])
     elapsed = time.perf_counter() - t0
 
     by: dict[str, dict[str, list[dict]]] = {obj: {"vacuum": [], "random_product": []} for obj in objectives}

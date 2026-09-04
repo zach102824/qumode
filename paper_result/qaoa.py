@@ -169,31 +169,54 @@ def optimize_qaoa(
     maxiter: int = 200,
     record_every: int = 10,
     adaptive_eta: bool = True,
+    fixed_eta: float | None = None,
     n: int = N,
 ) -> QAOAResult:
-    """BFGS on ⟨H⟩ or on the Gibbs cost −ln⟨e^{−ηE}⟩, same QAOA circuit."""
+    """BFGS on ⟨H⟩ or on the Gibbs cost −ln⟨e^{−ηE}⟩, same QAOA circuit.
+
+    ``fixed_eta`` holds η constant (no sampled-tail refresh). Otherwise Gibbs
+    uses ``SampledTailEta``, refreshed when ``adaptive_eta`` is true.
+    """
     x0 = np.asarray(x0, dtype=float).reshape(-1)
     e = np.asarray(energies, dtype=float).reshape(-1)
     p_layers = x0.size // 2
     objective = str(objective)
     if objective not in ("energy", "gibbs"):
         raise ValueError(f"unknown objective {objective!r}")
+    if fixed_eta is not None and objective != "gibbs":
+        raise ValueError("fixed_eta is only used with the Gibbs objective.")
 
     policy = None
     eta0 = None
+    held_eta = None if fixed_eta is None else float(fixed_eta)
     if objective == "gibbs":
-        policy = SampledTailEta()
-        eta0 = float(policy.initialize(e, born_probs(qaoa_state(x0, e, n))).eta)
+        if held_eta is not None:
+            eta0 = held_eta
 
-        def fun(params: np.ndarray) -> float:
-            p = born_probs(qaoa_state(params, e, n))
-            return gibbs_objective(p, e, float(policy.eta))
+            def fun(params: np.ndarray) -> float:
+                p = born_probs(qaoa_state(params, e, n))
+                return gibbs_objective(p, e, held_eta)
+
+        else:
+            policy = SampledTailEta()
+            eta0 = float(policy.initialize(e, born_probs(qaoa_state(x0, e, n))).eta)
+
+            def fun(params: np.ndarray) -> float:
+                p = born_probs(qaoa_state(params, e, n))
+                return gibbs_objective(p, e, float(policy.eta))
 
     else:
 
         def fun(params: np.ndarray) -> float:
             p = born_probs(qaoa_state(params, e, n))
             return float(np.dot(p, e))
+
+    def _eta_now() -> float | None:
+        if held_eta is not None:
+            return held_eta
+        if policy is None:
+            return None
+        return float(policy.eta)
 
     history: list[dict] = []
     iteration = {"k": 0}
@@ -205,7 +228,7 @@ def optimize_qaoa(
             p_now = born_probs(qaoa_state(xk, e, n))
             policy.maybe_update(k, int(maxiter), e, p_now)
         if record_every > 0 and k % int(record_every) == 0:
-            eta = None if policy is None else float(policy.eta)
+            eta = _eta_now()
             rec = histogram_stats(born_probs(qaoa_state(xk, e, n)), e, eta=eta)
             rec["iteration"] = k
             rec["cost"] = float(fun(xk))
@@ -214,7 +237,7 @@ def optimize_qaoa(
     options = {"maxiter": int(maxiter), "disp": False}
     result = sciopt.minimize(fun, x0, method="BFGS", callback=callback, options=options)
     x = np.asarray(result.x, dtype=float)
-    eta = None if policy is None else float(policy.eta)
+    eta = _eta_now()
     probs = born_probs(qaoa_state(x, e, n))
     final = histogram_stats(probs, e, eta=eta)
     final["cost"] = float(result.fun)
@@ -252,6 +275,7 @@ def run_qaoa_trial(job: dict) -> dict:
         maxiter=int(job["maxiter"]),
         record_every=int(job.get("record_every", 10)),
         adaptive_eta=bool(job.get("adaptive_eta", True)),
+        fixed_eta=None if job.get("fixed_eta") is None else float(job["fixed_eta"]),
     )
     rec = {
         "trial": int(job["trial"]),

@@ -30,13 +30,36 @@ from qumode_vqe.circuit import (
 )
 from qumode_vqe.eta import SampledTailEta
 from qumode_vqe.hamiltonian import TARGET_QNM
-from qumode_vqe.params import random_parameters
+from qumode_vqe.params import n_parameters, n_snap_parameters, random_parameters, random_snap_parameters
 from qumode_vqe.vqe import HybridSimulator, OptimizeResult, _history_record, optimize_vqe
 
 
 def notebook_ecd_x0(ndepth: int, rng: np.random.Generator) -> np.ndarray:
     """Initial ECD vector from the published knapsack notebook."""
     return random_parameters(int(ndepth), rng)
+
+
+def notebook_snap_x0(
+    ndepth: int,
+    rng: np.random.Generator,
+    nfocks: tuple[int, int] = (8, 8),
+) -> np.ndarray:
+    """SNAP+D start with the same Uniform ranges as the ECD notebook guess."""
+    return random_snap_parameters(int(ndepth), nfocks, rng)
+
+
+def notebook_x0(
+    ansatz: str,
+    ndepth: int,
+    rng: np.random.Generator,
+    nfocks: tuple[int, int] = (8, 8),
+) -> np.ndarray:
+    kind = str(ansatz).lower()
+    if kind == "snap":
+        return notebook_snap_x0(ndepth, rng, nfocks)
+    if kind == "ecd":
+        return notebook_ecd_x0(ndepth, rng)
+    raise ValueError(f"unknown ansatz {ansatz!r}")
 
 
 def unit_to_prep(u: np.ndarray, nfocks: tuple[int, int]) -> np.ndarray:
@@ -165,12 +188,18 @@ def run_ecd_trial(job: dict) -> dict:
 
     ``job["prep"]`` is optional. If omitted, the hybrid vacuum is used.
     If present, it is the frozen 5-vector of Ry(θ)|0⟩ ⊗ |α₁⟩ ⊗ |α₂⟩.
+    ``job["ansatz"]`` is ``"ecd"`` (default) or ``"snap"``.
     """
     x0 = np.asarray(job["x0"], dtype=float)
     objective = str(job.get("objective", "energy"))
+    ansatz = str(job.get("ansatz", "ecd")).lower()
+    ndepth = int(job.get("ndepth", 5))
     prep = job.get("prep")
     init = "random_product" if prep is not None else "vacuum"
-    sim = HybridSimulator(ndepth=int(job.get("ndepth", 5)), cost_kind=objective)
+    sim = HybridSimulator(ndepth=ndepth, cost_kind=objective, ansatz=ansatz)
+    expected = n_snap_parameters(ndepth, sim.nfocks) if ansatz == "snap" else n_parameters(ndepth)
+    if x0.size != expected:
+        raise ValueError(f"Expected {expected} {ansatz} parameters for ndepth={ndepth}, got {x0.size}.")
     if prep is not None:
         sim.initial_state = prep_params_to_ket(np.asarray(prep, dtype=float), sim.nfocks)
     ev0 = sim.evaluate(x0)
@@ -187,6 +216,9 @@ def run_ecd_trial(job: dict) -> dict:
     rec = {
         "trial": int(job["trial"]),
         "seed": int(job["seed"]),
+        "ansatz": ansatz,
+        "ndepth": ndepth,
+        "n_parameters": int(sim.n_ansatz_params()),
         "objective": objective,
         "init": init,
         "prep": None if prep is None else np.asarray(prep, dtype=float),

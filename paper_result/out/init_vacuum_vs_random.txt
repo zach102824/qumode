@@ -1,0 +1,9 @@
+# ECD-VQE initial state: vacuum vs random product (frozen prep)
+
+Same notebook ECD x0 and BFGS. Prep is not optimized.
+
+## energy ⟨H⟩
+- vacuum: 34%  (n=50)  mean P*=0.314
+- random: 30%  (n=50)  mean P*=0.273
+- paired: random-only 9, vacuum-only 11, both 6, neither 24
+

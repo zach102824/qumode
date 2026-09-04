@@ -19,6 +19,7 @@ from .circuit import (
     prep_bounds,
     prep_params_to_ket,
     project_prep_params,
+    vacuum_prep_params,
     snap_ansatz_unitary,
     snap_displacement_pair,
     uer_layer,
@@ -42,6 +43,7 @@ from .params import (
     n_snap_parameters,
     paper_bounds,
     random_parameters,
+    random_snap_parameters,
     snap_bounds,
     unpack,
     unpack_snap,
@@ -431,7 +433,10 @@ def optimize_vqe(
     """
     rng = rng or np.random.default_rng()
     if x0 is None:
-        x0 = random_parameters(sim.ndepth, rng, sim.layout)
+        if sim.ansatz == "snap":
+            x0 = random_snap_parameters(sim.ndepth, sim.nfocks, rng)
+        else:
+            x0 = random_parameters(sim.ndepth, rng, sim.layout)
     x0 = np.asarray(x0, dtype=float)
 
     stochastic = sim.measurement.n_shots is not None and observed
@@ -459,7 +464,12 @@ def optimize_vqe(
 
     opt_bounds = bounds
     if opt_bounds is None and method_u == "L-BFGS-B":
-        opt_bounds = paper_bounds(sim.ndepth) if sim.layout is ParamLayout.PAPER else cartesian_bounds(sim.ndepth)
+        if sim.ansatz == "snap":
+            opt_bounds = snap_bounds(sim.ndepth, sim.nfocks)
+        elif sim.layout is ParamLayout.PAPER:
+            opt_bounds = paper_bounds(sim.ndepth)
+        else:
+            opt_bounds = cartesian_bounds(sim.ndepth)
 
     history: list[dict] = []
     nfev_counter = {"n": 0}
@@ -640,7 +650,7 @@ DEFAULT_ANSATZ_STEPS = 0
 
 
 def optimize_gibbs_adaptive(
-    prep0: np.ndarray,
+    prep0: np.ndarray | None,
     x0: np.ndarray,
     *,
     ndepth: int = 5,
@@ -663,11 +673,13 @@ def optimize_gibbs_adaptive(
 ) -> AdaptiveGibbsResult:
     """Joint prep+ansatz SPSA (default: 70 steps, prep never frozen).
 
-    Default ``outer_iter=70``, ``spsa_iter=0``: one SPSA trajectory on the
-    full 45-vector (5 preparation coordinates + ECD ansatz). Prep stays live
-    for the whole budget. ``spsa_iter>0`` is an optional ablation that
-    freezes prep after the joint stage and continues the **same** ansatz
-    vector (not a new seed) for ``spsa_iter`` more steps.
+    The hybrid ket always starts at vacuum ``|0⟩⊗|0⟩⊗|0⟩`` unless ``prep0``
+    is supplied. Default ``outer_iter=70``, ``spsa_iter=0``: one SPSA
+    trajectory on the full 45-vector (5 preparation coordinates + ECD
+    ansatz). Prep stays live for the whole budget. ``spsa_iter>0`` is an
+    optional ablation that freezes prep after the joint stage and
+    continues the **same** ansatz vector (not a new seed) for
+    ``spsa_iter`` more steps.
 
     ``ansatz`` is ``"ecd"`` (8 parameters per UER layer) or ``"snap"``
     (gauge-fixed SNAP+displacement, 18 parameters per layer at nfocks=(8,8)).
@@ -681,7 +693,10 @@ def optimize_gibbs_adaptive(
     """
     rng = rng or np.random.default_rng()
     nfocks = (int(nfocks[0]), int(nfocks[1]))
-    prep0 = project_prep_params(prep0, nfocks)
+    if prep0 is None:
+        prep0 = vacuum_prep_params()
+    else:
+        prep0 = project_prep_params(prep0, nfocks)
     x0 = np.asarray(x0, dtype=float).reshape(-1)
     ansatz = str(ansatz).lower()
     expected = n_snap_parameters(ndepth, nfocks) if ansatz == "snap" else n_parameters(ndepth)

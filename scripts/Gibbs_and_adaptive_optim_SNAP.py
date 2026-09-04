@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Noiseless Gibbs VQE: joint SPSA on preparation and SNAP+displacement.
 
-Same mixed p-spin Hamiltonians, seeds, five-parameter coherent preparation,
+Same mixed p-spin Hamiltonians, seeds, vacuum initial state,
 sampled-tail Gibbs cost, and SPSA gains as ``Gibbs_and_adaptive_optim_ECD.py``.
 Each SNAP+displacement layer is
 

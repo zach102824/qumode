@@ -10,10 +10,12 @@ from qumode_vqe.circuit import (
     ecd_ansatz_unitary,
     ecd_gate,
     ecd_rotation_pair,
+    prep_params_to_ket,
     qubit_rotation,
     ry_coherent_product,
     uer_layer,
     vacuum,
+    vacuum_prep_params,
 )
 from qumode_vqe.params import UnpackedParams, pack, unpack
 from qumode_vqe.vqe import HybridSimulator
@@ -36,6 +38,11 @@ def test_qubit_rotation_is_unitary():
     assert (r.dag() * r - ident).norm() < 1e-12
     det = np.linalg.det(np.asarray(r.full()))
     assert abs(abs(det) - 1.0) < 1e-10
+
+
+def test_vacuum_prep_params_are_the_hybrid_vacuum():
+    ket = prep_params_to_ket(vacuum_prep_params(), NFOCKS)
+    assert (ket - vacuum(NFOCKS)).norm() < 1e-12
 
 
 def test_ecd_is_unitary():

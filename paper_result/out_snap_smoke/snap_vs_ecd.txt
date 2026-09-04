@@ -1,0 +1,28 @@
+# SNAP vs ECD: most-likely bitstring is the knapsack optimum (0110000)
+
+Same Fig. 5 protocol (vacuum, notebook Uniform init, BFGS).
+SNAP depths 1–2 keep the parameter count at or under ECD N_d=5 (40 params).
+
+## ECD-VQE  N_d=5  params=40  n=1
+- energy: 0%  (0/1)  mean P*=0.005
+- Gibbs:  0%  (0/1)  mean P*=0.061
+- paired: Gibbs-only 0, energy-only 0, both 0, neither 1
+
+## SNAP-VQE  N_d=1  params=18  n=1
+- energy: 0%  (0/1)  mean P*=0.046
+- Gibbs:  0%  (0/1)  mean P*=0.049
+- paired: Gibbs-only 0, energy-only 0, both 0, neither 1
+
+## SNAP-VQE  N_d=2  params=36  n=1
+- energy: 0%  (0/1)  mean P*=0.000
+- Gibbs:  0%  (0/1)  mean P*=0.036
+- paired: Gibbs-only 0, energy-only 0, both 0, neither 1
+
+## Same-seed ECD N_d=5 vs SNAP N_d=1
+- energy: both 0, ECD-only 0, SNAP-only 0, neither 1
+- Gibbs:  both 0, ECD-only 0, SNAP-only 0, neither 1
+
+## Same-seed ECD N_d=5 vs SNAP N_d=2
+- energy: both 0, ECD-only 0, SNAP-only 0, neither 1
+- Gibbs:  both 0, ECD-only 0, SNAP-only 0, neither 1
+
