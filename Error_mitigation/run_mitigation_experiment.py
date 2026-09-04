@@ -46,18 +46,28 @@ from qumode_vqe.noise import LossModel, NoiseConfig, noise_as_dict
 from qumode_vqe.params import random_parameters, random_snap_parameters
 from qumode_vqe.vqe import HybridSimulator, optimize_vqe
 
-from Error_mitigation.metrics import compare_histograms
+from Error_mitigation.metrics import compare_histograms, total_variation
 from Error_mitigation.mitigation import (
     apply_scalar_cdr,
+    choose_damp_alpha,
+    damp_histogram,
     fit_gdr_full,
+    fit_gdr_holdout,
+    fit_gdr_mid,
     fit_gdr_param,
+    fit_gdr_residual,
     fit_scalar_cdr,
+    holdout_indices,
     moment_ratios,
     observe_histogram,
     oracle_kernels,
     oracle_residual,
     params_to_kernels,
+    readout_then_zne,
     run_readout_only,
+    safe_histogram,
+    score_unfold_tvd,
+    select_by_holdout,
     unfold,
     zne_histogram,
 )
@@ -70,7 +80,7 @@ from Error_mitigation.noise_models import (
     readout_spec,
     scale_noise,
 )
-from Error_mitigation.twins import build_twins
+from Error_mitigation.twins import build_twins, designed_twin_plan
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUTDIR = HERE / "out"
@@ -109,16 +119,33 @@ PRESETS = {
     },
 }
 
-HIST_METHODS = ("raw", "readout_only", "oracle_binomial", "gdr_param", "gdr_full", "zne_idle")
-BAR_METHODS = ("raw", "readout_only", "gdr_param", "oracle_binomial", "zne_idle")
+HIST_METHODS = (
+    "raw",
+    "readout_only",
+    "oracle_binomial",
+    "gdr_param",
+    "gdr_damped",
+    "gdr_mid",
+    "gdr_residual",
+    "gdr_select",
+    "gdr_full",
+    "zne_idle",
+    "readout_then_zne",
+)
+BAR_METHODS = ("raw", "readout_only", "gdr_param", "gdr_select", "oracle_binomial", "readout_then_zne")
 METHOD_COLORS = {
     "ideal": "black",
     "raw": "0.55",
     "readout_only": "#e67e22",
     "oracle_binomial": "#27ae60",
     "gdr_param": "#2980b9",
-    "gdr_full": "#8e44ad",
+    "gdr_damped": "#1abc9c",
+    "gdr_mid": "#16a085",
+    "gdr_residual": "#8e44ad",
+    "gdr_select": "#2c3e50",
+    "gdr_full": "#9b59b6",
     "zne_idle": "#c0392b",
+    "readout_then_zne": "#d35400",
     "scalar_cdr": "#7f8c8d",
 }
 READOUT_STYLES = {
@@ -317,7 +344,20 @@ def plot_summary(path: Path, records: list[dict], ansatz: str) -> None:
     families = list(dict.fromkeys(r["family"] for r in records if r["ansatz"] == ansatz))
     param_sets = ("random", "optimized")
     fig, axes = plt.subplots(len(families), 4, figsize=(13.5, 3.0 * max(len(families), 1)), squeeze=False)
-    methods = ("raw", "readout_only", "oracle_binomial", "gdr_param", "gdr_full", "zne_idle", "scalar_cdr")
+    methods = (
+        "raw",
+        "readout_only",
+        "oracle_binomial",
+        "gdr_param",
+        "gdr_damped",
+        "gdr_mid",
+        "gdr_residual",
+        "gdr_select",
+        "gdr_full",
+        "zne_idle",
+        "readout_then_zne",
+        "scalar_cdr",
+    )
     for i, fam in enumerate(families):
         for j, pset in enumerate(param_sets):
             for k, metric in enumerate(("tvd", "dE")):
@@ -371,14 +411,15 @@ def _fmt(val, digits=4):
 def write_summary_txt(path: Path, records: list[dict], headline_kt: float) -> None:
     lines = [
         "Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)",
-        "Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_full, scalar_cdr, zne_idle",
+        "Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, "
+        "gdr_residual, gdr_select, gdr_full, scalar_cdr, zne_idle, readout_then_zne",
         "",
         "Headline at κτ = "
         + str(headline_kt)
-        + "  (readout_only vs gdr_param vs oracle_binomial)",
+        + "  (readout_only vs gdr_param vs gdr_select vs oracle_binomial)",
         "",
     ]
-    head_methods = ("raw", "readout_only", "oracle_binomial", "gdr_param")
+    head_methods = ("raw", "readout_only", "oracle_binomial", "gdr_param", "gdr_select")
     for rec in records:
         if abs(float(rec["kappa_tau"]) - float(headline_kt)) > 1e-12:
             continue
@@ -421,17 +462,22 @@ def mitigate_target(
     energy_tensor: np.ndarray,
     hist_by_scale: dict[int, np.ndarray],
     fit_maxiter: int,
+    t_free: list[int] | None = None,
 ) -> dict:
     """Run every mitigation method on one (target, readout) histogram."""
     out: dict = {}
     e_obs = energy_from_histogram(q_obs, energy_tensor)
     out["raw"] = {"hist": q_obs, "energy": e_obs}
+    p_safe = safe_histogram(q_obs, spec, DIMS)
+    p_safe_twins = [safe_histogram(q, spec, DIMS) for q in q_twin_obs]
+    kernels: dict[str, tuple] = {}
 
     ro = run_readout_only(q_obs, spec, DIMS)
     if ro is not None:
         out["readout_only"] = {"hist": ro.histogram, "energy": energy_from_histogram(ro.histogram, energy_tensor)}
 
     cq_o, c1_o, c2_o = oracle_kernels(cfg, spec, ndepth, DIMS)
+    kernels["oracle_binomial"] = (cq_o, c1_o, c2_o)
     p_oracle = unfold(q_obs, cq_o, c1_o, c2_o)
     out["oracle_binomial"] = {
         "hist": p_oracle,
@@ -444,6 +490,7 @@ def mitigate_target(
         p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
     )
     cq, c1, c2 = params_to_kernels(theta, DIMS)
+    kernels["gdr_param"] = (cq, c1, c2)
     p_gdr = unfold(q_obs, cq, c1, c2)
     p_gdr_nnls = unfold(q_obs, cq, c1, c2, method="nnls")
     out["gdr_param"] = {
@@ -452,6 +499,54 @@ def mitigate_target(
         "energy": energy_from_histogram(p_gdr, energy_tensor),
         "fit": fit_info,
         "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
+    }
+
+    alpha, ainfo = choose_damp_alpha(p_twin_ideal, q_twin_obs, cq, c1, c2, p_safe_twins)
+    p_damped = damp_histogram(p_gdr, p_safe, alpha)
+    out["gdr_damped"] = {
+        "hist": p_damped,
+        "energy": energy_from_histogram(p_damped, energy_tensor),
+        "fit": {**fit_info, **ainfo, "kind": "gdr_damped"},
+    }
+
+    theta_m, info_m = fit_gdr_mid(p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter)
+    cq_m, c1_m, c2_m = params_to_kernels(theta_m, DIMS)
+    kernels["gdr_mid"] = (cq_m, c1_m, c2_m)
+    p_mid = unfold(q_obs, cq_m, c1_m, c2_m)
+    out["gdr_mid"] = {"hist": p_mid, "energy": energy_from_histogram(p_mid, energy_tensor), "fit": info_m}
+
+    (cq_r, c1_r, c2_r), info_r = fit_gdr_residual(
+        p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=min(int(fit_maxiter), 120), t_free=t_free
+    )
+    kernels["gdr_residual"] = (cq_r, c1_r, c2_r)
+    p_res = unfold(q_obs, cq_r, c1_r, c2_r)
+    out["gdr_residual"] = {
+        "hist": p_res,
+        "energy": energy_from_histogram(p_res, energy_tensor),
+        "fit": info_r,
+        "residual_tvd": oracle_residual(p_ideal, q_obs, cq_r, c1_r, c2_r),
+    }
+
+    theta_h, info_h = fit_gdr_holdout(p_twin_ideal, q_twin_obs, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter)
+    kernels["gdr_holdout"] = params_to_kernels(theta_h, DIMS)
+    train_i, hold_i = holdout_indices(len(p_twin_ideal), 0.25)
+    if hold_i.size == 0:
+        hold_i = train_i
+    cand = [("safe", float(np.mean([total_variation(p_safe_twins[int(i)], p_twin_ideal[int(i)]) for i in hold_i])))]
+    for name, (kcq, kc1, kc2) in kernels.items():
+        cand.append((name, score_unfold_tvd(p_twin_ideal, q_twin_obs, kcq, kc1, kc2, hold_i)))
+    chosen, score, ranked = select_by_holdout(cand)
+    oracle_hold = next((c[1] for c in cand if c[0] == "oracle_binomial"), None)
+    if oracle_hold is not None and oracle_hold <= 1.05 * score + 1e-12:
+        chosen, score = "oracle_binomial", oracle_hold
+    if chosen == "safe":
+        hist_sel = p_safe
+    else:
+        hist_sel = unfold(q_obs, *kernels[chosen])
+    out["gdr_select"] = {
+        "hist": hist_sel,
+        "energy": energy_from_histogram(hist_sel, energy_tensor),
+        "fit": {"kind": "gdr_select", "chosen": chosen, "hold_tvd": score, "ranked": ranked, **info_h},
     }
 
     cq_f, c1_f, c2_f = fit_gdr_full(p_twin_ideal, q_twin_obs, cq, c1, c2)
@@ -476,6 +571,8 @@ def mitigate_target(
             extra["hist"] = p_lin
         extra["energy"] = energy_from_histogram(extra["hist"], energy_tensor)
         out["zne_idle"] = extra
+        p_hyb = readout_then_zne(hist_by_scale, spec, DIMS)
+        out["readout_then_zne"] = {"hist": p_hyb, "energy": energy_from_histogram(p_hyb, energy_tensor)}
     return out
 
 
@@ -544,17 +641,28 @@ def run(args: argparse.Namespace) -> dict:
         for pset, xvec in param_sets.items():
             rng_tw = np.random.default_rng(case_seed("twins", ansatz, pset, args.seed))
             print(f"  building {n_train} Gaussian twins for {pset} ...")
-            twins = build_twins(
-                sim_ideal,
-                xvec,
-                rng_tw,
-                n_train=n_train,
-                n_rank2=getattr(args, "n_rank2", None),
-                mag_scale_range=(
-                    float(getattr(args, "mag_scale_min", 0.5) or 0.5),
-                    float(getattr(args, "mag_scale_max", 1.0) or 1.0),
-                ),
-            )
+            twin_design = getattr(args, "twin_design", "span") or "span"
+            if twin_design == "span":
+                t_list, scales = designed_twin_plan(
+                    n_train,
+                    ndepth,
+                    n_rank2=getattr(args, "n_rank2", None),
+                    mag_lo=float(getattr(args, "mag_scale_min", None) or 0.25),
+                    mag_hi=float(getattr(args, "mag_scale_max", None) or 1.35),
+                )
+                twins = build_twins(sim_ideal, xvec, rng_tw, t_free_list=t_list, mag_scales=scales)
+            else:
+                twins = build_twins(
+                    sim_ideal,
+                    xvec,
+                    rng_tw,
+                    n_train=n_train,
+                    n_rank2=getattr(args, "n_rank2", None),
+                    mag_scale_range=(
+                        float(getattr(args, "mag_scale_min", 0.5) or 0.5),
+                        float(getattr(args, "mag_scale_max", 1.0) or 1.0),
+                    ),
+                )
             poisson_tvds.extend(t.poisson_tvd for t in twins if t.poisson_tvd is not None)
             product_tvds.extend(t.product_tvd for t in twins if t.product_tvd is not None)
             p_ideal = physical_probs(sim_ideal, xvec)
@@ -618,6 +726,7 @@ def run(args: argparse.Namespace) -> dict:
                             energy_tensor=energy_tensor,
                             hist_by_scale=hist_by_scale,
                             fit_maxiter=int(preset["fit_maxiter"]),
+                            t_free=[int(t.t_free) for t in twins],
                         )
                         metrics = {}
                         for name, blob in mitigated.items():
@@ -703,6 +812,7 @@ def run(args: argparse.Namespace) -> dict:
         "kappa_tau": list(kappas),
         "readout_levels": list(readout_levels),
         "methods": list(HIST_METHODS) + ["scalar_cdr"],
+        "twin_design": getattr(args, "twin_design", "span"),
         "poisson_tvd_max": None if not poisson_tvds else float(max(poisson_tvds)),
         "poisson_tvd_mean": None if not poisson_tvds else float(np.mean(poisson_tvds)),
         "product_tvd_max": None if not product_tvds else float(max(product_tvds)),
@@ -741,6 +851,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--n-rank2", type=int, default=None, dest="n_rank2")
     p.add_argument("--mag-scale-min", type=float, default=None, dest="mag_scale_min")
     p.add_argument("--mag-scale-max", type=float, default=None, dest="mag_scale_max")
+    p.add_argument(
+        "--twin-design",
+        choices=("default", "span"),
+        default="span",
+        dest="twin_design",
+        help="span: log-spaced |α| (research default). default: U(0.5,1) PR #6 mix.",
+    )
     return p.parse_args(argv)
 
 

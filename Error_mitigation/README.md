@@ -1,8 +1,8 @@
 # Gaussian Data Regression on a hybrid qumode
 
-## Status for cloud / grok bot (2026-09-04)
+## Status for cloud / grok bot (2026-09-04, research v2)
 
-Code is written. Local smoke was **stopped mid-run** (too slow on laptop). Do not restart three copies at once.
+PR #6 baseline (`out/`, 108 cells @ 8192 / 40 twins) is **done** — do not overwrite `out/` or `out_smoke/`. Research runs live in `out_research/`. Do not edit `src/`.
 
 | item | status |
 |------|--------|
@@ -57,7 +57,13 @@ python Error_mitigation/run_mitigation_experiment.py --preset smoke
 python Error_mitigation/run_mitigation_experiment.py --preset full --ansatz both
 ```
 
-Useful flags: `--ansatz ecd|snap|both`, `--instance 0`, `--outdir Error_mitigation/out`, `--shots`, `--n-train`, `--seed`, `--readout ideal|readout_realistic|readout_strong|all`.
+Useful flags: `--ansatz ecd|snap|both`, `--instance 0`, `--outdir Error_mitigation/out`, `--shots`, `--n-train`, `--seed`, `--readout ideal|readout_realistic|readout_strong|all`, `--families`, `--kappa-tau`, `--params`, `--twin-design span|default`.
+
+Cheap research loops (writes only under `out_research/`)::
+
+```bash
+python -u Error_mitigation/run_ablation.py --tag micro --ansatz ecd --families loss --kappa-tau 0.003,0.1 --shots 4096 --n-train 20
+```
 
 | preset | shots | twins | κτ | readout | optimizer |
 |--------|------:|------:|----|---------|-----------|
@@ -96,7 +102,7 @@ Same gate count and depth as the target.
 
 - **ECD:** snap each qubit angle \(\theta\) onto \(\{0,\pi\}\). Then every ECD is an unconditional displacement plus a bit flip, and the ideal state is \(\lvert q\rangle\lvert\alpha_1\rangle\lvert\alpha_2\rangle\). The analytic histogram is the truncated 1-mode product evolution (ECD reduced to unconditional \(D(\pm\beta/2)\); SNAP is already local). Asserted against `statevector` at TVD \(<10^{-6}\) for every \(t_{\mathrm{free}}=0\) twin. A Poisson formula in the tracked \(|\alpha|^2\) is stored as a diagnostic: truncated \(D(\alpha)\) is not an ideal coherent state at large \(|\alpha|\), so Poisson TVD is allowed to be larger for SNAP.
 - **SNAP:** replace each SNAP phase list \(\theta_n\) by its least-squares affine fit \(b n\) (\(\theta_0=0\)). Affine SNAP is a rotation.
-- \(\lvert\beta\rvert\) / \(\lvert\alpha\rvert\) are rescaled by \(U(0.5,1)\) (and capped so \(\lvert\alpha\rvert\) stays inside the Fock grid).
+- Default (`--twin-design span`): \(\lvert\beta\rvert\) / \(\lvert\alpha\rvert\) log-spaced in \([0.25, 1.35]\) (capped so \(\lvert\alpha\rvert\) stays inside the Fock grid). Wider \(\lvert\alpha\rvert^2\) span improves Fisher information for \((\eta, p_{nn})\). PR #6 used `U(0.5, 1)` (`--twin-design default`).
 - Default mix: 75% fully Gaussian (\(t_{\mathrm{free}}=0\)), 25% with \(t_{\mathrm{free}}=2\) non-Gaussian gates left in (Gaussian rank \(2^t\)).
 
 Twins are measured with the **same** readout level and shot count as the target. The Poisson check uses physical probabilities, never the readout-corrupted histogram.
@@ -109,9 +115,14 @@ Twins are measured with the **same** readout level and shot count as the target.
 | `readout_only` | yes | Invert only the calibrated readout confusion (Maciejewski et al., Quantum 4, 257). Skipped when readout is ideal. |
 | `oracle_binomial` | yes | Known-model end-of-circuit thermal-loss kernel with the true cumulative \(\eta=e^{-\sum\kappa\tau}\), composed with the **true** readout confusion. No learning. Residual TVD\((M p_{\mathrm{ideal}}, q_{\mathrm{noisy}})\) is the interleaved-vs-end-of-circuit error plus shot noise. |
 | `gdr_param` | yes | Fit \(M(\eta_1,\eta_2,n_{\mathrm{th}},p_\downarrow,p_\uparrow,\varepsilon,p_{01},p_{10},p_{nn})\) by multinomial MLE on the twins, then Richardson–Lucy unfold. Loss and readout are fitted **jointly**. |
+| `gdr_damped` | yes | Same fit as `gdr_param`, then mix the unfold with the readout-inverted (or raw) histogram. Mix weight α is chosen on twins. Stops over-correction on mild/random high-κτ cells. |
+| `gdr_mid` | yes | Fit only \((\eta_1,\eta_2,p_{01},p_{10},p_{nn})\); freeze heating/hops/leak. Structured middle ground vs `gdr_full`. |
+| `gdr_residual` | yes | Oracle end-of-circuit kernel composed with a small extra hop/leak fitted on twins (especially \(t_{\mathrm{free}}>0\)). Aimed at ECD interleaving residual. |
+| `gdr_select` | yes | Holdout picker among `{safe, oracle, gdr_param, gdr_mid, gdr_residual}`. Prefers oracle when it is within 5% of the best twin score. |
 | `gdr_full` | yes | Unstructured column-stochastic \(C_q\otimes C_1\otimes C_2\), alternating NNLS, initialized from `gdr_param`. Shows the cost of over-parametrization. |
 | `scalar_cdr` | no | Classic CDR on the energy only: \(E_{\mathrm{ideal}}\approx a_1 E_{\mathrm{noisy}}+a_0\). |
 | `zne_idle` | yes | Target at noise scales \((1,2,3)\); Richardson extrapolate each bin; clip and renormalize. Readout not scaled. |
+| `readout_then_zne` | yes | Invert calibrated readout on each idle-stretched histogram, then ZNE. Fixes the idle-ZNE bias under `readout_*`. |
 
 Unfolding is Richardson–Lucy on the simplex; NNLS is stored as a `gdr_param` cross-check.
 
@@ -130,7 +141,8 @@ Unfolding is Richardson–Lucy on the simplex; NNLS is stored as a `gdr_param` c
 - **`loss` family, `oracle_binomial` residual:** should sit near the shot-noise floor. If it does not, interleaved loss (not the readout model) is the culprit.
 - **Heating:** \(g_k^{\mathrm{noisy}}/g_k^{\mathrm{ideal}}\) vs \(\eta^k\) should fail for `loss_thermal_dephasing`.
 - **Identifiability:** loss \(n\to n-1\) and readout \(n\to n\pm 1\) look the same on a single circuit. Twins that span a range of \(\lvert\alpha\rvert^2\) break the degeneracy because loss scales with \(n\) and \(p_{nn}\) does not. Check fitted \(\eta\) vs true cumulative \(\eta\), and fitted \(p_{nn}\) vs the `MeasurementConfig`.
-- **`zne_idle` under readout:** circuit noise is scaled, the detector is not, so extrapolation is biased.
+- **`zne_idle` under readout:** circuit noise is scaled, the detector is not, so extrapolation is biased. Use `readout_then_zne`.
+- **Research scoreboard:** `Error_mitigation/out_research/NOTEBOOK.md` and `out_research/phase3/`. Do not overwrite `out/`.
 
 ## Caveats (known, not bugs)
 
