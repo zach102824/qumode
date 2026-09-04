@@ -1,0 +1,55 @@
+ablation tag=micro_hard  H000  shots=4096 n_train=20 twins=span  methods=raw,readout_only,oracle_binomial,gdr_param,gdr_ridge,gdr_holdout,gdr_damped,gdr_reg,gdr_mid,gdr_tfree,gdr_residual,gdr_select,zne_idle,readout_then_zne,zne_then_readout
+
+=== ecd N_d=5 ===
+  loaded optimized ecd params from optimized_params_ecd_h000_nd5.json
+    sim loss_thermal_dephasing κτ=0.003 random  target+20 twins ...
+      physical histograms in 7.7s
+      wrote cache ecd_random_loss_thermal_dephasing_kt0.003_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    random    loss_thermal_dephasing kt=0.003 ideal                raw=0.0644  gdr=0.0644
+    random    loss_thermal_dephasing kt=0.003 readout_realistic    raw=0.0737  gdr=0.0701
+    random    loss_thermal_dephasing kt=0.003 readout_strong       raw=0.1092  gdr=0.0774
+    sim loss_thermal_dephasing κτ=0.1 random  target+20 twins ...
+      physical histograms in 12.7s
+      wrote cache ecd_random_loss_thermal_dephasing_kt0.1_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    random    loss_thermal_dephasing kt=0.1 ideal                raw=0.3306  gdr=0.2743
+    random    loss_thermal_dephasing kt=0.1 readout_realistic    raw=0.3441  gdr=0.2904
+    random    loss_thermal_dephasing kt=0.1 readout_strong       raw=0.3423  gdr=0.3226
+    sim comprehensive κτ=0.003 random  target+20 twins ...
+      physical histograms in 14.5s
+      wrote cache ecd_random_comprehensive_kt0.003_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    random    comprehensive          kt=0.003 ideal                raw=0.0860  gdr=0.0813
+    random    comprehensive          kt=0.003 readout_realistic    raw=0.1181  gdr=0.1003
+    random    comprehensive          kt=0.003 readout_strong       raw=0.1500  gdr=0.1189
+    sim comprehensive κτ=0.1 random  target+20 twins ...
+      physical histograms in 21.1s
+      wrote cache ecd_random_comprehensive_kt0.1_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    random    comprehensive          kt=0.1 ideal                raw=0.4024  gdr=0.3679
+    random    comprehensive          kt=0.1 readout_realistic    raw=0.4061  gdr=0.3690
+    random    comprehensive          kt=0.1 readout_strong       raw=0.3920  gdr=0.3917
+    sim loss_thermal_dephasing κτ=0.003 optimized  target+20 twins ...
+      physical histograms in 8.5s
+      wrote cache ecd_optimized_loss_thermal_dephasing_kt0.003_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    optimized loss_thermal_dephasing kt=0.003 ideal                raw=0.0518  gdr=0.0210
+    optimized loss_thermal_dephasing kt=0.003 readout_realistic    raw=0.0862  gdr=0.0200
+    optimized loss_thermal_dephasing kt=0.003 readout_strong       raw=0.1610  gdr=0.0208
+    sim loss_thermal_dephasing κτ=0.1 optimized  target+20 twins ...
+      physical histograms in 12.2s
+      wrote cache ecd_optimized_loss_thermal_dephasing_kt0.1_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    optimized loss_thermal_dephasing kt=0.1 ideal                raw=0.7830  gdr=0.3174
+    optimized loss_thermal_dephasing kt=0.1 readout_realistic    raw=0.7884  gdr=0.3091
+    optimized loss_thermal_dephasing kt=0.1 readout_strong       raw=0.7832  gdr=0.2928
+    sim comprehensive κτ=0.003 optimized  target+20 twins ...
+      physical histograms in 10.7s
+      wrote cache ecd_optimized_comprehensive_kt0.003_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    optimized comprehensive          kt=0.003 ideal                raw=0.1922  gdr=0.0628
+    optimized comprehensive          kt=0.003 readout_realistic    raw=0.2075  gdr=0.0554
+    optimized comprehensive          kt=0.003 readout_strong       raw=0.2757  gdr=0.0507
+    sim comprehensive κτ=0.1 optimized  target+20 twins ...
+      physical histograms in 14.8s
+      wrote cache ecd_optimized_comprehensive_kt0.1_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    optimized comprehensive          kt=0.1 ideal                raw=0.9041  gdr=0.3904
+    optimized comprehensive          kt=0.1 readout_realistic    raw=0.9063  gdr=0.4100
+    optimized comprehensive          kt=0.1 readout_strong       raw=0.9085  gdr=0.3879
+
+wrote /workspace/Error_mitigation/out_research/micro_hard/results.json
+wrote /workspace/Error_mitigation/out_research/micro_hard/ablation_summary.md

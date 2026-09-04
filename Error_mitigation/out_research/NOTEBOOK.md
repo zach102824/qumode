@@ -104,3 +104,32 @@ PR #6 numbers on these cells differ by shot count (8192/40 vs 4096/20) but ranki
 | ECD opt κτ=0.1 | 0.197–0.213 | 0.207–0.220 | residual still best (~0.192–0.204) |
 
 Working recipe so far: **span twins + `gdr_param`**, plus `gdr_damped` on noisy random, `gdr_residual`/`oracle` on optimized, `readout_then_zne` when reporting ZNE under readout.
+
+### `micro_hard` — ECD thermal + comprehensive, span twins, 4096/20
+
+Span again flips PR #6 GDR-worse-than-raw cells:
+
+| cell | PR #6 gdr | this gdr_param | best new |
+|------|----------:|---------------:|----------|
+| ECD random thermal κτ=0.1 ideal | 0.407 (> raw 0.332) | **0.274** (< raw 0.331) | damped 0.272 |
+| ECD random comprehensive κτ=0.1 ideal | 0.539 (> raw 0.399) | **0.368** (< raw 0.402) | damped **0.328** |
+| ECD opt thermal κτ=0.003 | 0.019 | 0.021 | **residual 0.014–0.018** |
+| ECD opt thermal κτ=0.1 | 0.270 | 0.317 | **residual 0.249–0.259** |
+| ECD opt comprehensive κτ=0.003 | 0.053 | 0.051–0.063 | **gdr_mid 0.043–0.058** |
+
+`gdr_tfree` wins the ECD random comprehensive κτ=0.003 slice (~0.004 better than gdr_param). Residual remains a random-circuit loser.
+
+### `micro_snap` — SNAP loss, span twins, 4096/20
+
+| cell | PR #6 gdr | this gdr_param | best new |
+|------|----------:|---------------:|----------|
+| SNAP random κτ=0.003 ideal | 0.0223 (> raw 0.0194) | **0.0419** (< raw 0.0473)* | residual 0.039 |
+| SNAP random κτ=0.1 | 0.233–0.258 | **0.219–0.227** | select/reg **0.194–0.196** |
+| SNAP opt κτ=0.003 | 0.013–0.019 | 0.014–0.020 | residual/tfree 0.013–0.016 |
+| SNAP opt κτ=0.1 | 0.367–0.416 | 0.403–0.418 | tfree **0.385–0.394** |
+
+\*shot-mismatched raw; same-run GDR now beats raw on SNAP random mild ideal (the PR #6 failure).
+
+## Phase 3
+
+Fixed matrix vs PR #6: shots=8192, n_train=40, span twins, both ansatz, all families, κτ ∈ {0.003, 0.1} (and 0.03 if wall allows). Winner methods + baselines. See `out_research/phase3/`.
