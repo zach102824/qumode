@@ -30,9 +30,17 @@ PR #8 on `cursor/gdr-improve-30h-v2-4f00`, from PR #6 (`cursor/error-mitigation-
 
 Plot: `out_research/figures/hard_cells_adaptive.png`. Adaptive = span+damped (gated) on random, default-twin `gdr_param` on optimized.
 
-## Transfer caveat (H001)
+## Transfer caveat (needs a near-\(E_0\) opt)
 
-The optimized recipe needs a **near-\(E_0\) noiseless VQE**. H000 ECD: \(E=-6.230\) vs \(E_0=-7.111\) (deficit 0.881) — comprehensive \(\kappa\tau=0.1\) **wins** (0.343). H001 ECD: first budget \(E=-3.922\), extra budget \(E=-4.819\) vs \(E_0=-6.032\) (deficit 1.21–2.11). Random+span **wins** (0.187); mid-quality opt comprehensive \(0.1\) **loses** to raw (0.888 / 0.943 vs 0.79). No `params=auto` threshold both flips H001 and keeps the H000 0.343 cell. Do **not** open 20 Hamiltonians; do **not** ship `params=auto`.
+The optimized recipe needs a **near-\(E_0\) noiseless VQE**. Mid-quality opts are not a recipe-label bug.
+
+| instance | \(E_0\) | best ECD \(N_d=5\) | deficit | note |
+|----------|--------:|-------------------:|--------:|------|
+| H000 | −7.111 | −6.230 (3×200) | 0.881 | comprehensive \(\kappa\tau=0.1\) **wins** (0.343) |
+| H001 | −6.032 | −4.819 (6 starts) | 1.21 | random+span wins (0.187); mid-opt comprehensive \(0.1\) **loses** (0.89–0.94 vs 0.79) |
+| H002 | −9.371 | −8.020 (5×200 + H000 warm start, 83 min) | 1.351 | still mid-quality; **no 8-cell matrix**; stop expanding H |
+
+No `params=auto` threshold both flips H001 and keeps the H000 0.343 cell. H000 parameters do not warm-start H002 (\(E=-4.93\)). Do **not** open 20 Hamiltonians; do **not** ship `params=auto`.
 
 ## Tried and dropped
 

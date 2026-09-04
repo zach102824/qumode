@@ -431,3 +431,32 @@ Hybrid ZNE still wins under readout. GDR still beats either ZNE on these mild SN
 ### Phase 10 ship
 
 README methods table matches the shipped recipe. NOTEBOOK frozen at Phase 10. Tests: 28 `test_error_mitigation`; 113 non-slow. Stop until the next steer.
+
+## Phase 11 — paper scoreboard + H002 opt (no recipe change)
+
+Official defaults unchanged. No `src/` edits. `out/` / `out_smoke/` untouched. Dropped kernels stay dropped.
+
+### `PAPER_SUMMARY.md`
+
+One-page scoreboard: shipped recipe, **86/108** vs PR #6, **0/108** lose-to-raw, hard-cell table with bootstrap ±, H001/H002 caveat, dropped-idea table. CI pytest `test_adaptive_recipe_headlines_on_disk` asserts those counts stay on disk.
+
+### H002 serious ECD opt (stop expanding)
+
+`serious_opt_h002.py`: 5 random L-BFGS-B × 200 plus H000 warm start. Wall **4954 s** (~83 min). Target: deficit ≤ 0.3 vs \(E_0=-9.371\).
+
+| start | \(E\) | deficit |
+|-------|------:|--------:|
+| warm_h000 | −4.929 | 4.443 |
+| random_0 | **−8.020** | **1.351** |
+| random_1 | −5.700 | 3.672 |
+| random_2 | −5.933 | 3.438 |
+| random_3 | −4.932 | 4.440 |
+| random_4 | −5.365 | 4.007 |
+
+Best \(E=-8.020\) is closer than H001 (−4.82) but still **mid-quality** (1.35 ≫ 0.3; also worse than H000’s 0.881). H000 \(x\) does not transfer. **Did not** run the 8-cell optimized matrix. **Do not** open more Hamiltonians.
+
+Artifacts: `out_research/optimized_params_ecd_h002_nd5.json`, `leftover_xfer_h002/`.
+
+### Phase 11 ship
+
+Tests: 29 `test_error_mitigation`. Stop until the next steer.
