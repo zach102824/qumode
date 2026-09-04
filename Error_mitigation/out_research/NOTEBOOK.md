@@ -4,6 +4,8 @@ Branch: `cursor/gdr-improve-30h-v2-4f00`
 Start: from PR #6 `cursor/error-mitigation-smoke-full-5302` @ `b7b7a8c`  
 Hard rules: no `src/` edits; do not overwrite `out/` or `out_smoke/`; one heavy sim at a time.
 
+**Canonical frozen scoreboard:** `PAPER_SUMMARY.md` (same four-cell + bootstrap numbers as `adaptive_recipe.md` and `figures/hard_cells_adaptive.png`). Historical phases below are not rewritten when a later hybrid number supersedes a phase-local draw.
+
 ## Phase 0 (2026-09-04)
 
 Read `Error_mitigation/{mitigation,twins,noise_models,metrics,run_mitigation_experiment}.py` and `out/summary.txt`.
@@ -460,3 +462,35 @@ Artifacts: `out_research/optimized_params_ecd_h002_nd5.json`, `leftover_xfer_h00
 ### Phase 11 ship
 
 Tests: 29 `test_error_mitigation`. Stop until the next steer.
+
+## Phase 12 — packaging (no physics)
+
+Official defaults unchanged. No new kernels, no new VQE opts, no more Hamiltonians.
+
+### Number lock
+
+The four headline cells are the same in `PAPER_SUMMARY.md`, `adaptive_recipe.md` (canonical table), `plot_hard_cells.py`, and `figures/hard_cells_adaptive.png`:
+
+| cell | raw | PR #6 gdr | adaptive single | select bootstrap |
+|------|----:|----------:|----------------:|-----------------:|
+| ECD random loss 0.1 | 0.298 | 0.373 | **0.203** | **0.208 ± 0.012** |
+| ECD random comprehensive 0.1 | 0.403 | 0.539 | **0.342** | **0.314 ± 0.013** |
+| ECD opt comprehensive 0.1 | 0.909 | 0.343 | **0.343** | **0.346 ± 0.008** |
+| SNAP random comprehensive 0.003 | 0.037 | 0.045 | **0.0369** | **0.036 ± 0.004** |
+
+Phase-local tables above may differ by a few 0.001 (shot-matched vs hybrid post-hoc). That is history, not a second scoreboard.
+
+### Cache scan
+
+`out_research/cache/` is **3.5 MB / 162 files** (81 `.npz` + sidecars). Not huge. Kept:
+
+- **canonical random:** `*_n40_span_nr10_*` (phase3)
+- **canonical optimized:** `*_n40_default_nr10_*` (opt_default)
+- H001 transfer tags `*_h001`
+- n20 microbench caches (0.5 MB; historical)
+
+Did **not** delete `Error_mitigation/out/` or `out_smoke/`. Replaced the accidental top-level copy of `phase3/ablation_summary.md` with a pointer so the adaptive hybrid is not confused with span-only phase3.
+
+### Phase 12 ship
+
+README “how to reproduce PR #8 headlines.” Tests: 29 `test_error_mitigation` + full non-slow. Idle.

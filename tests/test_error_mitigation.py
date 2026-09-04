@@ -370,22 +370,28 @@ def test_classify_opt_quality_default_thresholds():
 
 
 def test_adaptive_recipe_headlines_on_disk():
-    path = ROOT / "Error_mitigation" / "out_research" / "adaptive_recipe.md"
-    text = path.read_text()
-    assert "beats PR #6 `gdr_param`" in text
-    assert "**86 / 108**" in text
-    assert "beats same-run raw" in text
-    assert "**108 / 108**" in text
-    assert "worse than raw" in text
-    assert "**0 / 108**" in text
-    assert "**0.203**" in text
-    assert "**0.342**" in text
-    summary = ROOT / "Error_mitigation" / "out_research" / "PAPER_SUMMARY.md"
-    assert summary.is_file()
-    stext = summary.read_text()
-    assert "**86 / 108**" in stext
-    assert "**0 / 108**" in stext
-    assert "near-" in stext.lower() or "H001" in stext
+    recipe = (ROOT / "Error_mitigation" / "out_research" / "adaptive_recipe.md").read_text()
+    paper = (ROOT / "Error_mitigation" / "out_research" / "PAPER_SUMMARY.md").read_text()
+    notebook = (ROOT / "Error_mitigation" / "out_research" / "NOTEBOOK.md").read_text()
+    plot = (ROOT / "Error_mitigation" / "plot_hard_cells.py").read_text()
+    for text in (recipe, paper):
+        assert "beats PR #6 `gdr_param`" in text or "**86 / 108**" in text
+        assert "**86 / 108**" in text
+        assert "**108 / 108**" in text
+        assert "**0 / 108**" in text
+        assert "**0.203**" in text
+        assert "**0.342**" in text
+        assert "**0.0369**" in text
+        assert "**0.208 ± 0.012**" in text
+        assert "**0.314 ± 0.013**" in text
+        assert "**0.346 ± 0.008**" in text
+        assert "**0.036 ± 0.004**" in text
+    assert "near-" in paper.lower() or "H001" in paper
+    for token in ("0.203", "0.342", "0.343", "0.0369", "0.012", "0.013", "0.008", "0.004"):
+        assert token in plot
+    assert "**0.203**" in notebook
+    fig = ROOT / "Error_mitigation" / "out_research" / "figures" / "hard_cells_adaptive.png"
+    assert fig.is_file() and fig.stat().st_size > 1000
 
 
 def test_research_smoke_preset_stays_in_out_research():

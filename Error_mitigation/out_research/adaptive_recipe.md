@@ -28,4 +28,13 @@ Headline cells the original plan called out:
 
 `opt_default` (54 optimized cells): default `gdr_param` vs span `gdr_param` is **35 better / 19 tie / 0 worse**.
 
-Summary plot of the four headline cells: `out_research/figures/hard_cells_adaptive.png`.
+Canonical four-cell table (same numbers as `PAPER_SUMMARY.md` and `figures/hard_cells_adaptive.png`). Bars are the single-draw adaptive TVD; ± is bootstrap σ from 8×8192 (`leftover_bootstrap/`).
+
+| cell | raw | PR #6 `gdr_param` | adaptive (single) | select bootstrap |
+|------|----:|------------------:|------------------:|-----------------:|
+| ECD random loss \(\kappa\tau=0.1\) ideal | 0.298 | 0.373 (lose) | **0.203** | **0.208 ± 0.012** |
+| ECD random comprehensive \(0.1\) ideal | 0.403 | 0.539 (lose) | **0.342** | **0.314 ± 0.013** |
+| ECD opt comprehensive \(0.1\) ideal | 0.909 | **0.343** | **0.343** | **0.346 ± 0.008** |
+| SNAP random comprehensive \(0.003\) ideal | 0.037 | 0.045 (lose) | **0.0369** | **0.036 ± 0.004** |
+
+Summary plot: `out_research/figures/hard_cells_adaptive.png`.

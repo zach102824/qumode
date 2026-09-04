@@ -54,6 +54,34 @@ python -u Error_mitigation/run_ablation.py --preset research_smoke
 
 That slice is ECD **optimized** loss κτ=0.003, adaptive twins (→ PR #6 mix), 2048 shots, `n_train=40`, ideal + realistic readout, methods `{raw, gdr_param, gdr_damped, gdr_select}`.
 
+### How to reproduce PR #8 headlines
+
+Do **not** re-run the 108-cell baseline and do **not** write to `out/`. The hybrid scoreboard is a fit-only stitch of two cached physics sets (8192 shots / 40 twins, H000):
+
+| circuit | twin design | cache glob under `out_research/cache/` | numbers from |
+|---------|-------------|----------------------------------------|--------------|
+| random | span (`nr10`) | `*_n40_span_nr10_lo0.25_hi1.35_x0.{npz,json}` | `out_research/phase3/` |
+| optimized | PR #6 default (`nr10`) | `*_n40_default_nr10_lo0.25_hi1.35_x0.{npz,json}` | `out_research/opt_default/` |
+
+Headline cells (same numbers in `PAPER_SUMMARY.md` / `adaptive_recipe.md` / `figures/hard_cells_adaptive.png`):
+
+| cell | cache key |
+|------|-----------|
+| ECD random loss κτ=0.1 | `ecd_random_loss_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0` |
+| ECD random comprehensive κτ=0.1 | `ecd_random_comprehensive_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0` |
+| ECD opt comprehensive κτ=0.1 | `ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0` |
+| SNAP random comprehensive κτ=0.003 | `snap_random_comprehensive_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0` |
+
+```bash
+# CI-ish adaptive-recipe slice (cache replay → out_research/research_smoke/)
+python -u Error_mitigation/run_ablation.py --preset research_smoke
+
+# Rebuild the four-cell figure from the locked numbers
+python -u Error_mitigation/plot_hard_cells.py
+```
+
+`research_smoke` reuses `ecd_optimized_loss_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0` (not a headline cell; checks that optimized select keeps `gdr_param`). Bootstrap ± on the figure is `out_research/leftover_bootstrap/`.
+
 Useful flags: `--ansatz ecd|snap|both`, `--instance 0`, `--outdir Error_mitigation/out`, `--shots`, `--n-train`, `--seed`, `--readout ideal|readout_realistic|readout_strong|all`, `--families`, `--kappa-tau`, `--params`, `--twin-design adaptive|span|default`.
 
 Cheap research loops (writes only under `out_research/`):
