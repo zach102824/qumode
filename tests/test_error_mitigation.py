@@ -353,3 +353,18 @@ def test_split_and_band_kernels_column_stochastic():
     assert is_column_stochastic(c1)
     assert is_column_stochastic(c2)
     assert info["kind"] == "gdr_band"
+
+
+def test_slice_twin_indices_even_subset():
+    from Error_mitigation.run_ablation import slice_twin_indices
+
+    full = slice_twin_indices(40, 40)
+    assert list(full) == list(range(40))
+    keep20 = slice_twin_indices(40, 20)
+    assert keep20.size == 20
+    assert keep20[0] == 0
+    assert keep20[-1] == 39
+    keep10 = slice_twin_indices(40, 10)
+    assert keep10.size == 10
+    assert keep10[0] == 0
+    assert keep10[-1] == 39

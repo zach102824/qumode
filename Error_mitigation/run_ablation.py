@@ -334,6 +334,33 @@ def _kernels_from_fit(theta, dims):
     return params_to_kernels(theta, dims)
 
 
+def slice_twin_indices(n_total: int, n_keep: int) -> np.ndarray:
+    """Evenly spaced subset of a cached twin roster (fit-only n_train sweep)."""
+    n_total = int(n_total)
+    n_keep = int(n_keep)
+    if n_keep <= 0 or n_keep >= n_total:
+        return np.arange(n_total, dtype=int)
+    return np.unique(np.round(np.linspace(0, n_total - 1, num=n_keep)).astype(int))
+
+
+def slice_twin_phys(phys: dict, n_keep: int | None) -> dict:
+    if n_keep is None:
+        return phys
+    t = np.asarray(phys["twin_t_free"])
+    keep = slice_twin_indices(int(t.size), int(n_keep))
+    if keep.size == t.size:
+        return phys
+    out = dict(phys)
+    for key in ("twin_phys", "twin_p_ideal"):
+        out[key] = np.asarray(phys[key])[keep]
+    out["twin_t_free"] = np.asarray(phys["twin_t_free"])[keep]
+    if "e_twin_ideal" in phys:
+        out["e_twin_ideal"] = np.asarray(phys["e_twin_ideal"])[keep]
+    out["n_train"] = int(keep.size)
+    out["fit_twin_index"] = keep
+    return out
+
+
 def mitigate_research(
     *,
     phys: dict,
@@ -807,9 +834,11 @@ def run(args: argparse.Namespace) -> dict:
     energy_tensor = np.asarray(inst["energy_tensor"], dtype=float)
     ground_qnm = tuple(int(v) for v in inst["ground_qnm"])
     hid = int(inst["hamiltonian_id"])
+    fit_n_train = args.fit_n_train
     print(
         f"ablation tag={args.tag}  H{hid:03d}  shots={shots} n_train={n_train} "
-        f"twins={args.twin_design}  methods={','.join(methods)}"
+        f"fit_n_train={fit_n_train or n_train}  twins={args.twin_design}  "
+        f"methods={','.join(methods)}"
     )
 
     records: list[dict] = []
@@ -826,6 +855,13 @@ def run(args: argparse.Namespace) -> dict:
             seed_base=int(args.seed),
             maxiter=200,
             n_restarts=3,
+        )
+        sim_e = make_sim(ansatz, ndepth, energy_tensor, ground_qnm)
+        e_rand = float(energy_from_histogram(physical_probs(sim_e, x_random), energy_tensor))
+        e_opt = float(energy_from_histogram(physical_probs(sim_e, x_opt), energy_tensor))
+        print(
+            f"  noiseless E_random={e_rand:.4f}  E_opt={e_opt:.4f}  "
+            f"E0={float(inst.get('energy_min', float('nan'))):.4f}"
         )
         param_sets = {"random": x_random, "optimized": x_opt}
         for pset in param_names:
@@ -844,6 +880,7 @@ def run(args: argparse.Namespace) -> dict:
                         ground_qnm=ground_qnm,
                         cache_dir=cache_dir,
                     )
+                    phys = slice_twin_phys(phys, fit_n_train)
                     cfg = circuit_noise(family, float(kt), dims=DIMS)
                     for ro in readout_levels:
                         spec = readout_spec(ro, shots, seed=None)
@@ -884,7 +921,8 @@ def run(args: argparse.Namespace) -> dict:
                             "kappa_tau": float(kt),
                             "readout": ro,
                             "n_shots": shots,
-                            "n_train": n_train,
+                            "n_train": int(phys.get("n_train", n_train)),
+                            "n_train_phys": n_train,
                             "twin_design": args.twin_design,
                             "twin_tag": twin_tag(args),
                             "noise": noise_as_dict(cfg),
@@ -913,6 +951,7 @@ def run(args: argparse.Namespace) -> dict:
         "tag": args.tag,
         "shots": shots,
         "n_train": n_train,
+        "fit_n_train": fit_n_train,
         "seed": int(args.seed),
         "twin_design": args.twin_design,
         "twin_tag": twin_tag(args),
@@ -940,6 +979,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--instance", type=int, default=0)
     p.add_argument("--shots", type=int, default=4096)
     p.add_argument("--n-train", type=int, default=20)
+    p.add_argument(
+        "--fit-n-train",
+        type=int,
+        default=None,
+        help="Fit on an evenly spaced subset of cached twins (does not resimulate).",
+    )
     p.add_argument("--seed", type=int, default=SEED_BASE)
     p.add_argument("--families", default="loss")
     p.add_argument("--kappa-tau", default="0.003,0.1")
