@@ -41,6 +41,7 @@ from Error_mitigation.mitigation import (
     score_unfold_tvd,
     fit_gdr_afterburn,
     fit_gdr_holdout,
+    fit_gdr_interleave,
     fit_gdr_mid,
     fit_gdr_param,
     fit_gdr_residual,
@@ -99,11 +100,13 @@ ALL_METHODS = (
     "gdr_ridge",
     "gdr_holdout",
     "gdr_damped",
+    "gdr_floor",
     "gdr_reg",
     "gdr_mid",
     "gdr_tfree",
     "gdr_residual",
     "gdr_afterburn",
+    "gdr_interleave",
     "gdr_blend",
     "gdr_energy",
     "gdr_select",
@@ -121,11 +124,13 @@ CHEAP_METHODS = (
     "gdr_ridge",
     "gdr_holdout",
     "gdr_damped",
+    "gdr_floor",
     "gdr_reg",
     "gdr_mid",
     "gdr_tfree",
     "gdr_residual",
     "gdr_afterburn",
+    "gdr_interleave",
     "gdr_blend",
     "gdr_select",
     "zne_idle",
@@ -359,7 +364,7 @@ def mitigate_research(
             }
 
     theta_base = fit_info_base = None
-    if any(m in methods for m in ("gdr_param", "gdr_damped", "gdr_reg", "gdr_full", "gdr_select")):
+    if any(m in methods for m in ("gdr_param", "gdr_damped", "gdr_floor", "gdr_reg", "gdr_full", "gdr_select")):
         theta_base, fit_info_base = fit_gdr_param(
             p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
         )
@@ -380,6 +385,16 @@ def mitigate_research(
                 "hist": p_d,
                 "energy": energy_from_histogram(p_d, energy_tensor),
                 "fit": {**(fit_info_base or {}), **ainfo, "kind": "gdr_damped"},
+            }
+        if "gdr_floor" in methods:
+            alpha_f, finfo = choose_damp_alpha(
+                p_twin, q_twins, cq, c1, c2, p_safe_twins, slack=0.003
+            )
+            p_f = damp_histogram(p_gdr, p_safe_target, alpha_f)
+            out["gdr_floor"] = {
+                "hist": p_f,
+                "energy": energy_from_histogram(p_f, energy_tensor),
+                "fit": {**(fit_info_base or {}), **finfo, "kind": "gdr_floor"},
             }
 
     if "gdr_ridge" in methods:
@@ -444,6 +459,19 @@ def mitigate_research(
                 "fit": info_res,
                 "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
             }
+
+    if "gdr_interleave" in methods:
+        (cq, c1, c2), info_il = fit_gdr_interleave(
+            p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=min(fit_maxiter, 160), t_free=t_free
+        )
+        kernels["gdr_interleave"] = (cq, c1, c2)
+        p = unfold(q_obs, cq, c1, c2)
+        out["gdr_interleave"] = {
+            "hist": p,
+            "energy": energy_from_histogram(p, energy_tensor),
+            "fit": info_il,
+            "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
+        }
 
     if "gdr_afterburn" in methods or "gdr_select" in methods:
         (cq, c1, c2), info_ab = fit_gdr_afterburn(

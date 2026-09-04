@@ -1,44 +1,19 @@
 # Gaussian Data Regression on a hybrid qumode
 
-## Status for cloud / grok bot (2026-09-04, research v2)
+## Status (2026-09-04, PR #8 research)
 
-PR #6 baseline (`out/`, 108 cells @ 8192 / 40 twins) is **done** — do not overwrite `out/` or `out_smoke/`. Research runs live in `out_research/`. Do not edit `src/`.
+PR #6 baseline (`Error_mitigation/out/`, 108 cells @ 8192 shots / 40 twins) is **validated** — do **not** overwrite `out/` or `out_smoke/`. Research runs live in `out_research/`. Do **not** edit `src/` unless a tiny proven bug blocks you.
 
 | item | status |
 |------|--------|
-| Modules under `Error_mitigation/` | done (`noise_models.py`, `twins.py`, `mitigation.py`, `metrics.py`, `run_mitigation_experiment.py`) |
-| This README (noises / methods / caveats) | done |
+| PR #6 smoke | **done** (`out_smoke/`, 4000 shots) |
+| PR #6 full | **done** (`out/`, 108 cells, product-state TVD max ~1e-15, wall ~64 min) |
+| PR #8 research | **in progress** on `cursor/gdr-improve-30h-v2-4f00` — adaptive twins + damped / residual / hybrid-ZNE |
+| Official default | `--twin-design adaptive` (span on random, U(0.5,1) on optimized) |
+| Tests | 21 `test_error_mitigation` + full non-slow suite green |
 | `src/` | **do not edit** |
-| `tests/test_error_mitigation.py` | **passed** (10 tests): kernels column-stochastic, ECD Poisson TVD `<1e-6`, SNAP product-state TVD `<1e-6`, `readout_only` skipped on ideal and beats raw on strong readout, RL inverts binomial blur |
-| Smoke `--preset smoke` | **incomplete**. Stopped after ECD random / `loss` κτ=0.003. Partial cache: `Error_mitigation/out_smoke/optimized_params_ecd_h000_nd5.json` (smoke-quality: `maxiter=5`, `success=false`, E≈−3.47 vs E0≈−7.11). **Do not reuse this cache for `full`.** |
-| Full `--preset full` | not started |
-| Histogram / TVD figures | not written (driver never finished) |
-| Existing `pytest` suite | unit file green; full repo pytest not re-run after the interrupt |
 
-**What the bot should do**
-
-1. From repo root, run smoke to completion (one process only), then full:
-   ```bash
-   python -u Error_mitigation/run_mitigation_experiment.py --preset smoke --ansatz both --outdir Error_mitigation/out_smoke
-   python -u Error_mitigation/run_mitigation_experiment.py --preset full --ansatz both --outdir Error_mitigation/out
-   ```
-2. If `out_smoke/optimized_params_ecd_h000_nd5.json` is still the 5-iter cache, delete it before `full` (or write `full` to `Error_mitigation/out`, which uses a different path and will re-optimize).
-3. Confirm in the smoke log: every `t_free=0` twin prints product-state TVD mean/max `≪ 1e-6` at the end (assertion already raises if it fails).
-4. Sanity checks on `out_smoke/summary.txt` / `results.json`:
-   - `ideal` readout: no `readout_only` method.
-   - `readout_realistic`: `readout_only` TVD `<` `raw` TVD.
-   - `loss` family: `oracle_binomial` residual near shot noise; if not, interleaving (not readout) is the issue.
-5. Run `python -m pytest tests/test_error_mitigation.py -q` and `python -m pytest -q` (existing suite must stay green).
-6. Do not edit the plan file. Do not modify `src/`.
-
-**Runtime note.** Each ECD noisy block (target + 12 twins + ZNE scales 2,3) took ~3–4 min locally at `ndepth=5`. Smoke is ~2 ansatz × 2 param sets × 3 families ≈ 12 such blocks plus SNAP (faster). Full is 40 twins × 3 κτ × 3 readout levels and will take hours. Fitting (`gdr_param` MLE) is cheap next to `HybridSimulator.density_matrix`.
-
-**Partial smoke numbers (ECD, random params, `loss`, κτ=0.003, 4000 shots)** — GDR did *not* beat raw; mild loss + shots, possible overfit/over-correct. Revisit after a finished run.
-
-| readout | raw TVD | gdr_param | oracle |
-|---------|--------:|----------:|-------:|
-| ideal | 0.0616 | 0.0646 | 0.0700 |
-| readout_realistic | 0.0683 | 0.0713 | 0.0725 |
+Do **not** re-run the full 108-cell baseline. Cheap loops: `run_ablation.py` (writes only under `out_research/`, reuses `out_research/cache/`). Scoreboard: `out_research/NOTEBOOK.md`, `out_research/adaptive_recipe.md`, `out_research/phase3/`.
 
 ---
 

@@ -20,6 +20,7 @@ from Error_mitigation.mitigation import (
     binomial_loss_kernel,
     choose_damp_alpha,
     damp_histogram,
+    fit_gdr_interleave,
     fock_kernel,
     holdout_indices,
     observe_histogram,
@@ -174,6 +175,19 @@ def test_damp_histogram_endpoints():
     assert mix.sum() == pytest.approx(1.0)
 
 
+def test_choose_damp_alpha_slack_picks_safer_mix():
+    p = np.zeros((2, 4, 4))
+    p[0, 0, 0] = 1.0
+    q = np.zeros_like(p)
+    q[0, 0, 0] = 0.55
+    q[1, 1, 1] = 0.45
+    eye2, eye4 = np.eye(2), np.eye(4)
+    a0, _ = choose_damp_alpha([p], [q], eye2, eye4, eye4, [p], alphas=np.linspace(0, 1, 5), slack=0.0)
+    a_s, info = choose_damp_alpha([p], [q], eye2, eye4, eye4, [p], alphas=np.linspace(0, 1, 5), slack=0.2)
+    assert a_s >= a0
+    assert info["slack"] == pytest.approx(0.2)
+
+
 def test_choose_damp_alpha_prefers_safe_when_unfold_is_wrong():
     p = np.zeros((2, 4, 4))
     p[0, 1, 1] = 1.0
@@ -270,6 +284,23 @@ def test_choose_mix_alpha_picks_better_end():
     alpha, info = choose_mix_alpha([p], [a], [p], alphas=np.linspace(0, 1, 5))
     assert alpha == pytest.approx(1.0)
     assert info["hold_tvd"] == pytest.approx(0.0)
+
+
+def test_interleave_kernels_column_stochastic():
+    cfg = circuit_noise("loss", 0.03)
+    spec = readout_spec("ideal", n_shots=200)
+    rng = np.random.default_rng(1)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    q = 0.85 * p + 0.15 * rng.random((2, 8, 8))
+    q = q / q.sum()
+    (cq, c1, c2), info = fit_gdr_interleave([p], [q], cfg, spec, ndepth=5, dims=(2, 8, 8), maxiter=15)
+    assert is_column_stochastic(cq)
+    assert is_column_stochastic(c1)
+    assert is_column_stochastic(c2)
+    assert info["kind"] == "gdr_interleave"
+    assert 0.15 <= info["eta_early"] <= 1.0
+    assert 0.15 <= info["eta_late"] <= 1.0
 
 
 def test_afterburn_kernels_column_stochastic():

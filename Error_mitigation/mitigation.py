@@ -923,6 +923,105 @@ def fit_gdr_afterburn(
     return (cq0, c1, c2), info
 
 
+def _interleave_fock(
+    eta_early: float,
+    eta_late: float,
+    nth: float,
+    p_down: float,
+    p_up: float,
+    eps: float,
+    p_nn: float,
+    n_fock: int,
+) -> np.ndarray:
+    """Loss then hops then loss then readout — not equivalent to one binomial."""
+    k = thermal_loss_kernel(eta_early, nth, n_fock)
+    k = shift_kernel(n_fock, p_down, -1) @ k
+    k = shift_kernel(n_fock, p_up, +1) @ k
+    k = leak_kernel(k, eps)
+    k = thermal_loss_kernel(eta_late, nth, n_fock) @ k
+    k = nearest_neighbor_fock_confusion(n_fock, p_nn) @ k
+    return _normalize_columns(k)
+
+
+def fit_gdr_interleave(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 160,
+    t_free: list[int] | None = None,
+) -> tuple[tuple[np.ndarray, np.ndarray, np.ndarray], dict]:
+    """Two-stage loss with hops in the middle (true interleaving structure).
+
+    A single end-of-circuit binomial commutes past Gaussians. Loss–hop–loss
+    does not: hops between two loss stages is the histogram-level analogue
+    of a non-Gaussian gate sitting in the idle. Fitted on t_free>0 twins
+    when present, initialized from the oracle split η_early = η_late = √η.
+    """
+    eta = float(np.clip(np.exp(-cfg.cumulative_kappa_t(int(ndepth))), 0.15, 1.0))
+    nth0 = float(np.clip(cfg.nth_cav, 0.0, 0.5))
+    split = float(np.sqrt(eta))
+    x0 = np.array([split, split, nth0, 0.0, 0.0, 0.0, spec.p01, spec.p10, spec.p_nn, spec.p_nn], dtype=float)
+    bounds = [
+        (0.15, 1.0),
+        (0.15, 1.0),
+        (0.0, 0.5),
+        (0.0, 0.3),
+        (0.0, 0.3),
+        (0.0, 0.3),
+        (0.0, 0.25),
+        (0.0, 0.25),
+        (0.0, 0.4),
+        (0.0, 0.4),
+    ]
+    if t_free is not None and any(int(t) > 0 for t in t_free):
+        keep = [i for i, t in enumerate(t_free) if int(t) > 0]
+        p_use, q_use = _select(p_ideals, np.asarray(keep)), _select(q_obs, np.asarray(keep))
+    else:
+        p_use, q_use = p_ideals, q_obs
+
+    def nll(x):
+        eta_e, eta_l, nth, p_down, p_up, eps, p01, p10, pnn1, pnn2 = (float(v) for v in x)
+        cq = qubit_kernel(p01, p10)
+        c1 = _interleave_fock(eta_e, eta_l, nth, p_down, p_up, eps, pnn1, dims[1])
+        c2 = _interleave_fock(eta_e, eta_l, nth, p_down, p_up, eps, pnn2, dims[2])
+        return _kernel_nll(p_use, q_use, spec.n_shots, cq, c1, c2)
+
+    result = optimize.minimize(
+        nll,
+        x0,
+        method="L-BFGS-B",
+        bounds=bounds,
+        options={"maxiter": int(maxiter), "ftol": 1e-10},
+    )
+    x = np.array([np.clip(result.x[i], bounds[i][0], bounds[i][1]) for i in range(len(x0))], dtype=float)
+    cq = qubit_kernel(x[6], x[7])
+    c1 = _interleave_fock(x[0], x[1], x[2], x[3], x[4], x[5], x[8], dims[1])
+    c2 = _interleave_fock(x[0], x[1], x[2], x[3], x[4], x[5], x[9], dims[2])
+    info = {
+        "kind": "gdr_interleave",
+        "eta_early": float(x[0]),
+        "eta_late": float(x[1]),
+        "nth": float(x[2]),
+        "p_down": float(x[3]),
+        "p_up": float(x[4]),
+        "eps": float(x[5]),
+        "p01": float(x[6]),
+        "p10": float(x[7]),
+        "p_nn1": float(x[8]),
+        "p_nn2": float(x[9]),
+        "eta_product": float(x[0] * x[1]),
+        "true_eta": eta,
+        "hops": float(x[3] + x[4] + x[5]),
+        "success": bool(result.success),
+        "nll": float(result.fun),
+    }
+    return (cq, c1, c2), info
+
+
 def choose_mix_alpha(
     p_ideals: list[np.ndarray],
     hists_a: list[np.ndarray],
@@ -981,20 +1080,33 @@ def choose_damp_alpha(
     p_safe: list[np.ndarray],
     *,
     alphas: np.ndarray | None = None,
+    slack: float = 0.0,
 ) -> tuple[float, dict]:
-    """Pick mix p = (1-α) unfold(q) + α p_safe that best matches twin ideals."""
+    """Pick mix p = (1-α) unfold(q) + α p_safe that best matches twin ideals.
+
+    ``slack>0`` takes the *largest* α whose twin TVD is within ``slack`` of
+    the best (conservative floor). Used to refuse a tiny unfold gain that
+    over-corrects the target (SNAP random comprehensive κτ=0.003).
+    """
     grid = np.linspace(0.0, 1.0, 21) if alphas is None else np.asarray(alphas, dtype=float)
     unfolded = [unfold(q, cq, c1, c2) for q in q_obs]
-    best_a, best_tvd = 0.0, None
+    scores = []
+    best_tvd = None
     for a in grid:
         tvds = []
         for p_id, p_u, p_s in zip(p_ideals, unfolded, p_safe):
             mix = (1.0 - float(a)) * p_u + float(a) * p_s
             tvds.append(total_variation(mix, p_id))
         mean = float(np.mean(tvds)) if tvds else 0.0
+        scores.append((float(a), mean))
         if best_tvd is None or mean < best_tvd:
-            best_tvd, best_a = mean, float(a)
-    return float(best_a), {"alpha": float(best_a), "hold_tvd": best_tvd}
+            best_tvd = mean
+    sl = max(float(slack), 0.0)
+    best_a = 0.0
+    for a, mean in scores:
+        if mean <= float(best_tvd) + sl + 1e-15:
+            best_a = a
+    return float(best_a), {"alpha": float(best_a), "hold_tvd": best_tvd, "slack": sl}
 
 
 def score_unfold_tvd(
