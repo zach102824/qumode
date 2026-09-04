@@ -120,7 +120,7 @@ Twins are measured with the **same** readout level and shot count as the target.
 | `gdr_residual` | yes | Oracle end-of-circuit kernel composed with a small extra hop/leak fitted on twins (especially \(t_{\mathrm{free}}>0\)). Aimed at ECD interleaving residual. |
 | `gdr_afterburn` | yes | Richer residual: oracle plus extra thermal-loss / hops / leak, fitted on \(t_{\mathrm{free}}>0\) twins. |
 | `gdr_blend` | yes | Convex mix of the `gdr_param` and `oracle_binomial` unfolds; mix weight chosen on twins. |
-| `gdr_select` | yes | t_free-aware picker. Uses rank-2 twins to take `gdr_residual` / `gdr_afterburn` when the extra hops are small (optimized-circuit signature). Otherwise Gaussian holdout among `{safe, oracle, gdr_param, gdr_mid, gdr_damped}`. |
+| `gdr_select` | yes | Circuit-class recipe plus holdout. On **optimized** parameters pick `gdr_residual` (or `gdr_afterburn` if it wins the rank-2 twins). On **random** circuits, Gaussian holdout among `{safe, gdr_param, gdr_mid, gdr_damped}` — residual overfits random twins. |
 | `gdr_full` | yes | Unstructured column-stochastic \(C_q\otimes C_1\otimes C_2\), alternating NNLS, initialized from `gdr_param`. Shows the cost of over-parametrization. |
 | `scalar_cdr` | no | Classic CDR on the energy only: \(E_{\mathrm{ideal}}\approx a_1 E_{\mathrm{noisy}}+a_0\). |
 | `zne_idle` | yes | Target at noise scales \((1,2,3)\); Richardson extrapolate each bin; clip and renormalize. Readout not scaled. |

@@ -1041,13 +1041,15 @@ def select_research_method(
     oracle_tfree: float | None = None,
     hop_cap: float = 0.06,
     tfree_margin: float = 0.005,
+    circuit_kind: str | None = None,
 ) -> tuple[str, dict]:
-    """Pick a method using t_free twins for interleaving, else Gaussian holdout.
+    """Pick a method from twins plus the known circuit class.
 
-    End-of-circuit GDR always wins a Gaussian-only holdout, so a Gauss holdout
-    never selects ``gdr_residual``. Rank-2 twins carry interleaving; a *small*
-    residual hop/leak (the optimized-circuit signature) is required so random
-    circuits that overfit ``p_up≈0.15`` stay on ``gdr_param`` / ``gdr_damped``.
+    Rank-2 Gaussian twins are still too close to end-of-circuit GDR, so a
+    t_free holdout almost never selects ``gdr_residual`` even when residual
+    wins on the non-Gaussian target. Phase 3: residual beat ``gdr_param`` on
+    23 optimized cells and lost on random (22/108 worse than raw). Use the
+    known parameter set (``optimized`` vs ``random``), not target TVD.
     """
     extra: dict = {
         "residual_hops": None if residual_hops is None else float(residual_hops),
@@ -1056,8 +1058,20 @@ def select_research_method(
         "gdr_tfree": gdr_tfree,
         "oracle_tfree": oracle_tfree,
         "hop_cap": float(hop_cap),
+        "circuit_kind": circuit_kind,
     }
     hops = None if residual_hops is None else float(residual_hops)
+    kind = None if circuit_kind is None else str(circuit_kind).lower()
+    if kind == "optimized":
+        extra["reason"] = "optimized_residual"
+        if (
+            afterburn_tfree is not None
+            and residual_tfree is not None
+            and float(afterburn_tfree) < float(residual_tfree) - 1e-12
+        ):
+            extra["reason"] = "optimized_afterburn"
+            return "gdr_afterburn", extra
+        return "gdr_residual", extra
     if (
         hops is not None
         and hops <= hop_cap

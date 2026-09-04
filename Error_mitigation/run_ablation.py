@@ -323,6 +323,7 @@ def mitigate_research(
     energy_tensor: np.ndarray,
     methods: tuple[str, ...],
     fit_maxiter: int,
+    circuit_kind: str | None = None,
 ) -> dict:
     p_ideal = phys["p_ideal"]
     p_twin = [phys["twin_p_ideal"][i] for i in range(phys["twin_p_ideal"].shape[0])]
@@ -557,6 +558,7 @@ def mitigate_research(
             afterburn_tfree=ab_tf,
             gdr_tfree=gdr_tf,
             oracle_tfree=ora_tf,
+            circuit_kind=circuit_kind,
         )
         if chosen == "safe":
             hist = p_safe_target
@@ -753,6 +755,7 @@ def run(args: argparse.Namespace) -> dict:
                             energy_tensor=energy_tensor,
                             methods=methods,
                             fit_maxiter=int(args.fit_maxiter),
+                            circuit_kind=pset,
                         )
                         metrics = {
                             name: compare_histograms(

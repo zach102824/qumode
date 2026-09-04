@@ -238,6 +238,18 @@ def test_select_research_method_picks_residual_on_small_hops():
     assert extra["reason"] == "tfree_residual"
 
 
+def test_select_research_method_uses_optimized_recipe():
+    name, extra = select_research_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.01)],
+        residual_hops=0.2,
+        residual_tfree=0.08,
+        gdr_tfree=0.04,
+        circuit_kind="optimized",
+    )
+    assert name == "gdr_residual"
+    assert extra["reason"] == "optimized_residual"
+
+
 def test_select_research_method_rejects_large_residual_hops():
     name, extra = select_research_method(
         [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.035)],

@@ -473,6 +473,7 @@ def mitigate_target(
     hist_by_scale: dict[int, np.ndarray],
     fit_maxiter: int,
     t_free: list[int] | None = None,
+    circuit_kind: str | None = None,
 ) -> dict:
     """Run every mitigation method on one (target, readout) histogram."""
     out: dict = {}
@@ -591,6 +592,7 @@ def mitigate_target(
         afterburn_tfree=score_unfold_tvd(p_twin_ideal, q_twin_obs, cq_ab, c1_ab, c2_ab, tf_i),
         gdr_tfree=score_unfold_tvd(p_twin_ideal, q_twin_obs, cq, c1, c2, tf_i),
         oracle_tfree=score_unfold_tvd(p_twin_ideal, q_twin_obs, cq_o, c1_o, c2_o, tf_i),
+        circuit_kind=circuit_kind,
     )
     if chosen == "safe":
         hist_sel = p_safe
@@ -784,6 +786,7 @@ def run(args: argparse.Namespace) -> dict:
                             hist_by_scale=hist_by_scale,
                             fit_maxiter=int(preset["fit_maxiter"]),
                             t_free=[int(t.t_free) for t in twins],
+                            circuit_kind=pset,
                         )
                         metrics = {}
                         for name, blob in mitigated.items():
