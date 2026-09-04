@@ -276,6 +276,35 @@ Cache replay only (physical hists unchanged). Hard cells: ECD random κτ=0.1 lo
 
 At 2048 shots, `gdr_param` can lose to raw on one random comprehensive+readout cell (0.431 vs 0.415); **damped / select still win**. Optimized comprehensive: `gdr_param` moves 0.343 → 0.351 (shot noise); damped still hurts, so select correctly keeps `gdr_param`. Recipe is robust; no method change.
 
-### Transfer (instance 1)
+### Transfer H001 (keep recipe; do not expand)
 
-`mixed_p_spin` H001 (`mixed_p_spin_p2-4_001.npz`, E0≈−6.032). No cached opt. One ECD 200-iter / 3-restart opt, then optimized-only matrix: loss + comprehensive, κτ ∈ {0.003, 0.1}, ideal + strong, default twins, 8192 / 40. Results in `out_research/leftover_xfer_h001/`.
+`mixed_p_spin` H001 (`mixed_p_spin_p2-4_001.npz`, E0≈−6.032, ground `|1,4,6⟩`). No cached opt. One ECD 200-iter / 3-restart opt into `out_research/optimized_params_ecd_h001_nd5.json` (33 min, best **E=−3.922**; restarts −3.08 / −2.44 / −3.92). Same budget that reached −6.23 on H000. Physics cache tagged `_h001` so H000 histograms are not reused.
+
+Small matrix: optimized only, default twins, 8192 / 40, loss + comprehensive, κτ ∈ {0.003, 0.1}, ideal + strong. `leftover_xfer_h001/`.
+
+| cell | raw | gdr_param / select | damped | residual | vs raw |
+|------|----:|-------------------:|-------:|---------:|:------:|
+| loss 0.003 ideal | 0.039 | **0.023** | 0.026 | 0.021 | win |
+| loss 0.003 strong | 0.247 | **0.038** | 0.045 | 0.031 | win |
+| loss 0.1 ideal | 0.587 | **0.495** | 0.519 | 0.958 | win |
+| loss 0.1 strong | 0.652 | **0.528** | 0.546 | 0.966 | win |
+| comprehensive 0.003 ideal | 0.176 | **0.112** | 0.149 | 0.086 | win |
+| comprehensive 0.003 strong | 0.342 | **0.130** | 0.159 | 0.090 | win |
+| comprehensive 0.1 ideal | **0.788** | 0.888 | 0.867 | 0.970 | lose |
+| comprehensive 0.1 strong | **0.810** | 0.874 | 0.855 | 0.965 | lose |
+
+Mild + high-κτ **loss** transfer. High-κτ **comprehensive** does not: every learned map over-corrects, damped still loses to raw, residual/oracle collapse. Switching optimized select to damped would regress the H000 comprehensive 0.1 cell (0.343 → 0.427). **Do not change the official recipe.** Do not spend the window on 20 Hamiltonians.
+
+H000 vs this weak H001 opt (same cells, `gdr_param`):
+
+| cell | H000 | H001 |
+|------|-----:|-----:|
+| loss 0.003 ideal | 0.0075 | 0.023 |
+| comprehensive 0.003 ideal | 0.052 | 0.112 |
+| comprehensive 0.1 ideal | 0.343 | 0.888 |
+
+The H001 circuit is closer to a random / poorly optimized ECD than to the H000 VQE. That is the transfer caveat, not a reason to flip the 86/108 default.
+
+### Phase 7 ship
+
+No official-recipe change. Adaptive twins + gated floor stay. Tests: 25 `test_error_mitigation`, 110 non-slow. Stop new ideas.
