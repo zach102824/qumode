@@ -308,3 +308,45 @@ The H001 circuit is closer to a random / poorly optimized ECD than to the H000 V
 ### Phase 7 ship
 
 No official-recipe change. Adaptive twins + gated floor stay. Tests: 25 `test_error_mitigation`, 110 non-slow. Stop new ideas.
+
+## Phase 8 — H001 lose, twin count, tail bins
+
+Adaptive / gated damped / optimized `gdr_param` unchanged. No `src/` edits. `out/` / `out_smoke/` untouched.
+
+### H001 comprehensive κτ=0.1 (keep recipe; stop expanding)
+
+Noiseless energies on H001: **E_random=+0.311**, first-budget **E_opt=−3.922**, E0=−6.032. The weak opt is not a random circuit.
+
+| circuit | twins | raw | gdr_param | damped | select |
+|---------|-------|----:|----------:|-------:|-------:|
+| H001 random comprehensive 0.1 ideal | span | 0.313 | 0.198 | **0.187** | **0.187** |
+| H001 weak opt (−3.92) | default | **0.788** | 0.888 | 0.867 | 0.888 |
+| H001 weak opt (−3.92) | span | **0.788** | 0.829 | 0.815 | 0.829 |
+| H001 extra opt (−4.82) | default | **0.795** | 0.943 | 0.894 | 0.943 |
+
+Random + official random recipe **wins**. Span twins on the weak opt still lose. One extra opt budget (H000 warm start −3.968; two new random restarts; best **−4.819** from `random_4`, 37 min) still loses, and over-corrects more. H000 warm start does not transfer.
+
+**Verdict:** the lose is this mid-quality VQE under comprehensive κτ=0.1, not a bad label and not “one more restart.” Transfer of the *optimized* recipe needs a near-E0 noiseless opt (H000: −6.23 vs E0 −6.23). This instance did not yield one in 6 starts. **Do not change the official recipe. Do not open 20 Hamiltonians.**
+
+Artifacts: `leftover_xfer_h001_rand/`, `leftover_xfer_h001_spanopt/`, `leftover_xfer_h001_opt2/`.
+
+### Twin-count sweep (keep n_train=40)
+
+Fit-only subsets of the official 40-twin H000 caches (`--fit-n-train`). Four hard cells at 8192, ideal readout:
+
+| cell | n=10 select | n=20 select | n=40 select |
+|------|------------:|------------:|------------:|
+| ECD random loss 0.1 | 0.230 | 0.230 | **0.201** |
+| ECD random comprehensive 0.1 | 0.361 | 0.360 | **0.342** |
+| ECD opt loss 0.1 | 0.203 | 0.201 | 0.195 |
+| ECD opt comprehensive 0.1 | 0.343 | 0.341 | 0.343 |
+
+Optimized `gdr_param` is already at the n=40 number with **10** twins. Random high-κτ still gains ~0.02–0.03 from 40 (and at n=20, random comprehensive `gdr_param` 0.406 **loses** to raw 0.403; damped/select still win at 0.360). Official `n_train=40` stays — it is the random/span requirement, not the optimized one.
+
+### Tail-bin truncation (drop)
+
+Zero twin bins below 0.5/shots or 2/shots, refit `gdr_param` (25 s). Occupancy at 0.5/shots equals the full hist (multinomial min is 1/8192). TVD change ≤0.001 on the three hard ideal cells. **Drop.**
+
+### Phase 8 ship
+
+No official-recipe change. Tests: 26 `test_error_mitigation`. Stop new ideas.

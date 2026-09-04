@@ -1,0 +1,34 @@
+Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)
+Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, zne_idle, readout_then_zne
+
+Headline at κτ = 0.1  (readout_only vs gdr_param vs gdr_select vs oracle_binomial)
+
+
+Full table (all cases)
+
+ansatz params     family                       kt readout            method                  TVD       dE     dPgs
+------------------------------------------------------------------------------------------------------------------
+ecd    random     loss                      0.100 ideal              raw                  0.2983   0.0834   0.0008
+ecd    random     loss                      0.100 ideal              gdr_param            0.2302   0.0412   0.0020
+ecd    random     loss                      0.100 ideal              gdr_damped           0.2151   0.0475   0.0018
+ecd    random     loss                      0.100 ideal              gdr_select           0.2302   0.0412   0.0020
+ecd    random     loss                      0.100 readout_realistic  raw                  0.3078   0.0560   0.0010
+ecd    random     loss                      0.100 readout_realistic  gdr_param            0.2380   0.0321   0.0048
+ecd    random     loss                      0.100 readout_realistic  gdr_damped           0.2210   0.0181   0.0042
+ecd    random     loss                      0.100 readout_realistic  gdr_select           0.2380   0.0321   0.0048
+ecd    random     loss                      0.100 readout_strong     raw                  0.3153   0.0285   0.0010
+ecd    random     loss                      0.100 readout_strong     gdr_param            0.2496   0.0129   0.0030
+ecd    random     loss                      0.100 readout_strong     gdr_damped           0.2396   0.0174   0.0027
+ecd    random     loss                      0.100 readout_strong     gdr_select           0.2496   0.0129   0.0030
+ecd    random     comprehensive             0.100 ideal              raw                  0.4031   0.1404   0.0010
+ecd    random     comprehensive             0.100 ideal              gdr_param            0.4062   0.1449   0.0075
+ecd    random     comprehensive             0.100 ideal              gdr_damped           0.3596   0.1438   0.0059
+ecd    random     comprehensive             0.100 ideal              gdr_select           0.3596   0.1438   0.0059
+ecd    random     comprehensive             0.100 readout_realistic  raw                  0.3980   0.1416   0.0003
+ecd    random     comprehensive             0.100 readout_realistic  gdr_param            0.3741   0.0232   0.0037
+ecd    random     comprehensive             0.100 readout_realistic  gdr_damped           0.3139   0.0389   0.0025
+ecd    random     comprehensive             0.100 readout_realistic  gdr_select           0.3203   0.0300   0.0027
+ecd    random     comprehensive             0.100 readout_strong     raw                  0.3995   0.1153   0.0011
+ecd    random     comprehensive             0.100 readout_strong     gdr_param            0.3593   0.0388   0.0065
+ecd    random     comprehensive             0.100 readout_strong     gdr_damped           0.3208   0.0738   0.0046
+ecd    random     comprehensive             0.100 readout_strong     gdr_select           0.3221   0.0688   0.0049

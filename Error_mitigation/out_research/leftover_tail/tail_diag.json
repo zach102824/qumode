@@ -1,0 +1,74 @@
+[
+  {
+    "cell": "random loss",
+    "kind": "full",
+    "thresh": 0.0,
+    "raw": 0.2983212671197147,
+    "gdr": 0.2087040761279129,
+    "twin_occ": 0.3228515625
+  },
+  {
+    "cell": "random loss",
+    "kind": "half_shot",
+    "thresh": 6.103515625e-05,
+    "raw": 0.2983212671197147,
+    "gdr": 0.2087040761279129,
+    "twin_occ": 0.3228515625
+  },
+  {
+    "cell": "random loss",
+    "kind": "two_shot",
+    "thresh": 0.000244140625,
+    "raw": 0.2983212671197147,
+    "gdr": 0.2085246722746938,
+    "twin_occ": 0.293359375
+  },
+  {
+    "cell": "random comprehensive",
+    "kind": "full",
+    "thresh": 0.0,
+    "raw": 0.4030952554325703,
+    "gdr": 0.3765050280946804,
+    "twin_occ": 0.4783203125
+  },
+  {
+    "cell": "random comprehensive",
+    "kind": "half_shot",
+    "thresh": 6.103515625e-05,
+    "raw": 0.4030952554325703,
+    "gdr": 0.3765050280946804,
+    "twin_occ": 0.4783203125
+  },
+  {
+    "cell": "random comprehensive",
+    "kind": "two_shot",
+    "thresh": 0.000244140625,
+    "raw": 0.4030952554325703,
+    "gdr": 0.3764547184327507,
+    "twin_occ": 0.416796875
+  },
+  {
+    "cell": "optimized comprehensive",
+    "kind": "full",
+    "thresh": 0.0,
+    "raw": 0.9085922712736444,
+    "gdr": 0.34464779941040047,
+    "twin_occ": 0.2119140625
+  },
+  {
+    "cell": "optimized comprehensive",
+    "kind": "half_shot",
+    "thresh": 6.103515625e-05,
+    "raw": 0.9085922712736444,
+    "gdr": 0.34464779941040047,
+    "twin_occ": 0.2119140625
+  },
+  {
+    "cell": "optimized comprehensive",
+    "kind": "two_shot",
+    "thresh": 0.000244140625,
+    "raw": 0.9085922712736444,
+    "gdr": 0.3437157002167877,
+    "twin_occ": 0.1884765625
+  }
+]
