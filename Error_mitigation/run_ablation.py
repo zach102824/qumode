@@ -31,12 +31,15 @@ for _path in (ROOT, SRC):
 from qumode_vqe.measurement import energy_from_histogram
 from qumode_vqe.noise import noise_as_dict
 
-from Error_mitigation.metrics import compare_histograms
+from Error_mitigation.metrics import compare_histograms, total_variation
 from Error_mitigation.mitigation import (
     apply_scalar_cdr,
     choose_damp_alpha,
     damp_histogram,
     energy_weights,
+    holdout_indices,
+    score_unfold_tvd,
+    select_by_holdout,
     fit_gdr_holdout,
     fit_gdr_mid,
     fit_gdr_param,
@@ -98,6 +101,7 @@ ALL_METHODS = (
     "gdr_tfree",
     "gdr_residual",
     "gdr_energy",
+    "gdr_select",
     "scalar_cdr",
     "zne_idle",
     "readout_then_zne",
@@ -116,6 +120,7 @@ CHEAP_METHODS = (
     "gdr_mid",
     "gdr_tfree",
     "gdr_residual",
+    "gdr_select",
     "zne_idle",
     "readout_then_zne",
     "zne_then_readout",
@@ -321,6 +326,7 @@ def mitigate_research(
     p_safe_target = safe_histogram(q_obs, spec, DIMS)
     p_safe_twins = [safe_histogram(q, spec, DIMS) for q in q_twins]
     out: dict = {}
+    kernels: dict[str, tuple] = {}
 
     if "raw" in methods:
         out["raw"] = {"hist": q_obs, "energy": e_obs}
@@ -333,21 +339,24 @@ def mitigate_research(
                 "energy": energy_from_histogram(ro.histogram, energy_tensor),
             }
 
-    if "oracle_binomial" in methods:
+    if "oracle_binomial" in methods or "gdr_select" in methods:
         cq_o, c1_o, c2_o = oracle_kernels(cfg, spec, ndepth, DIMS)
+        kernels["oracle_binomial"] = (cq_o, c1_o, c2_o)
         p_oracle = unfold(q_obs, cq_o, c1_o, c2_o)
-        out["oracle_binomial"] = {
-            "hist": p_oracle,
-            "energy": energy_from_histogram(p_oracle, energy_tensor),
-            "residual_tvd": oracle_residual(p_ideal, q_obs, cq_o, c1_o, c2_o),
-        }
+        if "oracle_binomial" in methods:
+            out["oracle_binomial"] = {
+                "hist": p_oracle,
+                "energy": energy_from_histogram(p_oracle, energy_tensor),
+                "residual_tvd": oracle_residual(p_ideal, q_obs, cq_o, c1_o, c2_o),
+            }
 
     theta_base = fit_info_base = None
-    if any(m in methods for m in ("gdr_param", "gdr_damped", "gdr_reg", "gdr_full")):
+    if any(m in methods for m in ("gdr_param", "gdr_damped", "gdr_reg", "gdr_full", "gdr_select")):
         theta_base, fit_info_base = fit_gdr_param(
             p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
         )
         cq, c1, c2 = _kernels_from_fit(theta_base, DIMS)
+        kernels["gdr_param"] = (cq, c1, c2)
         p_gdr = unfold(q_obs, cq, c1, c2)
         if "gdr_param" in methods:
             out["gdr_param"] = {
@@ -368,6 +377,7 @@ def mitigate_research(
     if "gdr_ridge" in methods:
         theta, info = fit_gdr_ridge(p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter, lam=1e-3)
         cq, c1, c2 = _kernels_from_fit(theta, DIMS)
+        kernels["gdr_ridge"] = (cq, c1, c2)
         p = unfold(q_obs, cq, c1, c2)
         out["gdr_ridge"] = {
             "hist": p,
@@ -380,6 +390,7 @@ def mitigate_research(
             p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
         )
         cq, c1, c2 = _kernels_from_fit(theta_h, DIMS)
+        kernels["gdr_holdout"] = (cq, c1, c2)
         p_h = unfold(q_obs, cq, c1, c2)
         if "gdr_holdout" in methods:
             out["gdr_holdout"] = {
@@ -399,6 +410,7 @@ def mitigate_research(
     if "gdr_mid" in methods:
         theta, info = fit_gdr_mid(p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter)
         cq, c1, c2 = _kernels_from_fit(theta, DIMS)
+        kernels["gdr_mid"] = (cq, c1, c2)
         p = unfold(q_obs, cq, c1, c2)
         out["gdr_mid"] = {"hist": p, "energy": energy_from_histogram(p, energy_tensor), "fit": info}
 
@@ -414,6 +426,7 @@ def mitigate_research(
         (cq, c1, c2), info = fit_gdr_residual(
             p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=min(fit_maxiter, 120), t_free=t_free
         )
+        kernels["gdr_residual"] = (cq, c1, c2)
         p = unfold(q_obs, cq, c1, c2)
         out["gdr_residual"] = {
             "hist": p,
@@ -448,6 +461,39 @@ def mitigate_research(
     if "zne_then_readout" in methods and 1 in hist_by_scale and 2 in hist_by_scale:
         p = zne_then_readout(hist_by_scale, spec, DIMS)
         out["zne_then_readout"] = {"hist": p, "energy": energy_from_histogram(p, energy_tensor)}
+
+    if "gdr_select" in methods and kernels:
+        train_i, hold_i = holdout_indices(len(p_twin), 0.25)
+        if hold_i.size == 0:
+            hold_i = train_i
+        cand_scores: list[tuple[str, float]] = []
+        safe_hold = float(
+            np.mean([total_variation(p_safe_twins[int(i)], p_twin[int(i)]) for i in hold_i])
+        )
+        cand_scores.append(("safe", safe_hold))
+        for name, (cq, c1, c2) in kernels.items():
+            cand_scores.append((name, score_unfold_tvd(p_twin, q_twins, cq, c1, c2, hold_i)))
+        chosen, score, ranked = select_by_holdout(cand_scores)
+        if chosen == "safe":
+            hist = p_safe_target
+        else:
+            cq, c1, c2 = kernels[chosen]
+            p_u = unfold(q_obs, cq, c1, c2)
+            # If unfold wins on holdout but is close to safe, still allow a little damp.
+            alpha, _ = choose_damp_alpha(
+                [p_twin[int(i)] for i in hold_i],
+                [q_twins[int(i)] for i in hold_i],
+                cq,
+                c1,
+                c2,
+                [p_safe_twins[int(i)] for i in hold_i],
+            )
+            hist = damp_histogram(p_u, p_safe_target, alpha) if alpha > 0.05 else p_u
+        out["gdr_select"] = {
+            "hist": hist,
+            "energy": energy_from_histogram(hist, energy_tensor),
+            "fit": {"kind": "gdr_select", "chosen": chosen, "hold_tvd": score, "ranked": ranked},
+        }
 
     return out
 

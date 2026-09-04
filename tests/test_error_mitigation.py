@@ -23,6 +23,7 @@ from Error_mitigation.mitigation import (
     fock_kernel,
     holdout_indices,
     observe_histogram,
+    select_by_holdout,
     oracle_kernels,
     readout_then_zne,
     richardson_lucy,
@@ -204,6 +205,13 @@ def test_readout_then_zne_beats_raw_zne_under_readout():
     other = zne_then_readout(blurred, spec, (2, 8, 8), degree=2)
     assert total_variation(hyb, p0) < total_variation(raw_zne, p0)
     assert total_variation(other, p0) <= total_variation(raw_zne, p0) + 1e-12
+
+
+def test_select_by_holdout_keeps_first_on_tie():
+    name, score, ranked = select_by_holdout([("a", 0.2), ("b", 0.1), ("c", 0.1)])
+    assert name == "b"
+    assert score == pytest.approx(0.1)
+    assert len(ranked) == 3
 
 
 def test_designed_twin_plan_spans_magnitude():

@@ -69,3 +69,21 @@ Added:
 ## Phase 2 microbenches
 
 See `out_research/<tag>/ablation_summary.md` for numbers. Same-run `gdr_param` is the controlled baseline; `base_*` columns are PR #6 (8192 / 40) and are not shot-matched on cheap loops.
+
+### `micro_ab` — ECD loss, default twins, shots=4096, n_train=20, κτ∈{0.003,0.1}
+
+12 cells. Wall ~3 min (sim 3–9 s/block; fits dominate).
+
+| verdict | method | evidence |
+|---------|--------|----------|
+| **keep (A)** | `gdr_damped` | Fixes GDR-worse-than-raw on ECD **random κτ=0.1**: TVD 0.29 vs gdr 0.36–0.41 (and beats raw). α≈0.3–0.4. On optimized mild, α=0 (does not spoil a good unfold). |
+| **keep (A/E)** | `gdr_mid` / `gdr_holdout` | Random κτ=0.1 ideal: mid 0.307 vs gdr 0.362 vs raw 0.317. Small help on optimized mild. |
+| **drop as default damp** | `gdr_reg` on optimized high-κτ | α=0.20–0.25 *hurts* when unfold is already good (0.30 vs gdr 0.20). |
+| **keep (B)** | `readout_then_zne` | Optimized loss κτ=0.003 **strong readout**: ZNE 0.145 → **0.025** (PR #6 ZNE was 0.152 ≈ raw 0.153). Still above gdr 0.009, but the idle-ZNE failure mode is fixed. Random mild ZNE remains bad (~0.22). |
+| **keep (D) on optimized** | `gdr_residual` | **Best on all 6 optimized cells.** Mild: 0.0093 / 0.0121 / 0.0076 vs gdr 0.0114 / 0.0179 / 0.0090 (matches oracle). High κτ: ~0.192–0.204 vs gdr 0.197–0.213. Residual hops ≈0 on mild; small leak at κτ=0.1. |
+| **drop (D) on random** | `gdr_residual` | Overfits (p_up≈0.15 at κτ=0.1); TVD 0.49 vs raw 0.32. |
+| **keep as combo** | `gdr_select` | Holdout picks residual vs damped vs mid vs safe. Added after `micro_ab`. |
+
+Random mild ideal is still tiny (raw 0.0618, gdr 0.0639, damped 0.0622) — next lever is twin span (C), not more regularization.
+
+PR #6 numbers on these cells differ by shot count (8192/40 vs 4096/20) but ranking matches.

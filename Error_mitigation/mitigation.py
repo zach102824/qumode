@@ -908,6 +908,34 @@ def choose_damp_alpha(
     return float(best_a), {"alpha": float(best_a), "hold_tvd": best_tvd}
 
 
+def score_unfold_tvd(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cq: np.ndarray,
+    c1: np.ndarray,
+    c2: np.ndarray,
+    idx: np.ndarray | None = None,
+) -> float:
+    """Mean TVD(unfold(q), p_ideal) on a twin subset (holdout selector)."""
+    if idx is None:
+        idx = np.arange(len(p_ideals))
+    tvds = []
+    for i in idx:
+        tvds.append(total_variation(unfold(q_obs[int(i)], cq, c1, c2), p_ideals[int(i)]))
+    return float(np.mean(tvds)) if tvds else 0.0
+
+
+def select_by_holdout(candidates: list[tuple[str, float]]) -> tuple[str, float, list[dict]]:
+    """Pick the candidate with lowest holdout TVD. Ties keep the first."""
+    ranked = []
+    best_name, best_score = candidates[0]
+    for name, score in candidates:
+        ranked.append({"name": name, "hold_tvd": float(score)})
+        if score < best_score - 1e-12:
+            best_name, best_score = name, score
+    return best_name, float(best_score), ranked
+
+
 def damp_histogram(p_unfold: np.ndarray, p_safe: np.ndarray, alpha: float) -> np.ndarray:
     a = float(np.clip(alpha, 0.0, 1.0))
     p = (1.0 - a) * np.asarray(p_unfold, dtype=float) + a * np.asarray(p_safe, dtype=float)
