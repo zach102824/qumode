@@ -1,0 +1,204 @@
+FULL_START 2026-09-04T09:52:51Z
+instance H000  file=mixed_p_spin_p2-4_000.npz  E0=-7.1107  ground=1111100 (1, 7, 4)
+
+=== ecd  N_d=5 ===
+  ecd restart 1/3: E=-6.229770 nfev=9061
+  ecd restart 2/3: E=-5.203964 nfev=8979
+  ecd restart 3/3: E=-5.075433 nfev=9020
+  wrote optimized_params_ecd_h000_nd5.json  E=-6.229770  (2380.8s)
+  building 40 Gaussian twins for random ...
+  sim loss  κτ=0.003  random  (target + 40 twins) ...
+    physical histograms in 5.0s
+    ideal                 raw TVD=0.0461  gdr=0.0459  oracle=0.0525
+    readout_realistic     raw TVD=0.0613  gdr=0.0499  oracle=0.0533
+    readout_strong        raw TVD=0.0996  gdr=0.0606  oracle=0.0671
+  sim loss  κτ=0.03  random  (target + 40 twins) ...
+    physical histograms in 10.0s
+    ideal                 raw TVD=0.1423  gdr=0.1283  oracle=0.2042
+    readout_realistic     raw TVD=0.1540  gdr=0.1304  oracle=0.2086
+    readout_strong        raw TVD=0.1711  gdr=0.1263  oracle=0.2034
+  sim loss  κτ=0.1  random  (target + 40 twins) ...
+    physical histograms in 8.8s
+    ideal                 raw TVD=0.2991  gdr=0.3725  oracle=0.5377
+    readout_realistic     raw TVD=0.2978  gdr=0.3940  oracle=0.5399
+    readout_strong        raw TVD=0.3142  gdr=0.3763  oracle=0.5268
+  sim loss_thermal_dephasing  κτ=0.003  random  (target + 40 twins) ...
+    physical histograms in 13.4s
+    ideal                 raw TVD=0.0488  gdr=0.0458  oracle=0.0513
+    readout_realistic     raw TVD=0.0610  gdr=0.0523  oracle=0.0565
+    readout_strong        raw TVD=0.1005  gdr=0.0655  oracle=0.0688
+  sim loss_thermal_dephasing  κτ=0.03  random  (target + 40 twins) ...
+    physical histograms in 18.4s
+    ideal                 raw TVD=0.1773  gdr=0.1447  oracle=0.2233
+    readout_realistic     raw TVD=0.1824  gdr=0.1740  oracle=0.2471
+    readout_strong        raw TVD=0.2056  gdr=0.1588  oracle=0.2295
+  sim loss_thermal_dephasing  κτ=0.1  random  (target + 40 twins) ...
+    physical histograms in 22.1s
+    ideal                 raw TVD=0.3319  gdr=0.4067  oracle=0.5427
+    readout_realistic     raw TVD=0.3286  gdr=0.3960  oracle=0.5368
+    readout_strong        raw TVD=0.3361  gdr=0.4211  oracle=0.5471
+  sim comprehensive  κτ=0.003  random  (target + 40 twins) ...
+    physical histograms in 21.0s
+    ideal                 raw TVD=0.0801  gdr=0.0713  oracle=0.0918
+    readout_realistic     raw TVD=0.1007  gdr=0.0847  oracle=0.1017
+    readout_strong        raw TVD=0.1339  gdr=0.0911  oracle=0.1094
+  sim comprehensive  κτ=0.03  random  (target + 40 twins) ...
+    physical histograms in 30.0s
+    ideal                 raw TVD=0.2380  gdr=0.2841  oracle=0.4156
+    readout_realistic     raw TVD=0.2357  gdr=0.2897  oracle=0.4241
+    readout_strong        raw TVD=0.2593  gdr=0.3045  oracle=0.4479
+  sim comprehensive  κτ=0.1  random  (target + 40 twins) ...
+    physical histograms in 35.4s
+    ideal                 raw TVD=0.3990  gdr=0.5392  oracle=0.7371
+    readout_realistic     raw TVD=0.4052  gdr=0.5224  oracle=0.7399
+    readout_strong        raw TVD=0.4035  gdr=0.5287  oracle=0.7456
+  building 40 Gaussian twins for optimized ...
+  sim loss  κτ=0.003  optimized  (target + 40 twins) ...
+    physical histograms in 5.2s
+    ideal                 raw TVD=0.0363  gdr=0.0075  oracle=0.0069
+    readout_realistic     raw TVD=0.0758  gdr=0.0107  oracle=0.0099
+    readout_strong        raw TVD=0.1534  gdr=0.0075  oracle=0.0062
+  sim loss  κτ=0.03  optimized  (target + 40 twins) ...
+    physical histograms in 6.4s
+    ideal                 raw TVD=0.3143  gdr=0.0724  oracle=0.0677
+    readout_realistic     raw TVD=0.3385  gdr=0.0731  oracle=0.0679
+    readout_strong        raw TVD=0.3837  gdr=0.0803  oracle=0.0738
+  sim loss  κτ=0.1  optimized  (target + 40 twins) ...
+    physical histograms in 10.9s
+    ideal                 raw TVD=0.7064  gdr=0.2015  oracle=0.1969
+    readout_realistic     raw TVD=0.7082  gdr=0.2064  oracle=0.2021
+    readout_strong        raw TVD=0.7233  gdr=0.2087  oracle=0.2054
+  sim loss_thermal_dephasing  κτ=0.003  optimized  (target + 40 twins) ...
+    physical histograms in 12.5s
+    ideal                 raw TVD=0.0542  gdr=0.0193  oracle=0.0151
+    readout_realistic     raw TVD=0.0873  gdr=0.0181  oracle=0.0125
+    readout_strong        raw TVD=0.1709  gdr=0.0218  oracle=0.0155
+  sim loss_thermal_dephasing  κτ=0.03  optimized  (target + 40 twins) ...
+    physical histograms in 14.5s
+    ideal                 raw TVD=0.3950  gdr=0.1317  oracle=0.1147
+    readout_realistic     raw TVD=0.4263  gdr=0.1252  oracle=0.1063
+    readout_strong        raw TVD=0.4448  gdr=0.1055  oracle=0.0936
+  sim loss_thermal_dephasing  κτ=0.1  optimized  (target + 40 twins) ...
+    physical histograms in 19.4s
+    ideal                 raw TVD=0.7671  gdr=0.2700  oracle=0.2574
+    readout_realistic     raw TVD=0.7786  gdr=0.2825  oracle=0.2681
+    readout_strong        raw TVD=0.7903  gdr=0.2978  oracle=0.2815
+  sim comprehensive  κτ=0.003  optimized  (target + 40 twins) ...
+    physical histograms in 17.1s
+    ideal                 raw TVD=0.1823  gdr=0.0534  oracle=0.1016
+    readout_realistic     raw TVD=0.2158  gdr=0.0523  oracle=0.1061
+    readout_strong        raw TVD=0.2722  gdr=0.0491  oracle=0.0996
+  sim comprehensive  κτ=0.03  optimized  (target + 40 twins) ...
+    physical histograms in 18.6s
+    ideal                 raw TVD=0.5762  gdr=0.1434  oracle=0.2155
+    readout_realistic     raw TVD=0.5832  gdr=0.1484  oracle=0.2189
+    readout_strong        raw TVD=0.6126  gdr=0.1441  oracle=0.2148
+  sim comprehensive  κτ=0.1  optimized  (target + 40 twins) ...
+    physical histograms in 20.6s
+    ideal                 raw TVD=0.9082  gdr=0.3429  oracle=0.4068
+    readout_realistic     raw TVD=0.9094  gdr=0.3519  oracle=0.4122
+    readout_strong        raw TVD=0.9062  gdr=0.3508  oracle=0.4108
+
+=== snap  N_d=2 ===
+  snap restart 1/3: E=-5.176224 nfev=777
+  snap restart 2/3: E=-5.177780 nfev=8103
+  snap restart 3/3: E=-5.176224 nfev=333
+  wrote optimized_params_snap_h000_nd2.json  E=-5.177780  (725.9s)
+  building 40 Gaussian twins for random ...
+  sim loss  κτ=0.003  random  (target + 40 twins) ...
+    physical histograms in 3.5s
+    ideal                 raw TVD=0.0194  gdr=0.0223  oracle=0.0229
+    readout_realistic     raw TVD=0.0424  gdr=0.0308  oracle=0.0309
+    readout_strong        raw TVD=0.0974  gdr=0.0356  oracle=0.0363
+  sim loss  κτ=0.03  random  (target + 40 twins) ...
+    physical histograms in 4.7s
+    ideal                 raw TVD=0.1427  gdr=0.0851  oracle=0.0963
+    readout_realistic     raw TVD=0.1551  gdr=0.0853  oracle=0.0939
+    readout_strong        raw TVD=0.1849  gdr=0.1043  oracle=0.1105
+  sim loss  κτ=0.1  random  (target + 40 twins) ...
+    physical histograms in 3.3s
+    ideal                 raw TVD=0.3330  gdr=0.2329  oracle=0.2440
+    readout_realistic     raw TVD=0.3444  gdr=0.2449  oracle=0.2611
+    readout_strong        raw TVD=0.3545  gdr=0.2580  oracle=0.2769
+  sim loss_thermal_dephasing  κτ=0.003  random  (target + 40 twins) ...
+    physical histograms in 6.0s
+    ideal                 raw TVD=0.0293  gdr=0.0304  oracle=0.0299
+    readout_realistic     raw TVD=0.0487  gdr=0.0299  oracle=0.0293
+    readout_strong        raw TVD=0.0995  gdr=0.0380  oracle=0.0387
+  sim loss_thermal_dephasing  κτ=0.03  random  (target + 40 twins) ...
+    physical histograms in 7.4s
+    ideal                 raw TVD=0.1568  gdr=0.0972  oracle=0.1099
+    readout_realistic     raw TVD=0.1596  gdr=0.1065  oracle=0.1144
+    readout_strong        raw TVD=0.1991  gdr=0.1074  oracle=0.1039
+  sim loss_thermal_dephasing  κτ=0.1  random  (target + 40 twins) ...
+    physical histograms in 7.4s
+    ideal                 raw TVD=0.3562  gdr=0.2419  oracle=0.2680
+    readout_realistic     raw TVD=0.3466  gdr=0.2560  oracle=0.2884
+    readout_strong        raw TVD=0.3667  gdr=0.2835  oracle=0.2986
+  sim comprehensive  κτ=0.003  random  (target + 40 twins) ...
+    physical histograms in 7.0s
+    ideal                 raw TVD=0.0413  gdr=0.0445  oracle=0.0467
+    readout_realistic     raw TVD=0.0523  gdr=0.0324  oracle=0.0348
+    readout_strong        raw TVD=0.0950  gdr=0.0410  oracle=0.0462
+  sim comprehensive  κτ=0.03  random  (target + 40 twins) ...
+    physical histograms in 6.9s
+    ideal                 raw TVD=0.2380  gdr=0.1436  oracle=0.1670
+    readout_realistic     raw TVD=0.2528  gdr=0.1406  oracle=0.1692
+    readout_strong        raw TVD=0.2711  gdr=0.1500  oracle=0.1705
+  sim comprehensive  κτ=0.1  random  (target + 40 twins) ...
+    physical histograms in 13.0s
+    ideal                 raw TVD=0.4663  gdr=0.4109  oracle=0.4934
+    readout_realistic     raw TVD=0.4725  gdr=0.4005  oracle=0.4878
+    readout_strong        raw TVD=0.4744  gdr=0.4373  oracle=0.5097
+  building 40 Gaussian twins for optimized ...
+  sim loss  κτ=0.003  optimized  (target + 40 twins) ...
+    physical histograms in 3.2s
+    ideal                 raw TVD=0.0546  gdr=0.0146  oracle=0.0223
+    readout_realistic     raw TVD=0.0954  gdr=0.0191  oracle=0.0259
+    readout_strong        raw TVD=0.1830  gdr=0.0127  oracle=0.0188
+  sim loss  κτ=0.03  optimized  (target + 40 twins) ...
+    physical histograms in 4.6s
+    ideal                 raw TVD=0.3584  gdr=0.0971  oracle=0.1613
+    readout_realistic     raw TVD=0.3812  gdr=0.0908  oracle=0.1608
+    readout_strong        raw TVD=0.4380  gdr=0.1067  oracle=0.1795
+  sim loss  κτ=0.1  optimized  (target + 40 twins) ...
+    physical histograms in 4.7s
+    ideal                 raw TVD=0.6658  gdr=0.4163  oracle=0.5296
+    readout_realistic     raw TVD=0.6552  gdr=0.3673  oracle=0.4818
+    readout_strong        raw TVD=0.6794  gdr=0.4051  oracle=0.5288
+  sim loss_thermal_dephasing  κτ=0.003  optimized  (target + 40 twins) ...
+    physical histograms in 4.9s
+    ideal                 raw TVD=0.0556  gdr=0.0129  oracle=0.0224
+    readout_realistic     raw TVD=0.1027  gdr=0.0161  oracle=0.0267
+    readout_strong        raw TVD=0.1879  gdr=0.0144  oracle=0.0265
+  sim loss_thermal_dephasing  κτ=0.03  optimized  (target + 40 twins) ...
+    physical histograms in 7.2s
+    ideal                 raw TVD=0.3860  gdr=0.0923  oracle=0.1846
+    readout_realistic     raw TVD=0.4155  gdr=0.0980  oracle=0.1950
+    readout_strong        raw TVD=0.4687  gdr=0.0994  oracle=0.2094
+  sim loss_thermal_dephasing  κτ=0.1  optimized  (target + 40 twins) ...
+    physical histograms in 7.3s
+    ideal                 raw TVD=0.6952  gdr=0.4322  oracle=0.5760
+    readout_realistic     raw TVD=0.7087  gdr=0.4417  oracle=0.6006
+    readout_strong        raw TVD=0.7189  gdr=0.4596  oracle=0.6229
+  sim comprehensive  κτ=0.003  optimized  (target + 40 twins) ...
+    physical histograms in 6.0s
+    ideal                 raw TVD=0.1033  gdr=0.0270  oracle=0.0415
+    readout_realistic     raw TVD=0.1443  gdr=0.0270  oracle=0.0445
+    readout_strong        raw TVD=0.2283  gdr=0.0332  oracle=0.0490
+  sim comprehensive  κτ=0.03  optimized  (target + 40 twins) ...
+    physical histograms in 9.1s
+    ideal                 raw TVD=0.5508  gdr=0.2035  oracle=0.3311
+    readout_realistic     raw TVD=0.5728  gdr=0.2285  oracle=0.3487
+    readout_strong        raw TVD=0.5979  gdr=0.2499  oracle=0.3608
+  sim comprehensive  κτ=0.1  optimized  (target + 40 twins) ...
+    physical histograms in 12.3s
+    ideal                 raw TVD=0.7933  gdr=0.6320  oracle=0.7970
+    readout_realistic     raw TVD=0.7958  gdr=0.6214  oracle=0.8036
+    readout_strong        raw TVD=0.8007  gdr=0.6256  oracle=0.8105
+
+wrote Error_mitigation/out/results.json
+wrote Error_mitigation/out/summary.txt
+Gaussian-twin product-state TVD: mean=2.645e-16  max=1.133e-15
+Gaussian-twin Poisson TVD (diagnostic): mean=1.209e-01  max=2.263e-01
+FULL_EXIT 0 2026-09-04T10:56:57Z
