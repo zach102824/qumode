@@ -130,6 +130,33 @@ Span again flips PR #6 GDR-worse-than-raw cells:
 
 \*shot-mismatched raw; same-run GDR now beats raw on SNAP random mild ideal (the PR #6 failure).
 
-## Phase 3
+## Phase 3 — shot-matched matrix (8192 / 40 / span, 108 cells)
 
-Fixed matrix vs PR #6: shots=8192, n_train=40, span twins, both ansatz, all families, κτ ∈ {0.003, 0.1} (and 0.03 if wall allows). Winner methods + baselines. See `out_research/phase3/`.
+`out_research/phase3/`. Same shots, twin count, seed, instance as PR #6; only the twin **design** and extra methods changed.
+
+Headline vs PR #6 `gdr_param`:
+
+| success-bar cell | PR #6 raw / gdr | phase3 gdr_param | best new |
+|------------------|----------------:|-----------------:|----------|
+| ECD random loss κτ=0.1 ideal | 0.299 / **0.373 (worse)** | **0.209** | select 0.201 |
+| ECD random comprehensive κτ=0.1 ideal | 0.399 / **0.539 (worse)** | **0.377** | damped **0.342** |
+| ECD random thermal κτ=0.1 ideal | 0.332 / **0.407 (worse)** | **0.263** | damped 0.258 |
+| SNAP random loss κτ=0.003 ideal | 0.019 / **0.022 (worse)** | **0.022 < raw 0.028** | mid 0.022 |
+| ECD opt loss κτ=0.003 strong (ZNE≈raw) | 0.153 / 0.0075 / ZNE 0.152 | gdr 0.017 | **readout_then_zne 0.010** (ZNE now 0.119) |
+| ECD opt loss κτ=0.003 ideal | 0.036 / 0.0075 | 0.0096 | **readout_then_zne / ZNE 0.0064** |
+| ECD opt thermal κτ=0.1 ideal | 0.767 / 0.270 | 0.318 | **residual 0.258** |
+| ECD opt comprehensive κτ=0.003 ideal | 0.182 / 0.053 | 0.054 | **readout_then_zne 0.025** |
+
+Counts:
+- `gdr_param` (span) beats PR #6 `gdr_param` on **66 / 108** cells.
+- PR #6 GDR-worse-than-raw: **15 → 2**. Remaining two are tiny mild-random cells; `gdr_damped` fixes the ECD one (0.0427 < raw 0.0434). SNAP random comprehensive κτ=0.003 ideal is still +0.003 over raw after damping.
+- New methods beat same-run `gdr_param` on: damped 44, mid 43, residual 36, select 33, `readout_then_zne` 11.
+
+Regressions to not hide: span `gdr_param` is a bit worse than PR #6 on ECD/SNAP **optimized comprehensive κτ=0.1** (e.g. 0.416 vs 0.343). Residual/mid recover some but not all. Use PR #6 `gdr_param` numbers as the floor there; the random-circuit failure mode was the one we set out to fix.
+
+## Phase 4
+
+Wired into `run_mitigation_experiment.py` (default `--twin-design span`):
+`gdr_damped`, `gdr_mid`, `gdr_residual`, `gdr_select`, `readout_then_zne`.
+README methods/caveats updated. `--twin-design default` restores the PR #6 U(0.5,1) mix.
+No `src/` edits. Tests: 16 mitigation + full non-slow suite green.
