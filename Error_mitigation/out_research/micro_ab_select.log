@@ -1,0 +1,23 @@
+ablation tag=micro_ab_select  H000  shots=4096 n_train=20 twins=default  methods=raw,readout_only,oracle_binomial,gdr_param,gdr_ridge,gdr_holdout,gdr_damped,gdr_reg,gdr_mid,gdr_tfree,gdr_residual,gdr_select,zne_idle,readout_then_zne,zne_then_readout
+
+=== ecd N_d=5 ===
+  loaded optimized ecd params from optimized_params_ecd_h000_nd5.json
+    cache hit ecd_random_loss_kt0.003_n20_default_nrauto_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.003 ideal                raw=0.0618  gdr=0.0639
+    random    loss                   kt=0.003 readout_realistic    raw=0.0760  gdr=0.0657
+    random    loss                   kt=0.003 readout_strong       raw=0.1156  gdr=0.0885
+    cache hit ecd_random_loss_kt0.1_n20_default_nrauto_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.1 ideal                raw=0.3169  gdr=0.3624
+    random    loss                   kt=0.1 readout_realistic    raw=0.3024  gdr=0.3900
+    random    loss                   kt=0.1 readout_strong       raw=0.3190  gdr=0.4052
+    cache hit ecd_optimized_loss_kt0.003_n20_default_nrauto_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.003 ideal                raw=0.0373  gdr=0.0114
+    optimized loss                   kt=0.003 readout_realistic    raw=0.0835  gdr=0.0179
+    optimized loss                   kt=0.003 readout_strong       raw=0.1624  gdr=0.0090
+    cache hit ecd_optimized_loss_kt0.1_n20_default_nrauto_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.1 ideal                raw=0.7139  gdr=0.1972
+    optimized loss                   kt=0.1 readout_realistic    raw=0.7000  gdr=0.2002
+    optimized loss                   kt=0.1 readout_strong       raw=0.7144  gdr=0.2131
+
+wrote /workspace/Error_mitigation/out_research/micro_ab_select/results.json
+wrote /workspace/Error_mitigation/out_research/micro_ab_select/ablation_summary.md

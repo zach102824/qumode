@@ -1,0 +1,226 @@
+ablation tag=phase3  H000  shots=8192 n_train=40 twins=span  methods=raw,readout_only,oracle_binomial,gdr_param,gdr_damped,gdr_holdout,gdr_mid,gdr_residual,gdr_select,zne_idle,readout_then_zne
+
+=== ecd N_d=5 ===
+  loaded optimized ecd params from optimized_params_ecd_h000_nd5.json
+    sim loss κτ=0.003 random  target+40 twins ...
+      physical histograms in 11.6s
+      wrote cache ecd_random_loss_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.003 ideal                raw=0.0434  gdr=0.0448
+    random    loss                   kt=0.003 readout_realistic    raw=0.0590  gdr=0.0470
+    random    loss                   kt=0.003 readout_strong       raw=0.1071  gdr=0.0589
+    sim loss κτ=0.03 random  target+40 twins ...
+      physical histograms in 5.9s
+      wrote cache ecd_random_loss_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.03 ideal                raw=0.1423  gdr=0.0909
+    random    loss                   kt=0.03 readout_realistic    raw=0.1539  gdr=0.0898
+    random    loss                   kt=0.03 readout_strong       raw=0.1856  gdr=0.1130
+    sim loss κτ=0.1 random  target+40 twins ...
+      physical histograms in 10.3s
+      wrote cache ecd_random_loss_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.1 ideal                raw=0.2983  gdr=0.2087
+    random    loss                   kt=0.1 readout_realistic    raw=0.3078  gdr=0.2221
+    random    loss                   kt=0.1 readout_strong       raw=0.3153  gdr=0.2322
+    sim loss_thermal_dephasing κτ=0.003 random  target+40 twins ...
+      physical histograms in 18.1s
+      wrote cache ecd_random_loss_thermal_dephasing_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss_thermal_dephasing kt=0.003 ideal                raw=0.0535  gdr=0.0456
+    random    loss_thermal_dephasing kt=0.003 readout_realistic    raw=0.0606  gdr=0.0476
+    random    loss_thermal_dephasing kt=0.003 readout_strong       raw=0.1041  gdr=0.0577
+    sim loss_thermal_dephasing κτ=0.03 random  target+40 twins ...
+      physical histograms in 25.9s
+      wrote cache ecd_random_loss_thermal_dephasing_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss_thermal_dephasing kt=0.03 ideal                raw=0.1744  gdr=0.1157
+    random    loss_thermal_dephasing kt=0.03 readout_realistic    raw=0.1915  gdr=0.1279
+    random    loss_thermal_dephasing kt=0.03 readout_strong       raw=0.2126  gdr=0.1442
+    sim loss_thermal_dephasing κτ=0.1 random  target+40 twins ...
+      physical histograms in 26.8s
+      wrote cache ecd_random_loss_thermal_dephasing_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss_thermal_dephasing kt=0.1 ideal                raw=0.3356  gdr=0.2633
+    random    loss_thermal_dephasing kt=0.1 readout_realistic    raw=0.3368  gdr=0.2642
+    random    loss_thermal_dephasing kt=0.1 readout_strong       raw=0.3443  gdr=0.2793
+    sim comprehensive κτ=0.003 random  target+40 twins ...
+      physical histograms in 24.0s
+      wrote cache ecd_random_comprehensive_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    comprehensive          kt=0.003 ideal                raw=0.0816  gdr=0.0723
+    random    comprehensive          kt=0.003 readout_realistic    raw=0.1016  gdr=0.0776
+    random    comprehensive          kt=0.003 readout_strong       raw=0.1346  gdr=0.0917
+    sim comprehensive κτ=0.03 random  target+40 twins ...
+      physical histograms in 33.0s
+      wrote cache ecd_random_comprehensive_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    comprehensive          kt=0.03 ideal                raw=0.2417  gdr=0.1497
+    random    comprehensive          kt=0.03 readout_realistic    raw=0.2237  gdr=0.1731
+    random    comprehensive          kt=0.03 readout_strong       raw=0.2608  gdr=0.2063
+    sim comprehensive κτ=0.1 random  target+40 twins ...
+      physical histograms in 36.9s
+      wrote cache ecd_random_comprehensive_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    comprehensive          kt=0.1 ideal                raw=0.4031  gdr=0.3765
+    random    comprehensive          kt=0.1 readout_realistic    raw=0.3980  gdr=0.3410
+    random    comprehensive          kt=0.1 readout_strong       raw=0.3995  gdr=0.3397
+    sim loss κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 9.3s
+      wrote cache ecd_optimized_loss_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.003 ideal                raw=0.0383  gdr=0.0096
+    optimized loss                   kt=0.003 readout_realistic    raw=0.0788  gdr=0.0103
+    optimized loss                   kt=0.003 readout_strong       raw=0.1629  gdr=0.0165
+    sim loss κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 9.0s
+      wrote cache ecd_optimized_loss_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.03 ideal                raw=0.3145  gdr=0.0730
+    optimized loss                   kt=0.03 readout_realistic    raw=0.3286  gdr=0.0715
+    optimized loss                   kt=0.03 readout_strong       raw=0.3913  gdr=0.0833
+    sim loss κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 10.0s
+      wrote cache ecd_optimized_loss_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.1 ideal                raw=0.6961  gdr=0.2298
+    optimized loss                   kt=0.1 readout_realistic    raw=0.7090  gdr=0.2340
+    optimized loss                   kt=0.1 readout_strong       raw=0.7207  gdr=0.2420
+    sim loss_thermal_dephasing κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 14.4s
+      wrote cache ecd_optimized_loss_thermal_dephasing_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss_thermal_dephasing kt=0.003 ideal                raw=0.0489  gdr=0.0174
+    optimized loss_thermal_dephasing kt=0.003 readout_realistic    raw=0.0894  gdr=0.0158
+    optimized loss_thermal_dephasing kt=0.003 readout_strong       raw=0.1664  gdr=0.0167
+    sim loss_thermal_dephasing κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 21.8s
+      wrote cache ecd_optimized_loss_thermal_dephasing_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss_thermal_dephasing kt=0.03 ideal                raw=0.3966  gdr=0.1250
+    optimized loss_thermal_dephasing kt=0.03 readout_realistic    raw=0.4164  gdr=0.1378
+    optimized loss_thermal_dephasing kt=0.03 readout_strong       raw=0.4561  gdr=0.1420
+    sim loss_thermal_dephasing κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 24.3s
+      wrote cache ecd_optimized_loss_thermal_dephasing_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss_thermal_dephasing kt=0.1 ideal                raw=0.7696  gdr=0.3178
+    optimized loss_thermal_dephasing kt=0.1 readout_realistic    raw=0.7792  gdr=0.3188
+    optimized loss_thermal_dephasing kt=0.1 readout_strong       raw=0.7802  gdr=0.3287
+    sim comprehensive κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 20.7s
+      wrote cache ecd_optimized_comprehensive_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized comprehensive          kt=0.003 ideal                raw=0.1842  gdr=0.0539
+    optimized comprehensive          kt=0.003 readout_realistic    raw=0.2074  gdr=0.0569
+    optimized comprehensive          kt=0.003 readout_strong       raw=0.2799  gdr=0.0599
+    sim comprehensive κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 24.8s
+      wrote cache ecd_optimized_comprehensive_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized comprehensive          kt=0.03 ideal                raw=0.5653  gdr=0.1521
+    optimized comprehensive          kt=0.03 readout_realistic    raw=0.5879  gdr=0.1558
+    optimized comprehensive          kt=0.03 readout_strong       raw=0.6073  gdr=0.1591
+    sim comprehensive κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 24.4s
+      wrote cache ecd_optimized_comprehensive_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized comprehensive          kt=0.1 ideal                raw=0.9086  gdr=0.4163
+    optimized comprehensive          kt=0.1 readout_realistic    raw=0.9116  gdr=0.4211
+    optimized comprehensive          kt=0.1 readout_strong       raw=0.9065  gdr=0.4034
+
+=== snap N_d=2 ===
+  loaded optimized snap params from optimized_params_snap_h000_nd2.json
+    sim loss κτ=0.003 random  target+40 twins ...
+      physical histograms in 3.8s
+      wrote cache snap_random_loss_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.003 ideal                raw=0.0283  gdr=0.0217
+    random    loss                   kt=0.003 readout_realistic    raw=0.0499  gdr=0.0346
+    random    loss                   kt=0.003 readout_strong       raw=0.0876  gdr=0.0386
+    sim loss κτ=0.03 random  target+40 twins ...
+      physical histograms in 3.2s
+      wrote cache snap_random_loss_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.03 ideal                raw=0.1304  gdr=0.0809
+    random    loss                   kt=0.03 readout_realistic    raw=0.1520  gdr=0.0736
+    random    loss                   kt=0.03 readout_strong       raw=0.1833  gdr=0.0849
+    sim loss κτ=0.1 random  target+40 twins ...
+      physical histograms in 3.9s
+      wrote cache snap_random_loss_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.1 ideal                raw=0.3351  gdr=0.1956
+    random    loss                   kt=0.1 readout_realistic    raw=0.3457  gdr=0.2140
+    random    loss                   kt=0.1 readout_strong       raw=0.3461  gdr=0.1953
+    sim loss_thermal_dephasing κτ=0.003 random  target+40 twins ...
+      physical histograms in 8.4s
+      wrote cache snap_random_loss_thermal_dephasing_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss_thermal_dephasing kt=0.003 ideal                raw=0.0291  gdr=0.0285
+    random    loss_thermal_dephasing kt=0.003 readout_realistic    raw=0.0487  gdr=0.0287
+    random    loss_thermal_dephasing kt=0.003 readout_strong       raw=0.0911  gdr=0.0336
+    sim loss_thermal_dephasing κτ=0.03 random  target+40 twins ...
+      physical histograms in 9.0s
+      wrote cache snap_random_loss_thermal_dephasing_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss_thermal_dephasing kt=0.03 ideal                raw=0.1505  gdr=0.0893
+    random    loss_thermal_dephasing kt=0.03 readout_realistic    raw=0.1741  gdr=0.0907
+    random    loss_thermal_dephasing kt=0.03 readout_strong       raw=0.1978  gdr=0.0833
+    sim loss_thermal_dephasing κτ=0.1 random  target+40 twins ...
+      physical histograms in 10.4s
+      wrote cache snap_random_loss_thermal_dephasing_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    loss_thermal_dephasing kt=0.1 ideal                raw=0.3433  gdr=0.1987
+    random    loss_thermal_dephasing kt=0.1 readout_realistic    raw=0.3460  gdr=0.1773
+    random    loss_thermal_dephasing kt=0.1 readout_strong       raw=0.3525  gdr=0.2055
+    sim comprehensive κτ=0.003 random  target+40 twins ...
+      physical histograms in 7.1s
+      wrote cache snap_random_comprehensive_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    comprehensive          kt=0.003 ideal                raw=0.0372  gdr=0.0415
+    random    comprehensive          kt=0.003 readout_realistic    raw=0.0535  gdr=0.0385
+    random    comprehensive          kt=0.003 readout_strong       raw=0.0892  gdr=0.0473
+    sim comprehensive κτ=0.03 random  target+40 twins ...
+      physical histograms in 10.7s
+      wrote cache snap_random_comprehensive_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    comprehensive          kt=0.03 ideal                raw=0.2450  gdr=0.1372
+    random    comprehensive          kt=0.03 readout_realistic    raw=0.2406  gdr=0.1349
+    random    comprehensive          kt=0.03 readout_strong       raw=0.2619  gdr=0.1336
+    sim comprehensive κτ=0.1 random  target+40 twins ...
+      physical histograms in 15.0s
+      wrote cache snap_random_comprehensive_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    random    comprehensive          kt=0.1 ideal                raw=0.4728  gdr=0.3747
+    random    comprehensive          kt=0.1 readout_realistic    raw=0.4685  gdr=0.3334
+    random    comprehensive          kt=0.1 readout_strong       raw=0.4817  gdr=0.3432
+    sim loss κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 3.5s
+      wrote cache snap_optimized_loss_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.003 ideal                raw=0.0567  gdr=0.0210
+    optimized loss                   kt=0.003 readout_realistic    raw=0.0971  gdr=0.0171
+    optimized loss                   kt=0.003 readout_strong       raw=0.1886  gdr=0.0201
+    sim loss κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 5.7s
+      wrote cache snap_optimized_loss_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.03 ideal                raw=0.3656  gdr=0.0919
+    optimized loss                   kt=0.03 readout_realistic    raw=0.3888  gdr=0.0884
+    optimized loss                   kt=0.03 readout_strong       raw=0.4389  gdr=0.0989
+    sim loss κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 5.6s
+      wrote cache snap_optimized_loss_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.1 ideal                raw=0.6603  gdr=0.4068
+    optimized loss                   kt=0.1 readout_realistic    raw=0.6680  gdr=0.4178
+    optimized loss                   kt=0.1 readout_strong       raw=0.6874  gdr=0.4171
+    sim loss_thermal_dephasing κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 7.7s
+      wrote cache snap_optimized_loss_thermal_dephasing_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss_thermal_dephasing kt=0.003 ideal                raw=0.0598  gdr=0.0136
+    optimized loss_thermal_dephasing kt=0.003 readout_realistic    raw=0.0988  gdr=0.0200
+    optimized loss_thermal_dephasing kt=0.003 readout_strong       raw=0.1795  gdr=0.0091
+    sim loss_thermal_dephasing κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 8.9s
+      wrote cache snap_optimized_loss_thermal_dephasing_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss_thermal_dephasing kt=0.03 ideal                raw=0.3928  gdr=0.0982
+    optimized loss_thermal_dephasing kt=0.03 readout_realistic    raw=0.4219  gdr=0.0989
+    optimized loss_thermal_dephasing kt=0.03 readout_strong       raw=0.4669  gdr=0.1081
+    sim loss_thermal_dephasing κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 10.3s
+      wrote cache snap_optimized_loss_thermal_dephasing_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized loss_thermal_dephasing kt=0.1 ideal                raw=0.6967  gdr=0.4434
+    optimized loss_thermal_dephasing kt=0.1 readout_realistic    raw=0.7029  gdr=0.4526
+    optimized loss_thermal_dephasing kt=0.1 readout_strong       raw=0.7195  gdr=0.4597
+    sim comprehensive κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 8.9s
+      wrote cache snap_optimized_comprehensive_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized comprehensive          kt=0.003 ideal                raw=0.0979  gdr=0.0202
+    optimized comprehensive          kt=0.003 readout_realistic    raw=0.1411  gdr=0.0237
+    optimized comprehensive          kt=0.003 readout_strong       raw=0.2200  gdr=0.0209
+    sim comprehensive κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 10.5s
+      wrote cache snap_optimized_comprehensive_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized comprehensive          kt=0.03 ideal                raw=0.5494  gdr=0.1977
+    optimized comprehensive          kt=0.03 readout_realistic    raw=0.5710  gdr=0.2226
+    optimized comprehensive          kt=0.03 readout_strong       raw=0.5865  gdr=0.2165
+    sim comprehensive κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 13.5s
+      wrote cache snap_optimized_comprehensive_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    optimized comprehensive          kt=0.1 ideal                raw=0.7914  gdr=0.6619
+    optimized comprehensive          kt=0.1 readout_realistic    raw=0.7952  gdr=0.6427
+    optimized comprehensive          kt=0.1 readout_strong       raw=0.7935  gdr=0.6712
+
+wrote /workspace/Error_mitigation/out_research/phase3/results.json
+wrote /workspace/Error_mitigation/out_research/phase3/ablation_summary.md

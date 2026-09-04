@@ -1,0 +1,31 @@
+ablation tag=micro_snap  H000  shots=4096 n_train=20 twins=span  methods=raw,readout_only,oracle_binomial,gdr_param,gdr_ridge,gdr_holdout,gdr_damped,gdr_reg,gdr_mid,gdr_tfree,gdr_residual,gdr_select,zne_idle,readout_then_zne,zne_then_readout
+
+=== snap N_d=2 ===
+  loaded optimized snap params from optimized_params_snap_h000_nd2.json
+    sim loss κτ=0.003 random  target+20 twins ...
+      physical histograms in 2.2s
+      wrote cache snap_random_loss_kt0.003_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.003 ideal                raw=0.0473  gdr=0.0419
+    random    loss                   kt=0.003 readout_realistic    raw=0.0453  gdr=0.0451
+    random    loss                   kt=0.003 readout_strong       raw=0.0935  gdr=0.0436
+    sim loss κτ=0.1 random  target+20 twins ...
+      physical histograms in 2.7s
+      wrote cache snap_random_loss_kt0.1_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    random    loss                   kt=0.1 ideal                raw=0.3418  gdr=0.2268
+    random    loss                   kt=0.1 readout_realistic    raw=0.3518  gdr=0.2189
+    random    loss                   kt=0.1 readout_strong       raw=0.3547  gdr=0.2257
+    sim loss κτ=0.003 optimized  target+20 twins ...
+      physical histograms in 3.2s
+      wrote cache snap_optimized_loss_kt0.003_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.003 ideal                raw=0.0446  gdr=0.0139
+    optimized loss                   kt=0.003 readout_realistic    raw=0.0966  gdr=0.0173
+    optimized loss                   kt=0.003 readout_strong       raw=0.1818  gdr=0.0202
+    sim loss κτ=0.1 optimized  target+20 twins ...
+      physical histograms in 3.2s
+      wrote cache snap_optimized_loss_kt0.1_n20_span_nr5_lo0.25_hi1.35_x0.npz
+    optimized loss                   kt=0.1 ideal                raw=0.6576  gdr=0.4034
+    optimized loss                   kt=0.1 readout_realistic    raw=0.6713  gdr=0.4177
+    optimized loss                   kt=0.1 readout_strong       raw=0.6781  gdr=0.4117
+
+wrote /workspace/Error_mitigation/out_research/micro_snap/results.json
+wrote /workspace/Error_mitigation/out_research/micro_snap/ablation_summary.md

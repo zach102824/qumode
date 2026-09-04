@@ -1,0 +1,8 @@
+{
+  "ansatz": "snap",
+  "params": "optimized",
+  "family": "comprehensive",
+  "kappa_tau": 0.003,
+  "n_train": 40,
+  "twin_tag": "span_nr10_lo0.25_hi1.35_x0"
+}
