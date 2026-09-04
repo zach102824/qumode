@@ -402,7 +402,12 @@ No method change. Adaptive / gated damped / optimized `gdr_param` / `n_train=40`
 python -u Error_mitigation/run_ablation.py --preset research_smoke
 ```
 
-ECD optimized loss κτ=0.003, `--twin-design adaptive` (→ PR #6 mix), 2048 shots, `n_train=40`, `n_rank2=10`, ideal + realistic, `{raw, gdr_param, gdr_damped, gdr_select}`. Cache key `ecd_optimized_loss_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0`.
+ECD optimized loss κτ=0.003, `--twin-design adaptive` (→ PR #6 mix), 2048 shots, `n_train=40`, `n_rank2=10`, ideal + realistic, `{raw, gdr_param, gdr_damped, gdr_select}`. Cache key `ecd_optimized_loss_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0`. Cache hit (~24 s). Select keeps `gdr_param` on optimized:
+
+| readout | raw | gdr_param | damped | select |
+|---------|----:|----------:|-------:|-------:|
+| ideal | 0.0380 | **0.0096** | 0.0238 | **0.0096** |
+| realistic | 0.0884 | **0.0192** | 0.0369 | **0.0192** |
 
 ### Hard-cell figure (keep)
 
@@ -425,4 +430,4 @@ Hybrid ZNE still wins under readout. GDR still beats either ZNE on these mild SN
 
 ### Phase 10 ship
 
-README methods table matches the shipped recipe. NOTEBOOK frozen at Phase 10. Tests: 28 `test_error_mitigation`. Stop until the next steer.
+README methods table matches the shipped recipe. NOTEBOOK frozen at Phase 10. Tests: 28 `test_error_mitigation`; 113 non-slow. Stop until the next steer.
