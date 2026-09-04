@@ -238,3 +238,44 @@ Ideal is the only previous loss-to-raw. Realistic/strong still beat raw. Adaptiv
 Forward oracle residual TVD(M p, q) is still **0.0705** at κτ=0.003 (the original interleaving caveat). Shot-noise TVD floor at 8192 is ~0.0005, so unfold TVD 0.0092 is real leftover model error — but the two-stage histogram kernel does not beat residual/oracle. Drop; keep `gdr_residual` as the extra on optimized loss/thermal.
 
 README status header updated (smoke + full on this branch are done).
+
+## Phase 7 — leftover loop (structured middle, shots, transfer)
+
+Adaptive twins + gated damped floor stay. No `src/` edits. `out/` / `out_smoke/` untouched.
+
+### Structured middle vs `gdr_full` (drop)
+
+`leftover_mid` reused the `opt_default` cache (ECD optimized comprehensive, default twins, 8192 / 40, `--n-rank2 10`). Two ridged extras on top of `gdr_param`:
+
+- `gdr_split` — per-register extra hops + leak, L2 toward 0 (`lam=0.05`)
+- `gdr_band` — signed n±1 band residual, same ridge
+
+Keep bar: beat `gdr_param` on optimized comprehensive **and** do not regress 86/108.
+
+| cell | gdr_param | split | band | mid | residual |
+|------|----------:|------:|-----:|----:|---------:|
+| κτ=0.003 ideal | 0.0522 | 0.0506 | 0.0510 | **0.0451** | 0.1048 |
+| κτ=0.1 ideal | **0.3434** | 0.3434 | 0.3433 | 0.3484 | 0.4138 |
+| κτ=0.1 strong | **0.3381** | 0.3379 | 0.3376 | 0.3465 | 0.4057 |
+
+At κτ=0.1 the ridge pins `gdr_split` hops to ~2e-4 (identical to `gdr_param`). `gdr_band` moves TVD by ≤0.0005. `gdr_mid` still wins mild comprehensive and still loses the high-κτ cell — already known, already not the select default. `gdr_full` already loses this cell in PR #6 (0.44). **Drop**; do not change the 86/108 recipe.
+
+### Shot robustness 2048 vs 8192 (keep recipe)
+
+Cache replay only (physical hists unchanged). Hard cells: ECD random κτ=0.1 loss / comprehensive (span) and ECD opt comprehensive κτ=0.1 (default). Official `gdr_select` / `gdr_damped`.
+
+| cell | shots | raw | gdr_param | damped | select |
+|------|------:|----:|----------:|-------:|-------:|
+| ECD random loss 0.1 ideal | 8192 | 0.298 | 0.209 | 0.203 | **0.201** |
+| | 2048 | 0.309 | 0.277 | **0.252** | **0.252** |
+| ECD random comprehensive 0.1 ideal | 8192 | 0.403 | 0.377 | **0.342** | **0.342** |
+| | 2048 | 0.419 | 0.376 | **0.345** | **0.345** |
+| ECD random comprehensive 0.1 realistic | 2048 | 0.415 | 0.431 | **0.374** | **0.374** |
+| ECD opt comprehensive 0.1 ideal | 8192 | 0.909 | **0.343** | 0.427 | **0.343** |
+| | 2048 | 0.906 | **0.351** | 0.434 | **0.351** |
+
+At 2048 shots, `gdr_param` can lose to raw on one random comprehensive+readout cell (0.431 vs 0.415); **damped / select still win**. Optimized comprehensive: `gdr_param` moves 0.343 → 0.351 (shot noise); damped still hurts, so select correctly keeps `gdr_param`. Recipe is robust; no method change.
+
+### Transfer (instance 1)
+
+`mixed_p_spin` H001 (`mixed_p_spin_p2-4_001.npz`, E0≈−6.032). No cached opt. One ECD 200-iter / 3-restart opt, then optimized-only matrix: loss + comprehensive, κτ ∈ {0.003, 0.1}, ideal + strong, default twins, 8192 / 40. Results in `out_research/leftover_xfer_h001/`.
