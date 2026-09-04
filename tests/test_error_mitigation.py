@@ -369,6 +369,25 @@ def test_classify_opt_quality_default_thresholds():
     assert good["recipe"] == "optimized"
 
 
+def test_adaptive_recipe_headlines_on_disk():
+    path = ROOT / "Error_mitigation" / "out_research" / "adaptive_recipe.md"
+    text = path.read_text()
+    assert "beats PR #6 `gdr_param`" in text
+    assert "**86 / 108**" in text
+    assert "beats same-run raw" in text
+    assert "**108 / 108**" in text
+    assert "worse than raw" in text
+    assert "**0 / 108**" in text
+    assert "**0.203**" in text
+    assert "**0.342**" in text
+    summary = ROOT / "Error_mitigation" / "out_research" / "PAPER_SUMMARY.md"
+    assert summary.is_file()
+    stext = summary.read_text()
+    assert "**86 / 108**" in stext
+    assert "**0 / 108**" in stext
+    assert "near-" in stext.lower() or "H001" in stext
+
+
 def test_research_smoke_preset_stays_in_out_research():
     from Error_mitigation.run_ablation import (
         DEFAULT_OUT,

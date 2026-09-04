@@ -10,10 +10,10 @@ PR #6 baseline (`Error_mitigation/out/`, 108 cells @ 8192 shots / 40 twins) is *
 | PR #6 full | **done** (`out/`, 108 cells, product-state TVD max ~1e-15, wall ~64 min) |
 | PR #8 research | **done** on `cursor/gdr-improve-30h-v2-4f00` — official defaults **frozen** |
 | Official default | `--twin-design adaptive` + gated `gdr_damped` + `gdr_param` on optimized + `n_train=40` |
-| Tests | 28 `test_error_mitigation` + full non-slow suite |
+| Tests | 29 `test_error_mitigation` + full non-slow suite |
 | `src/` | **do not edit** |
 
-Do **not** re-run the full 108-cell baseline. Cheap loops: `run_ablation.py` (writes only under `out_research/`, reuses `out_research/cache/`). Scoreboard: `out_research/NOTEBOOK.md`, `out_research/adaptive_recipe.md`, `out_research/figures/hard_cells_adaptive.png`.
+Do **not** re-run the full 108-cell baseline. Cheap loops: `run_ablation.py` (writes only under `out_research/`, reuses `out_research/cache/`). Scoreboard: `out_research/PAPER_SUMMARY.md`, `out_research/NOTEBOOK.md`, `out_research/adaptive_recipe.md`, `out_research/figures/hard_cells_adaptive.png`.
 
 ### Shipped recipe (frozen)
 
