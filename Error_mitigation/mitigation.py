@@ -562,3 +562,393 @@ def run_readout_only(
     cq, c1, c2 = confusion_from_measurement(meas, dims)
     hist = unfold(q_obs, cq, c1, c2, method="rl")
     return MethodResult("readout_only", hist, None, extra={"skipped": False})
+
+
+# ---------------------------------------------------------------------------
+# Research methods (A–F). Default gdr_param / zne_idle behavior is unchanged.
+# ---------------------------------------------------------------------------
+
+# Stronger L2 on heating / hop / leak knobs that overfit mild random circuits.
+RIDGE_WEIGHTS = np.array([1.0, 1.0, 8.0, 8.0, 8.0, 8.0, 8.0, 1.0, 1.0, 1.0, 1.0])
+# Structured middle ground: freeze nth / hops / leak, fit (η, readout) only.
+MID_FREE_IDX = (0, 1, 7, 8, 9, 10)
+DEFAULT_LAMBDAS = (0.0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1)
+
+
+def holdout_indices(n: int, frac: float = 0.25) -> tuple[np.ndarray, np.ndarray]:
+    """Stratified holdout (every k-th twin) so rank-2 twins are not all held out."""
+    n = int(n)
+    if n <= 1:
+        idx = np.arange(n)
+        return idx, np.array([], dtype=int)
+    n_h = max(1, int(round(n * float(frac))))
+    n_h = min(n_h, n - 1)
+    step = max(1, n // n_h)
+    hold = np.arange(0, n, step)[:n_h]
+    if hold.size < n_h:
+        extra = np.setdiff1d(np.arange(n), hold)[: n_h - hold.size]
+        hold = np.concatenate([hold, extra])
+    train = np.setdiff1d(np.arange(n), hold)
+    return train, hold
+
+
+def _select(xs: list, idx: np.ndarray) -> list:
+    return [xs[int(i)] for i in idx]
+
+
+def multinomial_nll_weighted(
+    theta: np.ndarray,
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    n_shots: int,
+    dims: tuple[int, int, int],
+    weights: np.ndarray | None = None,
+    theta0: np.ndarray | None = None,
+    lam: float = 0.0,
+    ridge_weights: np.ndarray | None = None,
+) -> float:
+    cq, c1, c2 = params_to_kernels(theta, dims)
+    nll = 0.0
+    shots = max(int(n_shots), 1)
+    w = np.ones(len(p_ideals), dtype=float) if weights is None else np.asarray(weights, dtype=float)
+    for p, q, wi in zip(p_ideals, q_obs, w):
+        pred = np.clip(apply_transfer(p, cq, c1, c2), EPS_PROB, None)
+        pred = pred / pred.sum()
+        counts = np.clip(np.asarray(q, dtype=float), 0.0, None)
+        counts = counts / max(float(counts.sum()), EPS_PROB) * shots
+        nll -= float(wi) * float(np.sum(counts * np.log(pred)))
+    if lam > 0.0 and theta0 is not None:
+        delta = np.asarray(theta, dtype=float) - np.asarray(theta0, dtype=float)
+        rw = RIDGE_WEIGHTS if ridge_weights is None else np.asarray(ridge_weights, dtype=float)
+        n_eff = max(float(np.sum(w)), 1.0)
+        nll += 0.5 * float(lam) * shots * n_eff * float(np.dot(rw * delta, delta))
+    return nll
+
+
+def _minimize_theta(
+    x0: np.ndarray,
+    bounds,
+    args: tuple,
+    maxiter: int,
+) -> np.ndarray:
+    result = optimize.minimize(
+        multinomial_nll_weighted,
+        np.asarray(x0, dtype=float),
+        args=args,
+        method="L-BFGS-B",
+        bounds=bounds,
+        options={"maxiter": int(maxiter), "ftol": 1e-10},
+    )
+    lo = np.array([b[0] for b in bounds], dtype=float)
+    hi = np.array([b[1] for b in bounds], dtype=float)
+    return np.clip(np.asarray(result.x, dtype=float), lo, hi)
+
+
+def _fit_info(theta: np.ndarray, cfg: NoiseConfig, spec: ReadoutSpec, ndepth: int, extra: dict) -> dict:
+    fitted = {name: float(theta[i]) for i, name in enumerate(PARAM_NAMES)}
+    true_eta = float(np.exp(-cfg.cumulative_kappa_t(int(ndepth))))
+    info = {
+        "fitted": fitted,
+        "true_eta": true_eta,
+        "true_nth": float(cfg.nth_cav),
+        "true_p01": float(spec.p01),
+        "true_p10": float(spec.p10),
+        "true_p_nn": float(spec.p_nn),
+        "d_eta1": abs(fitted["eta1"] - true_eta),
+        "d_eta2": abs(fitted["eta2"] - true_eta),
+        "d_p01": abs(fitted["p01"] - spec.p01),
+        "d_p10": abs(fitted["p10"] - spec.p10),
+        "d_p_nn1": abs(fitted["p_nn1"] - spec.p_nn),
+        "d_p_nn2": abs(fitted["p_nn2"] - spec.p_nn),
+    }
+    info.update(extra)
+    return info
+
+
+def fit_gdr_ridge(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 200,
+    lam: float = 1e-3,
+    weights: np.ndarray | None = None,
+) -> tuple[np.ndarray, dict]:
+    """Multinomial MLE with L2 pull toward the oracle prior (A)."""
+    x0 = initial_theta(cfg, spec, ndepth)
+    theta = _minimize_theta(
+        x0,
+        PARAM_BOUNDS,
+        (p_ideals, q_obs, spec.n_shots, dims, weights, x0, float(lam), RIDGE_WEIGHTS),
+        maxiter,
+    )
+    return theta, _fit_info(theta, cfg, spec, ndepth, {"lam": float(lam), "kind": "gdr_ridge"})
+
+
+def fit_gdr_holdout(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 200,
+    holdout_frac: float = 0.25,
+    lambdas: tuple[float, ...] = DEFAULT_LAMBDAS,
+    weights: np.ndarray | None = None,
+    refit_all: bool = True,
+) -> tuple[np.ndarray, dict]:
+    """Ridge path; pick λ by holdout NLL; optionally refit on all twins (A)."""
+    n = len(p_ideals)
+    train_i, hold_i = holdout_indices(n, holdout_frac)
+    x0 = initial_theta(cfg, spec, ndepth)
+    w = None if weights is None else np.asarray(weights, dtype=float)
+    w_tr = None if w is None else w[train_i]
+    p_tr, q_tr = _select(p_ideals, train_i), _select(q_obs, train_i)
+    p_h, q_h = _select(p_ideals, hold_i), _select(q_obs, hold_i)
+    best = None
+    path = []
+    for lam in lambdas:
+        theta = _minimize_theta(
+            x0,
+            PARAM_BOUNDS,
+            (p_tr, q_tr, spec.n_shots, dims, w_tr, x0, float(lam), RIDGE_WEIGHTS),
+            maxiter,
+        )
+        hold_nll = multinomial_nll_weighted(theta, p_h, q_h, spec.n_shots, dims, None, None, 0.0, None)
+        rec = {"lam": float(lam), "hold_nll": float(hold_nll)}
+        path.append(rec)
+        if best is None or hold_nll < best[0]:
+            best = (hold_nll, float(lam), theta)
+    assert best is not None
+    lam_star, theta = best[1], best[2]
+    if refit_all:
+        theta = _minimize_theta(
+            x0,
+            PARAM_BOUNDS,
+            (p_ideals, q_obs, spec.n_shots, dims, w, x0, lam_star, RIDGE_WEIGHTS),
+            maxiter,
+        )
+    return theta, _fit_info(
+        theta,
+        cfg,
+        spec,
+        ndepth,
+        {"lam": lam_star, "hold_nll": float(best[0]), "path": path, "kind": "gdr_holdout"},
+    )
+
+
+def _freeze_bounds(free_idx: tuple[int, ...], x0: np.ndarray):
+    bounds = []
+    for i, (lo, hi) in enumerate(PARAM_BOUNDS):
+        if i in free_idx:
+            bounds.append((lo, hi))
+        else:
+            v = float(x0[i])
+            bounds.append((v, v))
+    return bounds
+
+
+def fit_gdr_mid(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 200,
+    weights: np.ndarray | None = None,
+) -> tuple[np.ndarray, dict]:
+    """Fit only (η1, η2, p01, p10, p_nn1, p_nn2); freeze heating/hops/leak (E)."""
+    x0 = initial_theta(cfg, spec, ndepth)
+    theta = _minimize_theta(
+        x0,
+        _freeze_bounds(MID_FREE_IDX, x0),
+        (p_ideals, q_obs, spec.n_shots, dims, weights, None, 0.0, None),
+        maxiter,
+    )
+    return theta, _fit_info(theta, cfg, spec, ndepth, {"kind": "gdr_mid", "free": [PARAM_NAMES[i] for i in MID_FREE_IDX]})
+
+
+def tfree_weights(t_free: list[int], boost: float = 3.0) -> np.ndarray:
+    w = np.ones(len(t_free), dtype=float)
+    for i, t in enumerate(t_free):
+        if int(t) > 0:
+            w[i] = float(boost)
+    return w
+
+
+def fit_gdr_tfree(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    t_free: list[int],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 200,
+    boost: float = 3.0,
+    lam: float = 1e-3,
+) -> tuple[np.ndarray, dict]:
+    """Ridge GDR with extra weight on t_free>0 (interleaving-carrying) twins (D)."""
+    w = tfree_weights(t_free, boost=boost)
+    theta, info = fit_gdr_ridge(p_ideals, q_obs, cfg, spec, ndepth, dims, maxiter=maxiter, lam=lam, weights=w)
+    info["kind"] = "gdr_tfree"
+    info["tfree_boost"] = float(boost)
+    return theta, info
+
+
+def fit_gdr_residual(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 120,
+    t_free: list[int] | None = None,
+) -> tuple[tuple[np.ndarray, np.ndarray, np.ndarray], dict]:
+    """Oracle kernel composed with a small extra hop/leak fitted on twins (D).
+
+    Interleaving is invisible to a single end-of-circuit binomial on Gaussian
+    twins. A residual n-independent hop + leak absorbs the leftover after the
+    known-model map, using t_free>0 twins when available.
+    """
+    cq0, c10, c20 = oracle_kernels(cfg, spec, ndepth, dims)
+    if t_free is not None and any(int(t) > 0 for t in t_free):
+        keep = [i for i, t in enumerate(t_free) if int(t) > 0]
+        p_use, q_use = _select(p_ideals, np.asarray(keep)), _select(q_obs, np.asarray(keep))
+    else:
+        p_use, q_use = p_ideals, q_obs
+
+    def nll(x):
+        p_down, p_up, eps = (float(np.clip(v, 0.0, 0.3)) for v in x)
+        c1 = _normalize_columns(leak_kernel(shift_kernel(dims[1], p_up, +1) @ shift_kernel(dims[1], p_down, -1) @ c10, eps))
+        c2 = _normalize_columns(leak_kernel(shift_kernel(dims[2], p_up, +1) @ shift_kernel(dims[2], p_down, -1) @ c20, eps))
+        return _kernel_nll(p_use, q_use, spec.n_shots, cq0, c1, c2)
+
+    result = optimize.minimize(
+        nll,
+        np.array([0.0, 0.0, 0.0]),
+        method="L-BFGS-B",
+        bounds=[(0.0, 0.3), (0.0, 0.3), (0.0, 0.3)],
+        options={"maxiter": int(maxiter), "ftol": 1e-10},
+    )
+    p_down, p_up, eps = (float(np.clip(v, 0.0, 0.3)) for v in result.x)
+    c1 = _normalize_columns(leak_kernel(shift_kernel(dims[1], p_up, +1) @ shift_kernel(dims[1], p_down, -1) @ c10, eps))
+    c2 = _normalize_columns(leak_kernel(shift_kernel(dims[2], p_up, +1) @ shift_kernel(dims[2], p_down, -1) @ c20, eps))
+    info = {
+        "kind": "gdr_residual",
+        "p_down": p_down,
+        "p_up": p_up,
+        "eps": eps,
+        "success": bool(result.success),
+        "nll": float(result.fun),
+    }
+    return (cq0, c1, c2), info
+
+
+def _kernel_nll(p_ideals, q_obs, n_shots, cq, c1, c2) -> float:
+    nll = 0.0
+    shots = max(int(n_shots), 1)
+    for p, q in zip(p_ideals, q_obs):
+        pred = np.clip(apply_transfer(p, cq, c1, c2), EPS_PROB, None)
+        pred = pred / pred.sum()
+        counts = np.clip(np.asarray(q, dtype=float), 0.0, None)
+        counts = counts / max(float(counts.sum()), EPS_PROB) * shots
+        nll -= float(np.sum(counts * np.log(pred)))
+    return nll
+
+
+def energy_weights(e_ideal: np.ndarray, kind: str = "absE") -> np.ndarray:
+    """Optional GS/energy-aware twin weights (F)."""
+    e = np.asarray(e_ideal, dtype=float).reshape(-1)
+    if kind == "uniform" or e.size == 0:
+        return np.ones(e.size, dtype=float)
+    if kind == "absE":
+        w = np.abs(e)
+    elif kind == "negE":
+        w = np.maximum(-e, 0.0)
+    else:
+        w = np.ones(e.size, dtype=float)
+    if float(w.sum()) <= 0.0:
+        return np.ones(e.size, dtype=float)
+    return w * (e.size / float(w.sum()))
+
+
+def choose_damp_alpha(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cq: np.ndarray,
+    c1: np.ndarray,
+    c2: np.ndarray,
+    p_safe: list[np.ndarray],
+    *,
+    alphas: np.ndarray | None = None,
+) -> tuple[float, dict]:
+    """Pick mix p = (1-α) unfold(q) + α p_safe that best matches twin ideals."""
+    grid = np.linspace(0.0, 1.0, 21) if alphas is None else np.asarray(alphas, dtype=float)
+    unfolded = [unfold(q, cq, c1, c2) for q in q_obs]
+    best_a, best_tvd = 0.0, None
+    for a in grid:
+        tvds = []
+        for p_id, p_u, p_s in zip(p_ideals, unfolded, p_safe):
+            mix = (1.0 - float(a)) * p_u + float(a) * p_s
+            tvds.append(total_variation(mix, p_id))
+        mean = float(np.mean(tvds)) if tvds else 0.0
+        if best_tvd is None or mean < best_tvd:
+            best_tvd, best_a = mean, float(a)
+    return float(best_a), {"alpha": float(best_a), "hold_tvd": best_tvd}
+
+
+def damp_histogram(p_unfold: np.ndarray, p_safe: np.ndarray, alpha: float) -> np.ndarray:
+    a = float(np.clip(alpha, 0.0, 1.0))
+    p = (1.0 - a) * np.asarray(p_unfold, dtype=float) + a * np.asarray(p_safe, dtype=float)
+    p = np.clip(p, 0.0, None)
+    s = float(p.sum())
+    return p / s if s > 0.0 else np.full(p.shape, 1.0 / p.size)
+
+
+def safe_histogram(q_obs: np.ndarray, spec: ReadoutSpec, dims: tuple[int, int, int]) -> np.ndarray:
+    """Readout-inverted histogram, or the raw shots if readout is ideal."""
+    ro = run_readout_only(q_obs, spec, dims)
+    if ro is None:
+        return np.asarray(q_obs, dtype=float)
+    return np.asarray(ro.histogram, dtype=float)
+
+
+def readout_then_zne(
+    hist_by_scale: dict[int, np.ndarray],
+    spec: ReadoutSpec,
+    dims: tuple[int, int, int],
+    *,
+    degree: int | None = None,
+) -> np.ndarray:
+    """Invert calibrated readout on each idle-stretched histogram, then ZNE (B)."""
+    corrected = {int(s): safe_histogram(h, spec, dims) for s, h in hist_by_scale.items()}
+    deg = 2 if degree is None and 3 in corrected else (1 if degree is None else int(degree))
+    if max(corrected) < deg + 1:
+        deg = max(int(max(corrected)) - 1, 1)
+    return zne_histogram(corrected, degree=deg)
+
+
+def zne_then_readout(
+    hist_by_scale: dict[int, np.ndarray],
+    spec: ReadoutSpec,
+    dims: tuple[int, int, int],
+    *,
+    degree: int | None = None,
+) -> np.ndarray:
+    """Idle-time ZNE first, then invert the detector (B)."""
+    deg = 2 if degree is None and 3 in hist_by_scale else (1 if degree is None else int(degree))
+    if max(hist_by_scale) < deg + 1:
+        deg = max(int(max(hist_by_scale)) - 1, 1)
+    p = zne_histogram(hist_by_scale, degree=deg)
+    return safe_histogram(p, spec, dims)

@@ -498,7 +498,12 @@ def run(args: argparse.Namespace) -> dict:
         else ((args.readout,) if args.readout else preset["readout"])
     )
     families = tuple(preset["families"])
+    if getattr(args, "families", None):
+        families = tuple(x.strip() for x in str(args.families).split(",") if x.strip())
     kappas = tuple(preset["kappa_tau"])
+    if getattr(args, "kappa_tau", None):
+        kappas = tuple(float(x.strip()) for x in str(args.kappa_tau).split(",") if x.strip())
+    param_filter = getattr(args, "params", None) or "both"
     ansätze = ("ecd", "snap") if args.ansatz == "both" else (args.ansatz,)
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
@@ -532,12 +537,24 @@ def run(args: argparse.Namespace) -> dict:
             n_restarts=int(preset["opt_restarts"]),
         )
         param_sets = {"random": x_random, "optimized": x_opt}
+        if param_filter != "both":
+            param_sets = {param_filter: param_sets[param_filter]}
         sim_ideal = make_sim(ansatz, ndepth, energy_tensor, ground_qnm)
 
         for pset, xvec in param_sets.items():
             rng_tw = np.random.default_rng(case_seed("twins", ansatz, pset, args.seed))
             print(f"  building {n_train} Gaussian twins for {pset} ...")
-            twins = build_twins(sim_ideal, xvec, rng_tw, n_train=n_train)
+            twins = build_twins(
+                sim_ideal,
+                xvec,
+                rng_tw,
+                n_train=n_train,
+                n_rank2=getattr(args, "n_rank2", None),
+                mag_scale_range=(
+                    float(getattr(args, "mag_scale_min", 0.5) or 0.5),
+                    float(getattr(args, "mag_scale_max", 1.0) or 1.0),
+                ),
+            )
             poisson_tvds.extend(t.poisson_tvd for t in twins if t.poisson_tvd is not None)
             product_tvds.extend(t.product_tvd for t in twins if t.product_tvd is not None)
             p_ideal = physical_probs(sim_ideal, xvec)
@@ -718,6 +735,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Override the preset readout levels.",
     )
+    p.add_argument("--families", default=None, help="Comma-separated circuit families.")
+    p.add_argument("--kappa-tau", default=None, dest="kappa_tau", help="Comma-separated κτ values.")
+    p.add_argument("--params", choices=("random", "optimized", "both"), default="both")
+    p.add_argument("--n-rank2", type=int, default=None, dest="n_rank2")
+    p.add_argument("--mag-scale-min", type=float, default=None, dest="mag_scale_min")
+    p.add_argument("--mag-scale-max", type=float, default=None, dest="mag_scale_max")
     return p.parse_args(argv)
 
 

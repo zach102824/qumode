@@ -18,13 +18,20 @@ if str(SRC) not in sys.path:
 from Error_mitigation.metrics import total_variation
 from Error_mitigation.mitigation import (
     binomial_loss_kernel,
+    choose_damp_alpha,
+    damp_histogram,
     fock_kernel,
+    holdout_indices,
     observe_histogram,
     oracle_kernels,
+    readout_then_zne,
     richardson_lucy,
     run_readout_only,
     thermal_loss_kernel,
+    zne_histogram,
+    zne_then_readout,
 )
+from Error_mitigation.twins import designed_twin_plan
 from Error_mitigation.noise_models import (
     circuit_noise,
     is_trivial_readout,
@@ -140,3 +147,69 @@ def test_truncated_poisson_vacuum():
     p = truncated_poisson(0.0, 8)
     assert p[0] == pytest.approx(1.0)
     assert p.sum() == pytest.approx(1.0)
+
+
+def test_holdout_indices_stratified():
+    train, hold = holdout_indices(20, 0.25)
+    assert train.size + hold.size == 20
+    assert hold.size == 5
+    assert np.intersect1d(train, hold).size == 0
+    # not just the last 25% (those would be all t_free>0 twins)
+    assert hold.max() < 19 or hold.min() == 0
+
+
+def test_damp_histogram_endpoints():
+    a = np.zeros((2, 4, 4))
+    a[0, 0, 0] = 1.0
+    b = np.zeros_like(a)
+    b[1, 1, 1] = 1.0
+    assert damp_histogram(a, b, 0.0)[0, 0, 0] == pytest.approx(1.0)
+    assert damp_histogram(a, b, 1.0)[1, 1, 1] == pytest.approx(1.0)
+    mix = damp_histogram(a, b, 0.5)
+    assert mix[0, 0, 0] == pytest.approx(0.5)
+    assert mix.sum() == pytest.approx(1.0)
+
+
+def test_choose_damp_alpha_prefers_safe_when_unfold_is_wrong():
+    p = np.zeros((2, 4, 4))
+    p[0, 1, 1] = 1.0
+    q = np.zeros_like(p)
+    q[1, 2, 2] = 1.0
+    eye2, eye4 = np.eye(2), np.eye(4)
+    alpha, info = choose_damp_alpha([p], [q], eye2, eye4, eye4, [p], alphas=np.linspace(0, 1, 5))
+    assert alpha == pytest.approx(1.0)
+    assert info["hold_tvd"] == pytest.approx(0.0)
+
+
+def test_readout_then_zne_beats_raw_zne_under_readout():
+    spec = readout_spec("readout_strong", n_shots=0, seed=0)
+    rng = np.random.default_rng(1)
+    p0 = rng.random((2, 8, 8))
+    p0 = p0 / p0.sum()
+    eta = 0.9
+    b = binomial_loss_kernel(eta, 8)
+    b2 = binomial_loss_kernel(eta**2, 8)
+    b3 = binomial_loss_kernel(eta**3, 8)
+
+    def apply_b(kernel):
+        out = np.zeros_like(p0)
+        for q in range(2):
+            out[q] = kernel @ p0[q] @ kernel.T
+        return out
+
+    phys = {1: apply_b(b), 2: apply_b(b2), 3: apply_b(b3)}
+    blurred = {s: observe_histogram(h, spec, (2, 8, 8), seed=10 + s) for s, h in phys.items()}
+    raw_zne = zne_histogram(blurred, degree=2)
+    hyb = readout_then_zne(blurred, spec, (2, 8, 8), degree=2)
+    other = zne_then_readout(blurred, spec, (2, 8, 8), degree=2)
+    assert total_variation(hyb, p0) < total_variation(raw_zne, p0)
+    assert total_variation(other, p0) <= total_variation(raw_zne, p0) + 1e-12
+
+
+def test_designed_twin_plan_spans_magnitude():
+    t_free, scales = designed_twin_plan(12, ndepth=5, n_rank2=3, mag_lo=0.25, mag_hi=1.35)
+    assert len(t_free) == 12
+    assert t_free.count(0) == 9
+    assert t_free.count(2) == 3
+    assert min(scales) == pytest.approx(0.25)
+    assert max(scales) == pytest.approx(1.35)
