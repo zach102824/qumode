@@ -389,3 +389,40 @@ Single-draw headlines sit inside these bands (ECD opt comprehensive 0.343 vs 0.3
 ### Phase 9 ship
 
 Official defaults frozen. Tests: 27 `test_error_mitigation`.
+
+## Phase 10 — defaults frozen (polish only)
+
+No method change. Adaptive / gated damped / optimized `gdr_param` / `n_train=40` stay. No `src/` edits. `out/` / `out_smoke/` untouched. Did **not** reopen `params=auto`, interleave, middle/split/band, energy-weighted fit, or tail bins.
+
+### Research smoke (keep, documented)
+
+`run_mitigation_experiment.py --preset research_smoke` was **not** added: that driver's `DEFAULT_OUTDIR` is `Error_mitigation/out/`. The one-command CI-ish slice lives on the ablation driver (writes only under `out_research/`):
+
+```
+python -u Error_mitigation/run_ablation.py --preset research_smoke
+```
+
+ECD optimized loss κτ=0.003, `--twin-design adaptive` (→ PR #6 mix), 2048 shots, `n_train=40`, `n_rank2=10`, ideal + realistic, `{raw, gdr_param, gdr_damped, gdr_select}`. Cache key `ecd_optimized_loss_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0`.
+
+### Hard-cell figure (keep)
+
+`Error_mitigation/plot_hard_cells.py` writes `out_research/figures/hard_cells_adaptive.png` from the existing headline numbers (PR #6 `out/` vs adaptive hybrid; select error bars from the Phase 9 8×8192 bootstrap).
+
+### SNAP opt mild hybrid-ZNE (document only; `opt_default` cache)
+
+No new sim. SNAP optimized, default twins, κτ=0.003:
+
+| family | readout | raw | gdr_param | zne_idle | readout_then_zne |
+|--------|---------|----:|----------:|---------:|-----------------:|
+| loss | ideal | 0.057 | 0.018 | 0.027 | 0.027 |
+| loss | realistic | 0.097 | 0.013 | 0.076 | **0.063** |
+| loss | strong | 0.189 | 0.014 | 0.162 | **0.053** |
+| thermal | ideal | 0.060 | 0.013 | 0.059 | 0.059 |
+| thermal | realistic | 0.099 | 0.018 | 0.049 | **0.029** |
+| thermal | strong | 0.180 | 0.010 | 0.185 | **0.056** |
+
+Hybrid ZNE still wins under readout. GDR still beats either ZNE on these mild SNAP opt cells. Recipe unchanged.
+
+### Phase 10 ship
+
+README methods table matches the shipped recipe. NOTEBOOK frozen at Phase 10. Tests: 28 `test_error_mitigation`. Stop until the next steer.

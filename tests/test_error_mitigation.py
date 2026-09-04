@@ -369,6 +369,28 @@ def test_classify_opt_quality_default_thresholds():
     assert good["recipe"] == "optimized"
 
 
+def test_research_smoke_preset_stays_in_out_research():
+    from Error_mitigation.run_ablation import (
+        DEFAULT_OUT,
+        RESEARCH_SMOKE,
+        apply_research_smoke,
+        parse_args,
+    )
+
+    args = parse_args(["--preset", "research_smoke"])
+    assert args.preset == "research_smoke"
+    args = apply_research_smoke(args)
+    assert args.tag == "research_smoke"
+    assert args.ansatz == "ecd"
+    assert args.params == "optimized"
+    assert args.twin_design == "adaptive"
+    assert int(args.n_train) == 40
+    assert int(args.n_rank2) == 10
+    assert args.families == RESEARCH_SMOKE["families"]
+    assert DEFAULT_OUT.name == "out_research"
+    assert Path(args.outdir).resolve() == DEFAULT_OUT.resolve()
+
+
 def test_slice_twin_indices_even_subset():
     from Error_mitigation.run_ablation import slice_twin_indices
 

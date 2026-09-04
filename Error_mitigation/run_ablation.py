@@ -9,6 +9,7 @@ Usage (from repo root)::
 
     python -u Error_mitigation/run_ablation.py --tag micro_ab --ansatz ecd \\
         --params both --families loss --kappa-tau 0.003,0.1 --shots 4096 --n-train 20
+    python -u Error_mitigation/run_ablation.py --preset research_smoke
 """
 
 from __future__ import annotations
@@ -1002,8 +1003,36 @@ def run(args: argparse.Namespace) -> dict:
     return result
 
 
+RESEARCH_SMOKE = {
+    "tag": "research_smoke",
+    "ansatz": "ecd",
+    "params": "optimized",
+    "families": "loss",
+    "kappa_tau": "0.003",
+    "shots": 2048,
+    "n_train": 40,
+    "n_rank2": 10,
+    "twin_design": "adaptive",
+    "readout": "ideal,readout_realistic",
+    "methods": "raw,gdr_param,gdr_damped,gdr_select",
+}
+
+
+def apply_research_smoke(args: argparse.Namespace) -> argparse.Namespace:
+    """Tiny adaptive-recipe slice; writes only under out_research/."""
+    for key, val in RESEARCH_SMOKE.items():
+        setattr(args, key, val)
+    return args
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument(
+        "--preset",
+        choices=("none", "research_smoke"),
+        default="none",
+        help="research_smoke: cached ECD opt loss κτ=0.003 adaptive slice.",
+    )
     p.add_argument("--tag", default="micro", help="Subdirectory under out_research/")
     p.add_argument("--outdir", type=Path, default=DEFAULT_OUT)
     p.add_argument("--ansatz", choices=("ecd", "snap", "both"), default="ecd")
@@ -1045,7 +1074,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
-    run(parse_args(argv))
+    args = parse_args(argv)
+    if args.preset == "research_smoke":
+        args = apply_research_smoke(args)
+    run(args)
     return 0
 
 

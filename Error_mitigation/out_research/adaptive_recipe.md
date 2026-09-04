@@ -27,3 +27,5 @@ Headline cells the original plan called out:
 | SNAP opt comprehensive κτ=0.1 ideal | 0.791 | 0.632 | 0.662 | **0.611** |
 
 `opt_default` (54 optimized cells): default `gdr_param` vs span `gdr_param` is **35 better / 19 tie / 0 worse**.
+
+Summary plot of the four headline cells: `out_research/figures/hard_cells_adaptive.png`.
