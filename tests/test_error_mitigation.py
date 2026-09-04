@@ -27,6 +27,7 @@ from Error_mitigation.mitigation import (
     select_by_holdout,
     select_research_method,
     choose_mix_alpha,
+    classify_opt_quality,
     fit_gdr_afterburn,
     fit_gdr_band,
     fit_gdr_split,
@@ -353,6 +354,19 @@ def test_split_and_band_kernels_column_stochastic():
     assert is_column_stochastic(c1)
     assert is_column_stochastic(c2)
     assert info["kind"] == "gdr_band"
+
+
+def test_classify_opt_quality_default_thresholds():
+    h000 = classify_opt_quality(-6.2298, -7.1107, gap=0.7781)
+    assert h000["deficit"] == pytest.approx(0.8809, abs=1e-3)
+    assert h000["thresh"] == pytest.approx(0.5)
+    assert h000["recipe"] == "random"
+    h001 = classify_opt_quality(-3.9218, -6.0317, gap=1.1825)
+    assert h001["recipe"] == "random"
+    tight = classify_opt_quality(-6.2298, -7.1107, gap=0.7781, abs_tol=1.0)
+    assert tight["recipe"] == "optimized"
+    good = classify_opt_quality(-7.10, -7.1107, gap=0.7781)
+    assert good["recipe"] == "optimized"
 
 
 def test_slice_twin_indices_even_subset():

@@ -50,6 +50,7 @@ from Error_mitigation.mitigation import (
     fit_gdr_band,
     fit_gdr_tfree,
     choose_mix_alpha,
+    classify_opt_quality,
     select_research_method,
     tfree_indices,
     fit_scalar_cdr,
@@ -825,6 +826,8 @@ def run(args: argparse.Namespace) -> dict:
     )
     ansätze = ("ecd", "snap") if args.ansatz == "both" else (args.ansatz,)
     param_names = ("random", "optimized") if args.params == "both" else (args.params,)
+    if args.params == "auto":
+        param_names = ("auto",)
     methods = _parse_csv_str(args.methods, CHEAP_METHODS)
     for m in methods:
         if m not in ALL_METHODS:
@@ -864,8 +867,32 @@ def run(args: argparse.Namespace) -> dict:
             f"E0={float(inst.get('energy_min', float('nan'))):.4f}"
         )
         param_sets = {"random": x_random, "optimized": x_opt}
-        for pset in param_names:
-            xvec = param_sets[pset]
+        e0 = float(inst.get("energy_min", float("nan")))
+        auto_info = None
+        jobs: list[tuple[str, object, str, dict | None]] = []
+        if args.params == "auto":
+            auto_info = classify_opt_quality(
+                e_opt,
+                e0,
+                gap=inst.get("gap"),
+                abs_tol=float(args.auto_abs_tol),
+                rel_gap=float(args.auto_rel_gap),
+            )
+            recipe = str(auto_info["recipe"])
+            print(
+                f"  params=auto  deficit={auto_info['deficit']:.3f}  "
+                f"thresh={auto_info['thresh']:.3f}  recipe={recipe}"
+            )
+            jobs.append(("optimized", x_opt, recipe, auto_info))
+        else:
+            for name in param_names:
+                jobs.append((name, param_sets[name], name, None))
+        for pset, xvec, circuit_kind, gate_info in jobs:
+            args_phys = argparse.Namespace(**vars(args))
+            if args.params == "auto":
+                args_phys.twin_design = "span" if circuit_kind == "random" else "default"
+            elif args.twin_design == "adaptive":
+                args_phys.twin_design = "span" if circuit_kind == "random" else "default"
             for family in families:
                 for kt in kappas:
                     phys = build_or_load_physics(
@@ -875,7 +902,7 @@ def run(args: argparse.Namespace) -> dict:
                         family=family,
                         kt=float(kt),
                         n_train=n_train,
-                        args=args,
+                        args=args_phys,
                         energy_tensor=energy_tensor,
                         ground_qnm=ground_qnm,
                         cache_dir=cache_dir,
@@ -898,7 +925,7 @@ def run(args: argparse.Namespace) -> dict:
                             energy_tensor=energy_tensor,
                             methods=methods,
                             fit_maxiter=int(args.fit_maxiter),
-                            circuit_kind=pset,
+                            circuit_kind=circuit_kind,
                             family=family,
                             kappa_tau=float(kt),
                         )
@@ -917,14 +944,16 @@ def run(args: argparse.Namespace) -> dict:
                             "ansatz": ansatz,
                             "ndepth": ndepth,
                             "params": pset,
+                            "circuit_kind": circuit_kind,
+                            "auto": gate_info,
                             "family": family,
                             "kappa_tau": float(kt),
                             "readout": ro,
                             "n_shots": shots,
                             "n_train": int(phys.get("n_train", n_train)),
                             "n_train_phys": n_train,
-                            "twin_design": args.twin_design,
-                            "twin_tag": twin_tag(args),
+                            "twin_design": args_phys.twin_design,
+                            "twin_tag": twin_tag(args_phys),
                             "noise": noise_as_dict(cfg),
                             "readout_spec": readout_as_dict(spec),
                             "metrics": metrics,
@@ -933,10 +962,13 @@ def run(args: argparse.Namespace) -> dict:
                         records.append(rec)
                         gdr = (metrics.get("gdr_param") or {}).get("tvd")
                         raw = (metrics.get("raw") or {}).get("tvd")
+                        sel = (metrics.get("gdr_select") or {}).get("tvd")
                         print(
-                            f"    {pset:<9} {family:<22} kt={kt:g} {ro:<20} "
+                            f"    {pset:<9} kind={circuit_kind:<9} {family:<22} "
+                            f"kt={kt:g} {ro:<20} "
                             f"raw={raw if raw is None else f'{raw:.4f}'}  "
-                            f"gdr={gdr if gdr is None else f'{gdr:.4f}'}"
+                            f"gdr={gdr if gdr is None else f'{gdr:.4f}'}  "
+                            f"sel={sel if sel is None else f'{sel:.4f}'}"
                         )
 
     run_dir = outdir / args.tag
@@ -975,7 +1007,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--tag", default="micro", help="Subdirectory under out_research/")
     p.add_argument("--outdir", type=Path, default=DEFAULT_OUT)
     p.add_argument("--ansatz", choices=("ecd", "snap", "both"), default="ecd")
-    p.add_argument("--params", choices=("random", "optimized", "both"), default="both")
+    p.add_argument(
+        "--params",
+        choices=("random", "optimized", "both", "auto"),
+        default="both",
+        help="auto: keep the optimized circuit but apply the random recipe "
+        "if E_opt is worse than E0 by more than max(abs_tol, rel_gap*gap).",
+    )
+    p.add_argument("--auto-abs-tol", type=float, default=0.5)
+    p.add_argument("--auto-rel-gap", type=float, default=0.2)
     p.add_argument("--instance", type=int, default=0)
     p.add_argument("--shots", type=int, default=4096)
     p.add_argument("--n-train", type=int, default=20)
@@ -991,7 +1031,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--readout", default="all")
     p.add_argument("--methods", default=",".join(CHEAP_METHODS))
     p.add_argument("--fit-maxiter", type=int, default=120)
-    p.add_argument("--twin-design", choices=("default", "wide", "span", "more_tfree"), default="default")
+    p.add_argument(
+        "--twin-design",
+        choices=("default", "wide", "span", "more_tfree", "adaptive"),
+        default="default",
+    )
     p.add_argument("--n-rank2", type=int, default=None)
     p.add_argument("--mag-lo", type=float, default=0.25)
     p.add_argument("--mag-hi", type=float, default=1.35)

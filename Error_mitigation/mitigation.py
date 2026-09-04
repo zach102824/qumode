@@ -1267,6 +1267,42 @@ def tfree_indices(t_free: list[int] | None) -> np.ndarray:
     return np.asarray([i for i, t in enumerate(t_free) if int(t) > 0], dtype=int)
 
 
+def classify_opt_quality(
+    e_opt: float,
+    e0: float,
+    *,
+    gap: float | None = None,
+    abs_tol: float = 0.5,
+    rel_gap: float = 0.2,
+) -> dict:
+    """Treat a noiseless VQE as random if it sits too far above E0.
+
+    Deficit is ``E_opt - E0`` (positive = worse). The threshold is
+    ``max(abs_tol, rel_gap * gap)`` with ``gap`` defaulting to ``|E0|``.
+    Research-only: Phase 8 H001 fail was a mid-quality VQE, not a random
+    circuit. Default thresholds are a hypothesis, not a shipped recipe.
+    """
+    e_opt_f = float(e_opt)
+    e0_f = float(e0)
+    deficit = e_opt_f - e0_f
+    if gap is not None and float(gap) > 0.0:
+        g = float(gap)
+    else:
+        g = abs(e0_f)
+    thresh = max(float(abs_tol), float(rel_gap) * g)
+    recipe = "random" if deficit > thresh else "optimized"
+    return {
+        "recipe": recipe,
+        "e_opt": e_opt_f,
+        "e0": e0_f,
+        "deficit": float(deficit),
+        "gap": float(g),
+        "abs_tol": float(abs_tol),
+        "rel_gap": float(rel_gap),
+        "thresh": float(thresh),
+    }
+
+
 def select_research_method(
     cand_hold: list[tuple[str, float]],
     *,
