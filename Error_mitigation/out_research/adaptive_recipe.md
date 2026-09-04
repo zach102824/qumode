@@ -8,7 +8,7 @@ Hybrid scoreboard (no new target shots beyond `phase3` + `opt_default`):
 | metric | count |
 |--------|------:|
 | beats PR #6 `gdr_param` | **86 / 108** |
-| beats same-run raw | **107 / 108** |
+| beats same-run raw | **108 / 108** |
 | worse than raw | **0 / 108** after gated floor on random comprehensive κτ≤0.003 |
 
 Headline cells the original plan called out:
