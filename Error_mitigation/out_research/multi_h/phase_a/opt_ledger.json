@@ -95,7 +95,7 @@
       "deficit": 1.2122744856158523,
       "near_e0": false,
       "source": "Error_mitigation/out_research/leftover_xfer_h001_opt2/optimized_params_ecd_h001_nd5.json",
-      "status": "opt-failed-incumbent",
+      "status": "opt-failed",
       "new_restarts": 0,
       "h000_quality": false,
       "x_path": "/workspace/Error_mitigation/out_research/multi_h/phase_a/optimized_params_ecd_h001_nd5.json"
@@ -114,7 +114,7 @@
       "deficit": 1.3510077947287762,
       "near_e0": false,
       "source": "Error_mitigation/out_research/optimized_params_ecd_h002_nd5.json",
-      "status": "opt-failed-incumbent",
+      "status": "opt-failed",
       "new_restarts": 0,
       "h000_quality": false,
       "x_path": "/workspace/Error_mitigation/out_research/multi_h/phase_a/optimized_params_ecd_h002_nd5.json"
@@ -321,8 +321,8 @@
         2
       ],
       "file": "mixed_p_spin_p2-4_009.npz",
-      "status": "opt-failed",
-      "new_restarts": 4,
+      "status": "pass",
+      "new_restarts": 5,
       "restart_history": [
         {
           "hid": 9,
@@ -367,13 +367,24 @@
           "nfev": 9143,
           "elapsed_s": 1188.9286794662476,
           "unix": 1788711248.2818077
+        },
+        {
+          "hid": 9,
+          "kind": "continue_best",
+          "local_index": 4,
+          "fun": -4.805621654267727,
+          "deficit": 0.44879076266129836,
+          "success": false,
+          "nfev": 8856,
+          "elapsed_s": 1213.7961568832397,
+          "unix": 1788712462.0870025
         }
       ],
-      "fun": -4.725316463794004,
-      "deficit": 0.5290959531350206,
-      "nfev": 9143,
-      "elapsed_s": 3100.8324477672577,
-      "near_e0": false,
+      "fun": -4.805621654267727,
+      "deficit": 0.44879076266129836,
+      "nfev": 8856,
+      "elapsed_s": 4314.628604650497,
+      "near_e0": true,
       "h000_quality": true
     }
   },
@@ -542,6 +553,17 @@
       "nfev": 9143,
       "elapsed_s": 1188.9286794662476,
       "unix": 1788711248.2818077
+    },
+    {
+      "hid": 9,
+      "kind": "continue_best",
+      "local_index": 4,
+      "fun": -4.805621654267727,
+      "deficit": 0.44879076266129836,
+      "success": false,
+      "nfev": 8856,
+      "elapsed_s": 1213.7961568832397,
+      "unix": 1788712462.0870025
     }
   ]
 }

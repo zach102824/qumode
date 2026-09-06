@@ -31,3 +31,21 @@ Phase A H009 random #3  E0=-5.2544 remaining=58.0 min
 Phase A H009 random #4  E0=-5.2544 remaining=38.3 min
   → E=-4.725316 deficit=0.529096 nfev=9143 1188.9s  best=-4.725316 near_e0=False
 Phase A H009 continue_best #5  E0=-5.2544 remaining=18.4 min
+  → E=-4.805622 deficit=0.448791 nfev=8856 1213.8s  best=-4.805622 near_e0=True
+Phase A done. strict passers=2
+wrote /workspace/Error_mitigation/out_research/multi_h/MULTI_H_SUMMARY.md
+H000 x changed vs out/; will resimulate optimized cells.
+Phase B optimized transfer on H=[0, 4, 9]
+    sim comprehensive κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 23.8s
+      wrote cache ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=2026  raw=0.3247  gdr=0.1012  sel=0.1012
+    sim comprehensive κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 25.9s
+      wrote cache ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=2026  raw=0.7809  gdr=0.4101  sel=0.4101
+    sim comprehensive κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 387.8s
+      wrote cache ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=2026  raw=0.9527  gdr=0.8688  sel=0.8688
+    sim comprehensive κτ=0.003 optimized  target+40 twins ...
