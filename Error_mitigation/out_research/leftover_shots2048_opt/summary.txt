@@ -1,0 +1,25 @@
+Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)
+Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, zne_idle, readout_then_zne
+
+Headline at κτ = 0.1  (readout_only vs gdr_param vs gdr_select vs oracle_binomial)
+
+ecd  comprehensive             ideal                 raw.TVD=0.9060 dE=3.7350  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.3514 dE=1.9013  gdr_select.TVD=0.3514 dE=1.9013
+ecd  comprehensive             readout_realistic     raw.TVD=0.9173 dE=3.8847  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.3604 dE=1.9398  gdr_select.TVD=0.3604 dE=1.9398
+ecd  comprehensive             readout_strong        raw.TVD=0.9041 dE=3.8106  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.3515 dE=1.8963  gdr_select.TVD=0.3515 dE=1.8963
+
+Full table (all cases)
+
+ansatz params     family                       kt readout            method                  TVD       dE     dPgs
+------------------------------------------------------------------------------------------------------------------
+ecd    optimized  comprehensive             0.100 ideal              raw                  0.9060   3.7350   0.0000
+ecd    optimized  comprehensive             0.100 ideal              gdr_param            0.3514   1.9013   0.0000
+ecd    optimized  comprehensive             0.100 ideal              gdr_damped           0.4336   2.1764   0.0000
+ecd    optimized  comprehensive             0.100 ideal              gdr_select           0.3514   1.9013   0.0000
+ecd    optimized  comprehensive             0.100 readout_realistic  raw                  0.9173   3.8847   0.0000
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_param            0.3604   1.9398   0.0000
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_damped           0.4431   2.2282   0.0000
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_select           0.3604   1.9398   0.0000
+ecd    optimized  comprehensive             0.100 readout_strong     raw                  0.9041   3.8106   0.0000
+ecd    optimized  comprehensive             0.100 readout_strong     gdr_param            0.3515   1.8963   0.0000
+ecd    optimized  comprehensive             0.100 readout_strong     gdr_damped           0.4336   2.1636   0.0000
+ecd    optimized  comprehensive             0.100 readout_strong     gdr_select           0.3515   1.8963   0.0000

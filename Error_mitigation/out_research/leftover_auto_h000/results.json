@@ -1,0 +1,575 @@
+{
+  "tag": "leftover_auto_h000",
+  "shots": 8192,
+  "n_train": 40,
+  "fit_n_train": null,
+  "seed": 2026,
+  "twin_design": "default",
+  "twin_tag": "default_nr10_lo0.25_hi1.35_x0",
+  "families": [
+    "comprehensive"
+  ],
+  "kappa_tau": [
+    0.1
+  ],
+  "readout_levels": [
+    "ideal",
+    "readout_strong"
+  ],
+  "methods": [
+    "raw",
+    "gdr_param",
+    "gdr_mid",
+    "gdr_damped",
+    "gdr_select"
+  ],
+  "hamiltonian_id": 0,
+  "records": [
+    {
+      "tag": "leftover_auto_h000",
+      "ansatz": "ecd",
+      "ndepth": 5,
+      "params": "optimized",
+      "circuit_kind": "random",
+      "auto": {
+        "recipe": "random",
+        "e_opt": -6.229769511196412,
+        "e0": -7.110659991944239,
+        "deficit": 0.8808904807478264,
+        "gap": 0.7780579835000001,
+        "abs_tol": 0.5,
+        "rel_gap": 0.2,
+        "thresh": 0.5
+      },
+      "family": "comprehensive",
+      "kappa_tau": 0.1,
+      "readout": "ideal",
+      "n_shots": 8192,
+      "n_train": 40,
+      "n_train_phys": 40,
+      "twin_design": "span",
+      "twin_tag": "span_nr10_lo0.25_hi1.35_x0",
+      "noise": {
+        "timing": "per_ecd_pair",
+        "loss_model": "lindblad",
+        "kappa_tau_used": 0.1,
+        "tau_application_s": 6.5e-07,
+        "cumulative_kappa_t_nd5": 1.0,
+        "nth_cav": 0.01,
+        "kappa_phi": 0.0,
+        "t1_cav": 0.000436,
+        "tau_ecd": 6.5e-07,
+        "enable_transmon": true,
+        "t1_q": 5e-05,
+        "t2_q": 3e-05,
+        "nth_q": 0.0,
+        "rotation_rel_error": 0.01,
+        "ecd_amp_rel_error": 0.01,
+        "ecd_phase_error": 0.0,
+        "kerr": 3141.592653589793,
+        "cross_kerr": 0.0,
+        "chi_dispersive": 0.0
+      },
+      "readout_spec": {
+        "level": "ideal",
+        "p01": 0.0,
+        "p10": 0.0,
+        "p_nn": 0.0,
+        "n_shots": 8192,
+        "seed": null
+      },
+      "metrics": {
+        "raw": {
+          "tvd": 0.9085922712736444,
+          "hellinger": 0.8278452222542138,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -2.525845381990801,
+          "dE": 3.703924129205612,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 0.0,
+          "dPgs": 0.0,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -4.323158413260389,
+          "dGibbs": 1.9089948142042008,
+          "has_histogram": true
+        },
+        "gdr_param": {
+          "tvd": 0.41625747723952056,
+          "hellinger": 0.48149783486954173,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -3.8396135083106535,
+          "dE": 2.39015600288576,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 8.546293131449468e-24,
+          "dPgs": 8.546293131449468e-24,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -5.703675330930086,
+          "dGibbs": 0.528477896534504,
+          "has_histogram": true
+        },
+        "gdr_damped": {
+          "tvd": 0.563905125303175,
+          "hellinger": 0.5753358831249127,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -3.4454830704146966,
+          "dE": 2.7842864407817167,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 5.982405192014627e-24,
+          "dPgs": 5.982405192014627e-24,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -5.449343649804746,
+          "dGibbs": 0.7828095776598438,
+          "has_histogram": true
+        },
+        "gdr_mid": {
+          "tvd": 0.41041195799522245,
+          "hellinger": 0.47838828895774765,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -3.923404307229359,
+          "dE": 2.3063652039670544,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 1.7589948695856524e-29,
+          "dPgs": 1.7589948695856524e-29,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -5.70939128880594,
+          "dGibbs": 0.5227619386586495,
+          "has_histogram": true
+        },
+        "gdr_select": {
+          "tvd": 0.5885256357296372,
+          "hellinger": 0.5911892124091291,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -3.3797946640987044,
+          "dE": 2.849974847097709,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 5.5550905354421516e-24,
+          "dPgs": 5.5550905354421516e-24,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -5.39987334729366,
+          "dGibbs": 0.8322798801709297,
+          "has_histogram": true
+        }
+      },
+      "fits": {
+        "gdr_param": {
+          "success": false,
+          "nll": 685743.6630755367,
+          "nfev": 1728,
+          "message": "STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT",
+          "fitted": {
+            "eta1": 0.7824455846074706,
+            "eta2": 0.3694899947560709,
+            "nth1": 0.16762131210195333,
+            "nth2": 0.008603843848123252,
+            "p_down": 0.3,
+            "p_up": 0.0,
+            "eps": 0.0,
+            "p01": 0.07438497280651328,
+            "p10": 0.18757578101131164,
+            "p_nn1": 0.052174889920831205,
+            "p_nn2": 0.005280266870942885
+          },
+          "true_eta": 0.36787944117144233,
+          "true_nth": 0.01,
+          "true_p01": 0.0,
+          "true_p10": 0.0,
+          "true_p_nn": 0.0,
+          "d_eta1": 0.41456614343602827,
+          "d_eta2": 0.0016105535846285823,
+          "d_p01": 0.07438497280651328,
+          "d_p10": 0.18757578101131164,
+          "d_p_nn1": 0.052174889920831205,
+          "d_p_nn2": 0.005280266870942885
+        },
+        "gdr_damped": {
+          "success": false,
+          "nll": 685743.6630755367,
+          "nfev": 1728,
+          "message": "STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT",
+          "fitted": {
+            "eta1": 0.7824455846074706,
+            "eta2": 0.3694899947560709,
+            "nth1": 0.16762131210195333,
+            "nth2": 0.008603843848123252,
+            "p_down": 0.3,
+            "p_up": 0.0,
+            "eps": 0.0,
+            "p01": 0.07438497280651328,
+            "p10": 0.18757578101131164,
+            "p_nn1": 0.052174889920831205,
+            "p_nn2": 0.005280266870942885
+          },
+          "true_eta": 0.36787944117144233,
+          "true_nth": 0.01,
+          "true_p01": 0.0,
+          "true_p10": 0.0,
+          "true_p_nn": 0.0,
+          "d_eta1": 0.41456614343602827,
+          "d_eta2": 0.0016105535846285823,
+          "d_p01": 0.07438497280651328,
+          "d_p10": 0.18757578101131164,
+          "d_p_nn1": 0.052174889920831205,
+          "d_p_nn2": 0.005280266870942885,
+          "alpha": 0.30000000000000004,
+          "hold_tvd": 0.21715699082621578,
+          "slack": 0.0,
+          "tvd_safe": 0.3136991607324192,
+          "safe_gated": false,
+          "kind": "gdr_damped"
+        },
+        "gdr_mid": {
+          "fitted": {
+            "eta1": 0.7155721976233681,
+            "eta2": 0.3698976614560576,
+            "nth1": 0.01,
+            "nth2": 0.01,
+            "p_down": 0.0,
+            "p_up": 0.0,
+            "eps": 0.0,
+            "p01": 0.07436143062323844,
+            "p10": 0.18914993660232202,
+            "p_nn1": 0.3710789977244208,
+            "p_nn2": 0.000293474297181765
+          },
+          "true_eta": 0.36787944117144233,
+          "true_nth": 0.01,
+          "true_p01": 0.0,
+          "true_p10": 0.0,
+          "true_p_nn": 0.0,
+          "d_eta1": 0.34769275645192577,
+          "d_eta2": 0.002018220284615291,
+          "d_p01": 0.07436143062323844,
+          "d_p10": 0.18914993660232202,
+          "d_p_nn1": 0.3710789977244208,
+          "d_p_nn2": 0.000293474297181765,
+          "kind": "gdr_mid",
+          "free": [
+            "eta1",
+            "eta2",
+            "p01",
+            "p10",
+            "p_nn1",
+            "p_nn2"
+          ]
+        },
+        "gdr_select": {
+          "kind": "gdr_select",
+          "chosen": "gdr_damped",
+          "damp_alpha": 0.35000000000000003,
+          "residual_hops": 0.3,
+          "residual_tfree": 0.7896285887313473,
+          "afterburn_tfree": 0.7896285887313472,
+          "gdr_tfree": 0.43371254791818387,
+          "oracle_tfree": 0.8022364092238359,
+          "hop_cap": 0.06,
+          "circuit_kind": "random",
+          "reason": "holdout",
+          "hold_tvd": 0.20498064795933627,
+          "ranked": [
+            {
+              "name": "safe",
+              "hold_tvd": 0.3068375413968628
+            },
+            {
+              "name": "oracle_binomial",
+              "hold_tvd": 0.5735534998869992
+            },
+            {
+              "name": "gdr_param",
+              "hold_tvd": 0.2315171319465036
+            },
+            {
+              "name": "gdr_mid",
+              "hold_tvd": 0.24152235981204825
+            },
+            {
+              "name": "gdr_residual",
+              "hold_tvd": 0.5621200176998256
+            },
+            {
+              "name": "gdr_afterburn",
+              "hold_tvd": 0.5621200176998256
+            },
+            {
+              "name": "gdr_damped",
+              "hold_tvd": 0.20498064795933627
+            }
+          ]
+        }
+      }
+    },
+    {
+      "tag": "leftover_auto_h000",
+      "ansatz": "ecd",
+      "ndepth": 5,
+      "params": "optimized",
+      "circuit_kind": "random",
+      "auto": {
+        "recipe": "random",
+        "e_opt": -6.229769511196412,
+        "e0": -7.110659991944239,
+        "deficit": 0.8808904807478264,
+        "gap": 0.7780579835000001,
+        "abs_tol": 0.5,
+        "rel_gap": 0.2,
+        "thresh": 0.5
+      },
+      "family": "comprehensive",
+      "kappa_tau": 0.1,
+      "readout": "readout_strong",
+      "n_shots": 8192,
+      "n_train": 40,
+      "n_train_phys": 40,
+      "twin_design": "span",
+      "twin_tag": "span_nr10_lo0.25_hi1.35_x0",
+      "noise": {
+        "timing": "per_ecd_pair",
+        "loss_model": "lindblad",
+        "kappa_tau_used": 0.1,
+        "tau_application_s": 6.5e-07,
+        "cumulative_kappa_t_nd5": 1.0,
+        "nth_cav": 0.01,
+        "kappa_phi": 0.0,
+        "t1_cav": 0.000436,
+        "tau_ecd": 6.5e-07,
+        "enable_transmon": true,
+        "t1_q": 5e-05,
+        "t2_q": 3e-05,
+        "nth_q": 0.0,
+        "rotation_rel_error": 0.01,
+        "ecd_amp_rel_error": 0.01,
+        "ecd_phase_error": 0.0,
+        "kerr": 3141.592653589793,
+        "cross_kerr": 0.0,
+        "chi_dispersive": 0.0
+      },
+      "readout_spec": {
+        "level": "readout_strong",
+        "p01": 0.03,
+        "p10": 0.08,
+        "p_nn": 0.1,
+        "n_shots": 8192,
+        "seed": null
+      },
+      "metrics": {
+        "raw": {
+          "tvd": 0.9065170759611444,
+          "hellinger": 0.825809224545566,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -2.4036390384480515,
+          "dE": 3.826130472748362,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 0.0,
+          "dPgs": 0.0,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -4.331843440006532,
+          "dGibbs": 1.900309787458058,
+          "has_histogram": true
+        },
+        "gdr_param": {
+          "tvd": 0.4034389123926936,
+          "hellinger": 0.4728175782835049,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -3.9541859727078865,
+          "dE": 2.275583538488527,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 2.7420421846177653e-33,
+          "dPgs": 2.7420421846177653e-33,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -5.725119230947877,
+          "dGibbs": 0.5070339965167125,
+          "has_histogram": true
+        },
+        "gdr_damped": {
+          "tvd": 0.5544808126211662,
+          "hellinger": 0.5690707584873048,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -3.527484671963917,
+          "dE": 2.7022848392324965,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 1.9194295292324357e-33,
+          "dPgs": 1.9194295292324357e-33,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -5.469497878876255,
+          "dGibbs": 0.7626553485883347,
+          "has_histogram": true
+        },
+        "gdr_mid": {
+          "tvd": 0.40120191875544675,
+          "hellinger": 0.4721103473565967,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -4.010210940804799,
+          "dE": 2.219558570391614,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 1.0761394770341648e-18,
+          "dPgs": 1.0761394770341648e-18,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -5.72576896957789,
+          "dGibbs": 0.5063842578866993,
+          "has_histogram": true
+        },
+        "gdr_select": {
+          "tvd": 0.5796702398136697,
+          "hellinger": 0.5852810777790711,
+          "energy_ideal": -6.229769511196413,
+          "energy_mit": -3.456367788506588,
+          "dE": 2.773401722689825,
+          "p_gs_ideal": 0.0,
+          "p_gs_mit": 1.782327420001547e-33,
+          "dPgs": 1.782327420001547e-33,
+          "gibbs_ideal": -6.23215322746459,
+          "gibbs_mit": -5.419736095156147,
+          "dGibbs": 0.8124171323084424,
+          "has_histogram": true
+        }
+      },
+      "fits": {
+        "gdr_param": {
+          "success": true,
+          "nll": 759792.7281245053,
+          "nfev": 1476,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "fitted": {
+            "eta1": 0.78132070353342,
+            "eta2": 0.6417664994563953,
+            "nth1": 0.16822823006310406,
+            "nth2": 0.022863693681668552,
+            "p_down": 0.3,
+            "p_up": 0.0,
+            "eps": 0.0,
+            "p01": 0.09567340636596695,
+            "p10": 0.239488493092786,
+            "p_nn1": 0.14504545209619704,
+            "p_nn2": 0.10087169310068488
+          },
+          "true_eta": 0.36787944117144233,
+          "true_nth": 0.01,
+          "true_p01": 0.03,
+          "true_p10": 0.08,
+          "true_p_nn": 0.1,
+          "d_eta1": 0.41344126236197765,
+          "d_eta2": 0.27388705828495297,
+          "d_p01": 0.06567340636596695,
+          "d_p10": 0.159488493092786,
+          "d_p_nn1": 0.045045452096197036,
+          "d_p_nn2": 0.0008716931006848699
+        },
+        "gdr_damped": {
+          "success": true,
+          "nll": 759792.7281245053,
+          "nfev": 1476,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "fitted": {
+            "eta1": 0.78132070353342,
+            "eta2": 0.6417664994563953,
+            "nth1": 0.16822823006310406,
+            "nth2": 0.022863693681668552,
+            "p_down": 0.3,
+            "p_up": 0.0,
+            "eps": 0.0,
+            "p01": 0.09567340636596695,
+            "p10": 0.239488493092786,
+            "p_nn1": 0.14504545209619704,
+            "p_nn2": 0.10087169310068488
+          },
+          "true_eta": 0.36787944117144233,
+          "true_nth": 0.01,
+          "true_p01": 0.03,
+          "true_p10": 0.08,
+          "true_p_nn": 0.1,
+          "d_eta1": 0.41344126236197765,
+          "d_eta2": 0.27388705828495297,
+          "d_p01": 0.06567340636596695,
+          "d_p10": 0.159488493092786,
+          "d_p_nn1": 0.045045452096197036,
+          "d_p_nn2": 0.0008716931006848699,
+          "alpha": 0.30000000000000004,
+          "hold_tvd": 0.22129660344385327,
+          "slack": 0.0,
+          "tvd_safe": 0.3141788659965701,
+          "safe_gated": false,
+          "kind": "gdr_damped"
+        },
+        "gdr_mid": {
+          "fitted": {
+            "eta1": 0.7168698848000405,
+            "eta2": 0.40152659591452444,
+            "nth1": 0.01,
+            "nth2": 0.01,
+            "p_down": 0.0,
+            "p_up": 0.0,
+            "eps": 0.0,
+            "p01": 0.09570208081124669,
+            "p10": 0.2417410009244,
+            "p_nn1": 0.4,
+            "p_nn2": 0.10042581928047381
+          },
+          "true_eta": 0.36787944117144233,
+          "true_nth": 0.01,
+          "true_p01": 0.03,
+          "true_p10": 0.08,
+          "true_p_nn": 0.1,
+          "d_eta1": 0.3489904436285982,
+          "d_eta2": 0.03364715474308211,
+          "d_p01": 0.06570208081124669,
+          "d_p10": 0.16174100092440002,
+          "d_p_nn1": 0.30000000000000004,
+          "d_p_nn2": 0.0004258192804738048,
+          "kind": "gdr_mid",
+          "free": [
+            "eta1",
+            "eta2",
+            "p01",
+            "p10",
+            "p_nn1",
+            "p_nn2"
+          ]
+        },
+        "gdr_select": {
+          "kind": "gdr_select",
+          "chosen": "gdr_damped",
+          "damp_alpha": 0.35000000000000003,
+          "residual_hops": 0.3,
+          "residual_tfree": 0.7896618592491469,
+          "afterburn_tfree": 0.7896618592491469,
+          "gdr_tfree": 0.43648112544584183,
+          "oracle_tfree": 0.8047934856930711,
+          "hop_cap": 0.06,
+          "circuit_kind": "random",
+          "reason": "holdout",
+          "hold_tvd": 0.20238382376347577,
+          "ranked": [
+            {
+              "name": "safe",
+              "hold_tvd": 0.3077787321097983
+            },
+            {
+              "name": "oracle_binomial",
+              "hold_tvd": 0.574102711931354
+            },
+            {
+              "name": "gdr_param",
+              "hold_tvd": 0.22838793962196524
+            },
+            {
+              "name": "gdr_mid",
+              "hold_tvd": 0.23347039484633308
+            },
+            {
+              "name": "gdr_residual",
+              "hold_tvd": 0.5555715457296754
+            },
+            {
+              "name": "gdr_afterburn",
+              "hold_tvd": 0.5555715457296755
+            },
+            {
+              "name": "gdr_damped",
+              "hold_tvd": 0.20238382376347577
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
