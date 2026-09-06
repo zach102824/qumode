@@ -1,10 +1,35 @@
 # Multi-H realistic comprehensive validation (PR #8 adaptive GDR)
 
-Frozen recipe, no new mitigation kernels. Noise locked to `comprehensive` + `readout_realistic`, 8192 shots, 40 twins, adaptive design (span on random, U(0.5,1) on optimized).
+Frozen recipe. **No new mitigation kernels. No `src/` edits.** Noise locked to
+`comprehensive` + `readout_realistic`, 8192 shots, `n_train=40`, official
+adaptive twins (span on random, \(U(0.5,1)\) on optimized). Everything lives
+under `Error_mitigation/out_research/multi_h/`. `out/` and `out_smoke/` were
+not overwritten.
 
-Keep gate: `E_opt - E0 <= 0.5`. H000 frozen ECD from `Error_mitigation/out/optimized_params_ecd_h000_nd5.json` is the PR #8 reference circuit and is always included in optimized transfer / 10-seed even if it misses the strict gate; that exception is labeled `h000_reference`. Every other H that misses the gate is **opt-failed** and has no optimized transfer matrix.
+Keep gate: `E_opt - E0 <= 0.5`. Failed opts get **no** optimized transfer
+matrix. H000 is the PR #8 reference circuit: an extra L-BFGS-B start improved
+it from deficit 0.881 → **0.756**, still above the gate. It is included in
+Phases B/C and labeled `h000_reference`.
+
+## Headline for Zach
+
+**≥4 H beat raw at κτ=0.003: NO.** Only **2** Hamiltonians cleared the 0.5
+near-\(E_0\) gate (H004, H009). Adding the H000 reference gives **3** optimized
+transfer Hamiltonians, not 4.
+
+On those 3, adaptive still beats raw at mild realistic-device noise, on the
+H000 10-seed mean, and on 33/36 random cells. The recipe was not changed.
+
+| success bar | result |
+|---|---|
+| ≥4 H beat raw at κτ=0.003 comprehensive+readout_realistic | **NO** (3 H: H000, H004, H009) |
+| Report κτ=0.03 and 0.1 honestly | **yes** — all 3 win at 0.03; H009 **loses** at 0.1 |
+| H000 10-seed mean beats raw on the mild cell | **YES** (0.0925 ± 0.0071 vs 0.3169 ± 0.0057; no seed flips) |
+| Honest opt-fail list | **yes** (below) |
 
 ## Phase A — which H passed / failed the E0 gate
+
+ECD \(N_d=5\), L-BFGS-B maxiter 200. Numbers from `phase_a/opt_ledger.json`.
 
 | H | file | E0 | E_opt | deficit | new restarts | gate |
 |---|---|---:|---:|---:|---:|---|
@@ -19,12 +44,16 @@ Keep gate: `E_opt - E0 <= 0.5`. H000 frozen ECD from `Error_mitigation/out/optim
 | H008 | `mixed_p_spin_p2-4_008.npz` | -6.1975 | -3.8496 | 2.3479 | 1 | FAIL |
 | H009 | `mixed_p_spin_p2-4_009.npz` | -5.2544 | -4.8056 | 0.4488 | 5 | PASS |
 
-Strict passers (deficit ≤ 0.5): **2**.
-Honest opt-fail list: H000, H001, H002, H003, H005, H006, H007, H008.
+Strict passers (deficit ≤ 0.5): **H004, H009**.
+
+**Honest opt-fail list (no optimized transfer):** H001, H002, H003, H005,
+H006, H007, H008. H000 missed the 0.5 gate (deficit 0.756) but is the PR #8
+reference and **was** transferred.
 
 ## Phase B — optimized ECD transfer (adaptive vs raw)
 
-Each cell: comprehensive + readout_realistic. Adaptive select on optimized **is** `gdr_param`.
+Each cell: comprehensive + readout_realistic, official optimized recipe
+(`gdr_select` **is** `gdr_param`). Tables match `phase_b/results.json`.
 
 | H | κτ | raw TVD | adaptive select TVD | gdr_param TVD | raw \|ΔE\| | select \|ΔE\| | beat raw? |
 |---|---:|---:|---:|---:|---:|---:|:---:|
@@ -38,13 +67,17 @@ Each cell: comprehensive + readout_realistic. Adaptive select on optimized **is*
 | H009 | 0.03 | 0.7398 | 0.4423 | 0.4423 | 3.5983 | 1.2283 | yes |
 | H009 | 0.1 | 0.9132 | 0.9670 | 0.9670 | 4.6140 | 2.9698 | no |
 
-Hamiltonians that beat raw at κτ=0.003 (comprehensive+readout_realistic): **3** (H000, H004, H009).
+- κτ=0.003: **3/3 win** (H000, H004, H009).
+- κτ=0.03: **3/3 win**.
+- κτ=0.1: H000 and H004 win on TVD; **H009 loses** (0.967 vs 0.913). H000’s
+  κτ=0.1 TVD win comes with a **worse** \|ΔE\| (7.43 vs 6.73). Both facts stand.
 
 **Success bar 1 (≥4 H beat raw at κτ=0.003): NO.**
 
-κτ=0.03 and 0.1 are reported in the table above without filtering. Wins and losses both stand.
-
 ## Phase C — H000 10-seed mean ± std
+
+Same 3 cells, 10 independent shot seeds. Physics cached; only shots+fit change.
+Matches `phase_c/results.json`.
 
 | κτ | raw TVD | adaptive select TVD | gdr_param TVD | seed flips (select loses to raw) |
 |---:|---:|---:|---:|---|
@@ -52,9 +85,13 @@ Hamiltonians that beat raw at κτ=0.003 (comprehensive+readout_realistic): **3*
 | 0.03 | 0.7911 ± 0.0051 | 0.4397 ± 0.0174 | 0.4397 ± 0.0174 | none |
 | 0.1 | 0.9523 ± 0.0012 | 0.8588 ± 0.0158 | 0.8588 ± 0.0158 | none |
 
-**Success bar 3 (H000 10-seed mean beats raw on the mild cell): YES.**
+**Success bar 3 (H000 10-seed mean beats raw on the mild cell): YES.** No seed
+flips at any of the three κτ.
 
 ## Phase D — random ECD targets
+
+8 random ECD circuits on H000 + 4 on H004 (a strict passer). Official
+span/adaptive-random path. Matches `phase_d/results.json`.
 
 | H | random_id | κτ | raw TVD | adaptive select TVD | gdr_param TVD | beat raw? |
 |---|---:|---:|---:|---:|---:|:---:|
@@ -97,13 +134,25 @@ Hamiltonians that beat raw at κτ=0.003 (comprehensive+readout_realistic): **3*
 
 Random cells where adaptive select beats raw: **33 / 36**.
 
+Honest losses:
+
+| cell | raw | select |
+|---|---:|---:|
+| H000 random 6, κτ=0.1 | 0.4363 | 0.4784 |
+| H004 random 1, κτ=0.003 | 0.0991 | 0.1093 |
+| H004 random 2, κτ=0.1 | 0.4343 | 0.4383 |
+
 ## Phase E — SNAP
 
-Not run or no ≥2 near-E0 SNAP opts.
+**Not run** (stopped on purpose). A–D already answer the success bars.
 
-## Headline
+Partial SNAP \(N_d=2\) opts that finished before the stop both **failed** the
+0.5 gate (H000 deficit 1.93, H004 deficit 1.41). H009 SNAP was killed mid-restart.
+No SNAP transfer matrix. Official ECD/SNAP adaptive defaults unchanged.
 
-≥4 H beat raw at κτ=0.003 under realistic device noise (comprehensive + readout_realistic): **NO** (3 H).
+## Notes
 
-Do not treat mid-quality VQE losses as a recipe bug. Official adaptive defaults were not changed.
-
+- Prefer A–C–F over expanding to 20 H: done. Phase D finished as well.
+- Mid-quality VQE (H001/H002-class deficits ≥1.2) were not transferred as
+  “optimized.” That is the Phase 8 caveat, not a recipe bug.
+- Official adaptive defaults were not changed.

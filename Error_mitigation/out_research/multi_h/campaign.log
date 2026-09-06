@@ -293,3 +293,65 @@ copied official random cache ecd_random_comprehensive_kt0.1_n40_span_nr10_lo0.25
 wrote /workspace/Error_mitigation/out_research/multi_h/MULTI_H_SUMMARY.md
 Phase E SNAP H000 restart 1/3
 Phase E SNAP H000 restart 2/3
+Phase E SNAP H000 restart 3/3
+  SNAP H000 fail deficit=1.9329
+Phase E SNAP H004 restart 1/3
+Phase E SNAP H004 restart 2/3
+Phase E SNAP H004 restart 3/3
+  SNAP H004 fail deficit=1.4121
+Phase E SNAP H009 restart 1/3
+Traceback (most recent call last):
+  File "/workspace/Error_mitigation/out_research/multi_h/run_campaign.py", line 1178, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/Error_mitigation/out_research/multi_h/run_campaign.py", line 1165, in main
+    phase_e_snap(P, ledger, hard - 10 * 60)
+  File "/workspace/Error_mitigation/out_research/multi_h/run_campaign.py", line 859, in phase_e_snap
+    opt = optimize_vqe(sim, x0, method="L-BFGS-B", maxiter=200, record_every=0, verbose=False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/src/qumode_vqe/vqe.py", line 494, in optimize_vqe
+    result = sciopt.minimize(
+             ^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/scipy/optimize/_minimize.py", line 784, in minimize
+    res = _minimize_lbfgsb(fun, x0, args, jac, bounds,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/scipy/optimize/_lbfgsb_py.py", line 469, in _minimize_lbfgsb
+    f, g = func_and_grad(x)
+           ^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py", line 413, in fun_and_grad
+    self._update_grad()
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py", line 375, in _update_grad
+    self.g = self._wrapped_grad(self.x, f0=self.f)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py", line 41, in __call__
+    g, dct = approx_derivative(
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/scipy/optimize/_numdiff.py", line 593, in approx_derivative
+    J, _nfev = _dense_difference(fun_wrapped, x0, f0, h,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/scipy/optimize/_numdiff.py", line 686, in _dense_difference
+    df = [f_eval - f0 for f_eval in f_evals]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/scipy/optimize/_numdiff.py", line 879, in __call__
+    f = np.atleast_1d(self.fun(x, *self.args, **self.kwargs))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/scipy/_lib/_util.py", line 603, in __call__
+    fx = self.f(np.copy(x), *self.args)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/src/qumode_vqe/vqe.py", line 479, in fun
+    return sim.cost(x, **cost_kw)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/src/qumode_vqe/vqe.py", line 346, in cost
+    result = self.evaluate(xvec)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/src/qumode_vqe/vqe.py", line 307, in evaluate
+    phys = density_physicality(rho)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/src/qumode_vqe/channels.py", line 159, in density_physicality
+    abs(trace - 1.0) < tol and np.linalg.norm(r - r.conj().T) < 1e-6 and np.min(evals) > -1e-8
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/qumode-venv/lib/python3.12/site-packages/numpy/linalg/_linalg.py", line 2766, in norm
+    sqnorm = x_real.dot(x_real) + x_imag.dot(x_imag)
+                                  ^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+END 130 2026-09-06T17:58:27Z

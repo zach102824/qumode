@@ -1,11 +1,14 @@
 # multi_h campaign status
 
-updated_unix: 1788712462
+Campaign **stopped after A–D**. Phase E SNAP opts killed (SIGINT). No new
+optimizations.
+
+updated: 2026-09-06T17:58Z
 strict_gate: `0.5` (E_opt − E0)
 
 | H | E0 | E_opt | deficit | new_restarts | status |
 |---|---:|---:|---:|---:|---|
-| H000 | -7.1107 | -6.3547 | 0.7560 | 5 | opt-failed |
+| H000 | -7.1107 | -6.3547 | 0.7560 | 5 | h000_reference |
 | H001 | -6.0317 | -4.8195 | 1.2123 | 0 | opt-failed |
 | H002 | -9.3715 | -8.0205 | 1.3510 | 0 | opt-failed |
 | H003 | -6.0743 | -3.6784 | 2.3959 | 1 | opt-failed |
@@ -16,4 +19,4 @@ strict_gate: `0.5` (E_opt − E0)
 | H008 | -6.1975 | -3.8496 | 2.3479 | 1 | opt-failed |
 | H009 | -5.2544 | -4.8056 | 0.4488 | 5 | pass |
 
-Phase A finished.
+Final report: `MULTI_H_SUMMARY.md`.
