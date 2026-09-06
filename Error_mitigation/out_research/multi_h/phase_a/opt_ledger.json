@@ -117,8 +117,27 @@
         6
       ],
       "file": "mixed_p_spin_p2-4_004.npz",
-      "status": "pending",
-      "new_restarts": 0
+      "status": "pass",
+      "new_restarts": 1,
+      "restart_history": [
+        {
+          "hid": 4,
+          "kind": "random",
+          "local_index": 0,
+          "fun": -5.0200264189057515,
+          "deficit": 0.3261877095900534,
+          "success": false,
+          "nfev": 9143,
+          "elapsed_s": 900.1331598758698,
+          "unix": 1788701862.9086227
+        }
+      ],
+      "fun": -5.0200264189057515,
+      "deficit": 0.3261877095900534,
+      "nfev": 9143,
+      "elapsed_s": 900.1331598758698,
+      "near_e0": true,
+      "h000_quality": true
     },
     "5": {
       "hamiltonian_id": 5,
@@ -208,6 +227,17 @@
       "nfev": 9594,
       "elapsed_s": 1192.9227232933044,
       "unix": 1788700962.6491835
+    },
+    {
+      "hid": 4,
+      "kind": "random",
+      "local_index": 0,
+      "fun": -5.0200264189057515,
+      "deficit": 0.3261877095900534,
+      "success": false,
+      "nfev": 9143,
+      "elapsed_s": 900.1331598758698,
+      "unix": 1788701862.9086227
     }
   ]
 }
