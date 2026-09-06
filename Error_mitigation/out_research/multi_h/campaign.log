@@ -49,3 +49,121 @@ Phase B optimized transfer on H=[0, 4, 9]
       wrote cache ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
     H000 optimized optimized κτ=0.1 seed=2026  raw=0.9527  gdr=0.8688  sel=0.8688
     sim comprehensive κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 25.1s
+      wrote cache ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0_h004.npz
+    H004 optimized optimized κτ=0.003 seed=2026  raw=0.2007  gdr=0.0763  sel=0.0763
+    sim comprehensive κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 29.2s
+      wrote cache ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0_h004.npz
+    H004 optimized optimized κτ=0.03 seed=2026  raw=0.6704  gdr=0.4460  sel=0.4460
+    sim comprehensive κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 41.0s
+      wrote cache ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0_h004.npz
+    H004 optimized optimized κτ=0.1 seed=2026  raw=0.8527  gdr=0.7612  sel=0.7612
+    sim comprehensive κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 19.7s
+      wrote cache ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0_h009.npz
+    H009 optimized optimized κτ=0.003 seed=2026  raw=0.2764  gdr=0.0932  sel=0.0932
+    sim comprehensive κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 31.6s
+      wrote cache ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0_h009.npz
+    H009 optimized optimized κτ=0.03 seed=2026  raw=0.7398  gdr=0.4423  sel=0.4423
+    sim comprehensive κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 38.6s
+      wrote cache ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0_h009.npz
+    H009 optimized optimized κτ=0.1 seed=2026  raw=0.9132  gdr=0.9670  sel=0.9670
+wrote /workspace/Error_mitigation/out_research/multi_h/MULTI_H_SUMMARY.md
+removed stale H000 cache ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+removed stale H000 cache ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.json
+removed stale H000 cache ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+removed stale H000 cache ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.json
+removed stale H000 cache ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+removed stale H000 cache ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.json
+H000 x changed vs out/; will resimulate optimized cells.
+Phase C H000 × 10 seeds [2026, 12033, 22040, 32047, 42054, 52061, 62068, 72075, 82082, 92089]
+    sim comprehensive κτ=0.003 optimized  target+40 twins ...
+      physical histograms in 21.1s
+      wrote cache ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=2026  raw=0.3247  gdr=0.1012  sel=0.1012
+    sim comprehensive κτ=0.03 optimized  target+40 twins ...
+      physical histograms in 33.1s
+      wrote cache ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=2026  raw=0.7809  gdr=0.4101  sel=0.4101
+    sim comprehensive κτ=0.1 optimized  target+40 twins ...
+      physical histograms in 36.0s
+      wrote cache ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=2026  raw=0.9527  gdr=0.8688  sel=0.8688
+    cache hit ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=12033  raw=0.3112  gdr=0.0791  sel=0.0791
+    cache hit ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=12033  raw=0.7939  gdr=0.4484  sel=0.4484
+    cache hit ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=12033  raw=0.9518  gdr=0.8786  sel=0.8786
+    cache hit ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=22040  raw=0.3221  gdr=0.0919  sel=0.0919
+    cache hit ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=22040  raw=0.7954  gdr=0.4487  sel=0.4487
+    cache hit ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=22040  raw=0.9518  gdr=0.8369  sel=0.8369
+    cache hit ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=32047  raw=0.3185  gdr=0.0880  sel=0.0880
+    cache hit ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=32047  raw=0.7976  gdr=0.4629  sel=0.4629
+    cache hit ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=32047  raw=0.9524  gdr=0.8645  sel=0.8645
+    cache hit ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=42054  raw=0.3060  gdr=0.0949  sel=0.0949
+    cache hit ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=42054  raw=0.7884  gdr=0.4494  sel=0.4494
+    cache hit ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=42054  raw=0.9518  gdr=0.8783  sel=0.8783
+    cache hit ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=52061  raw=0.3179  gdr=0.1013  sel=0.1013
+    cache hit ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=52061  raw=0.7926  gdr=0.4259  sel=0.4259
+    cache hit ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=52061  raw=0.9534  gdr=0.8592  sel=0.8592
+    cache hit ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=62068  raw=0.3226  gdr=0.0843  sel=0.0843
+    cache hit ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=62068  raw=0.7844  gdr=0.4127  sel=0.4127
+    cache hit ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=62068  raw=0.9525  gdr=0.8679  sel=0.8679
+    cache hit ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=72075  raw=0.3168  gdr=0.0949  sel=0.0949
+    cache hit ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=72075  raw=0.7927  gdr=0.4490  sel=0.4490
+    cache hit ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=72075  raw=0.9502  gdr=0.8347  sel=0.8347
+    cache hit ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=82082  raw=0.3163  gdr=0.0924  sel=0.0924
+    cache hit ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=82082  raw=0.7937  gdr=0.4419  sel=0.4419
+    cache hit ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=82082  raw=0.9546  gdr=0.8518  sel=0.8518
+    cache hit ecd_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.003 seed=92089  raw=0.3129  gdr=0.0967  sel=0.0967
+    cache hit ecd_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.03 seed=92089  raw=0.7912  gdr=0.4479  sel=0.4479
+    cache hit ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz
+    H000 optimized optimized κτ=0.1 seed=92089  raw=0.9519  gdr=0.8472  sel=0.8472
+wrote /workspace/Error_mitigation/out_research/multi_h/MULTI_H_SUMMARY.md
+Phase D random ECD jobs=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (4, 0), (4, 1), (4, 2), (4, 3)] second_H=4 kappas=(0.003, 0.03, 0.1)
+copied official random cache ecd_random_comprehensive_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+copied official random cache ecd_random_comprehensive_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+copied official random cache ecd_random_comprehensive_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    cache hit ecd_random_comprehensive_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    H000 random random κτ=0.003 seed=2026  raw=0.1016  gdr=0.0776  sel=0.0776
+    cache hit ecd_random_comprehensive_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    H000 random random κτ=0.03 seed=2026  raw=0.2237  gdr=0.1731  sel=0.1530
+    cache hit ecd_random_comprehensive_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    H000 random random κτ=0.1 seed=2026  raw=0.3980  gdr=0.3410  sel=0.3027
+    sim comprehensive κτ=0.003 random_1  target+40 twins ...
+      physical histograms in 27.0s
+      wrote cache ecd_random_1_comprehensive_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    H000 random_1 random κτ=0.003 seed=2027  raw=0.0858  gdr=0.0791  sel=0.0772
+    sim comprehensive κτ=0.03 random_1  target+40 twins ...
+      physical histograms in 31.4s
+      wrote cache ecd_random_1_comprehensive_kt0.03_n40_span_nr10_lo0.25_hi1.35_x0.npz
+    H000 random_1 random κτ=0.03 seed=2027  raw=0.2126  gdr=0.1824  sel=0.1681
+    sim comprehensive κτ=0.1 random_1  target+40 twins ...

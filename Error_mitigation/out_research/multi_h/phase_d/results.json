@@ -1,0 +1,815 @@
+{
+  "records": [
+    {
+      "hamiltonian_id": 0,
+      "ansatz": "ecd",
+      "ndepth": 5,
+      "params": "random",
+      "circuit_kind": "random",
+      "family": "comprehensive",
+      "kappa_tau": 0.003,
+      "readout": "readout_realistic",
+      "n_shots": 8192,
+      "n_train": 40,
+      "seed": 2026,
+      "twin_design": "span",
+      "twin_tag": "span_nr10_lo0.25_hi1.35_x0",
+      "noise": {
+        "timing": "per_ecd_pair",
+        "loss_model": "lindblad",
+        "kappa_tau_used": 0.003,
+        "tau_application_s": 6.5e-07,
+        "cumulative_kappa_t_nd5": 0.03,
+        "nth_cav": 0.01,
+        "kappa_phi": 0.0,
+        "t1_cav": 0.000436,
+        "tau_ecd": 6.5e-07,
+        "enable_transmon": true,
+        "t1_q": 5e-05,
+        "t2_q": 3e-05,
+        "nth_q": 0.0,
+        "rotation_rel_error": 0.01,
+        "ecd_amp_rel_error": 0.01,
+        "ecd_phase_error": 0.0,
+        "kerr": 3141.592653589793,
+        "cross_kerr": 0.0,
+        "chi_dispersive": 0.0
+      },
+      "readout_spec": {
+        "level": "readout_realistic",
+        "p01": 0.01,
+        "p10": 0.03,
+        "p_nn": 0.03,
+        "n_shots": 8192,
+        "seed": null
+      },
+      "metrics": {
+        "raw": {
+          "tvd": 0.10164647267594173,
+          "hellinger": 0.11534560958601216,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.5208078587137291,
+          "dE": 0.0500831639868079,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.0006103515625,
+          "dPgs": 0.0005204369581397139,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.642423954547714,
+          "dGibbs": 0.0634099031111739,
+          "has_histogram": true
+        },
+        "gdr_param": {
+          "tvd": 0.07760238458876084,
+          "hellinger": 0.10915808985607973,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.5372852698090566,
+          "dE": 0.03360575289148049,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 5.616191931289046e-08,
+          "dPgs": 8.98584424409732e-05,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.6499244660310355,
+          "dGibbs": 0.07091041459449521,
+          "has_histogram": true
+        },
+        "gdr_damped": {
+          "tvd": 0.07760238458876084,
+          "hellinger": 0.10915808985607973,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.5372852698090566,
+          "dE": 0.03360575289148049,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 5.616191931289046e-08,
+          "dPgs": 8.98584424409732e-05,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.6499244660310355,
+          "dGibbs": 0.07091041459449521,
+          "has_histogram": true
+        },
+        "gdr_mid": {
+          "tvd": 0.08150939414312691,
+          "hellinger": 0.1179551159787097,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.5481219186668594,
+          "dE": 0.0227691040336776,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 1.1099141552233254e-07,
+          "dPgs": 8.980361294476376e-05,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.6500249646428284,
+          "dGibbs": 0.07101091320628816,
+          "has_histogram": true
+        },
+        "gdr_select": {
+          "tvd": 0.07760238458876084,
+          "hellinger": 0.10915808985607973,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.5372852698090566,
+          "dE": 0.03360575289148049,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 5.616191931289046e-08,
+          "dPgs": 8.98584424409732e-05,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.6499244660310355,
+          "dGibbs": 0.07091041459449521,
+          "has_histogram": true
+        }
+      },
+      "select_fit": {
+        "kind": "gdr_select",
+        "chosen": "gdr_param",
+        "damp_alpha": 0.0,
+        "residual_hops": 0.06378498290243126,
+        "residual_tfree": 0.09841417816538614,
+        "afterburn_tfree": 0.0984143456804551,
+        "gdr_tfree": 0.07285678781450282,
+        "oracle_tfree": 0.09605892685265657,
+        "hop_cap": 0.06,
+        "circuit_kind": "random",
+        "reason": "holdout",
+        "hold_tvd": 0.04680051190090456,
+        "ranked": [
+          {
+            "name": "safe",
+            "hold_tvd": 0.07815246072131603
+          },
+          {
+            "name": "oracle_binomial",
+            "hold_tvd": 0.050889236236900906
+          },
+          {
+            "name": "gdr_param",
+            "hold_tvd": 0.04680051190090456
+          },
+          {
+            "name": "gdr_mid",
+            "hold_tvd": 0.059055443233302515
+          },
+          {
+            "name": "gdr_residual",
+            "hold_tvd": 0.04785121978395353
+          },
+          {
+            "name": "gdr_afterburn",
+            "hold_tvd": 0.04785155818323418
+          },
+          {
+            "name": "gdr_damped",
+            "hold_tvd": 0.046800511900904576
+          }
+        ]
+      },
+      "energy_ideal": -0.5708910227005368,
+      "random_id": 0
+    },
+    {
+      "hamiltonian_id": 0,
+      "ansatz": "ecd",
+      "ndepth": 5,
+      "params": "random",
+      "circuit_kind": "random",
+      "family": "comprehensive",
+      "kappa_tau": 0.03,
+      "readout": "readout_realistic",
+      "n_shots": 8192,
+      "n_train": 40,
+      "seed": 2026,
+      "twin_design": "span",
+      "twin_tag": "span_nr10_lo0.25_hi1.35_x0",
+      "noise": {
+        "timing": "per_ecd_pair",
+        "loss_model": "lindblad",
+        "kappa_tau_used": 0.03,
+        "tau_application_s": 6.5e-07,
+        "cumulative_kappa_t_nd5": 0.3,
+        "nth_cav": 0.01,
+        "kappa_phi": 0.0,
+        "t1_cav": 0.000436,
+        "tau_ecd": 6.5e-07,
+        "enable_transmon": true,
+        "t1_q": 5e-05,
+        "t2_q": 3e-05,
+        "nth_q": 0.0,
+        "rotation_rel_error": 0.01,
+        "ecd_amp_rel_error": 0.01,
+        "ecd_phase_error": 0.0,
+        "kerr": 3141.592653589793,
+        "cross_kerr": 0.0,
+        "chi_dispersive": 0.0
+      },
+      "readout_spec": {
+        "level": "readout_realistic",
+        "p01": 0.01,
+        "p10": 0.03,
+        "p_nn": 0.03,
+        "n_shots": 8192,
+        "seed": null
+      },
+      "metrics": {
+        "raw": {
+          "tvd": 0.22372491792941648,
+          "hellinger": 0.2368959869527331,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.5678011211912096,
+          "dE": 0.0030899015093274196,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.00146484375,
+          "dPgs": 0.0013749291456397138,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.664870130775177,
+          "dGibbs": 0.0858560793386367,
+          "has_histogram": true
+        },
+        "gdr_param": {
+          "tvd": 0.17312366967027493,
+          "hellinger": 0.18935902240354432,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.7368030551653921,
+          "dE": 0.16591203246485509,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.0006493436688986915,
+          "dPgs": 0.0005594290645384054,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.8343456717318136,
+          "dGibbs": 0.25533162029527334,
+          "has_histogram": true
+        },
+        "gdr_damped": {
+          "tvd": 0.15303002172219,
+          "hellinger": 0.15996407284499758,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.6862997773201878,
+          "dE": 0.11540875461965072,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.0008834354983463614,
+          "dPgs": 0.0007935208939860753,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.7853005138874622,
+          "dGibbs": 0.20628646245092197,
+          "has_histogram": true
+        },
+        "gdr_mid": {
+          "tvd": 0.15819656182618702,
+          "hellinger": 0.18752064283083375,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.7392697894469061,
+          "dE": 0.1683787667463691,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.001941696674808854,
+          "dPgs": 0.0018517820704485677,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.837208566290147,
+          "dGibbs": 0.2581945148536069,
+          "has_histogram": true
+        },
+        "gdr_select": {
+          "tvd": 0.15303002172219,
+          "hellinger": 0.15996407284499758,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.6862997773201878,
+          "dE": 0.11540875461965072,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.0008834354983463614,
+          "dPgs": 0.0007935208939860753,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.7853005138874622,
+          "dGibbs": 0.20628646245092197,
+          "has_histogram": true
+        }
+      },
+      "select_fit": {
+        "kind": "gdr_select",
+        "chosen": "gdr_damped",
+        "damp_alpha": 0.30000000000000004,
+        "residual_hops": 0.36217576928248857,
+        "residual_tfree": 0.3450086281162202,
+        "afterburn_tfree": 0.34500863566404566,
+        "gdr_tfree": 0.1856017349040577,
+        "oracle_tfree": 0.406792174851652,
+        "hop_cap": 0.06,
+        "circuit_kind": "random",
+        "reason": "holdout",
+        "hold_tvd": 0.08223305834399171,
+        "ranked": [
+          {
+            "name": "safe",
+            "hold_tvd": 0.1191626642024494
+          },
+          {
+            "name": "oracle_binomial",
+            "hold_tvd": 0.17768087394210916
+          },
+          {
+            "name": "gdr_param",
+            "hold_tvd": 0.09188374526189522
+          },
+          {
+            "name": "gdr_mid",
+            "hold_tvd": 0.09739846561215378
+          },
+          {
+            "name": "gdr_residual",
+            "hold_tvd": 0.318591668055623
+          },
+          {
+            "name": "gdr_afterburn",
+            "hold_tvd": 0.3185917182150784
+          },
+          {
+            "name": "gdr_damped",
+            "hold_tvd": 0.08223305834399171
+          }
+        ]
+      },
+      "energy_ideal": -0.5708910227005368,
+      "random_id": 0
+    },
+    {
+      "hamiltonian_id": 0,
+      "ansatz": "ecd",
+      "ndepth": 5,
+      "params": "random",
+      "circuit_kind": "random",
+      "family": "comprehensive",
+      "kappa_tau": 0.1,
+      "readout": "readout_realistic",
+      "n_shots": 8192,
+      "n_train": 40,
+      "seed": 2026,
+      "twin_design": "span",
+      "twin_tag": "span_nr10_lo0.25_hi1.35_x0",
+      "noise": {
+        "timing": "per_ecd_pair",
+        "loss_model": "lindblad",
+        "kappa_tau_used": 0.1,
+        "tau_application_s": 6.5e-07,
+        "cumulative_kappa_t_nd5": 1.0,
+        "nth_cav": 0.01,
+        "kappa_phi": 0.0,
+        "t1_cav": 0.000436,
+        "tau_ecd": 6.5e-07,
+        "enable_transmon": true,
+        "t1_q": 5e-05,
+        "t2_q": 3e-05,
+        "nth_q": 0.0,
+        "rotation_rel_error": 0.01,
+        "ecd_amp_rel_error": 0.01,
+        "ecd_phase_error": 0.0,
+        "kerr": 3141.592653589793,
+        "cross_kerr": 0.0,
+        "chi_dispersive": 0.0
+      },
+      "readout_spec": {
+        "level": "readout_realistic",
+        "p01": 0.01,
+        "p10": 0.03,
+        "p_nn": 0.03,
+        "n_shots": 8192,
+        "seed": null
+      },
+      "metrics": {
+        "raw": {
+          "tvd": 0.39800164514015035,
+          "hellinger": 0.36738861973427644,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.4293123906408391,
+          "dE": 0.14157863205969795,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.0003662109375,
+          "dPgs": 0.00027629633313971393,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.5333719793295724,
+          "dGibbs": 0.04564207210696791,
+          "has_histogram": true
+        },
+        "gdr_param": {
+          "tvd": 0.3410066162562652,
+          "hellinger": 0.3341533396747157,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.47766350044500894,
+          "dE": 0.0932275222555281,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.0020557823553928266,
+          "dPgs": 0.0019658677510325405,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.8267253926932283,
+          "dGibbs": 0.24771134125668803,
+          "has_histogram": true
+        },
+        "gdr_damped": {
+          "tvd": 0.3027484426137861,
+          "hellinger": 0.309730272809889,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.4593301502612336,
+          "dE": 0.11156087243930346,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.0015410574585954836,
+          "dPgs": 0.0014511428542351974,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.7456973487725147,
+          "dGibbs": 0.16668329733597442,
+          "has_histogram": true
+        },
+        "gdr_mid": {
+          "tvd": 0.3596503559066242,
+          "hellinger": 0.3678573953231473,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.6978845363482042,
+          "dE": 0.1269935136476672,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.004467524007521811,
+          "dPgs": 0.004377609403161525,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -4.03942613810156,
+          "dGibbs": 0.46041208666501987,
+          "has_histogram": true
+        },
+        "gdr_select": {
+          "tvd": 0.3027484426137861,
+          "hellinger": 0.309730272809889,
+          "energy_ideal": -0.570891022700537,
+          "energy_mit": -0.4593301502612336,
+          "dE": 0.11156087243930346,
+          "p_gs_ideal": 8.99146043602861e-05,
+          "p_gs_mit": 0.0015410574585954836,
+          "dPgs": 0.0014511428542351974,
+          "gibbs_ideal": -3.5790140514365403,
+          "gibbs_mit": -3.7456973487725147,
+          "dGibbs": 0.16668329733597442,
+          "has_histogram": true
+        }
+      },
+      "select_fit": {
+        "kind": "gdr_select",
+        "chosen": "gdr_damped",
+        "damp_alpha": 0.30000000000000004,
+        "residual_hops": 0.6,
+        "residual_tfree": 0.6076071114127729,
+        "afterburn_tfree": 0.6076071114127728,
+        "gdr_tfree": 0.37076551372386557,
+        "oracle_tfree": 0.7728029171119773,
+        "hop_cap": 0.06,
+        "circuit_kind": "random",
+        "reason": "holdout",
+        "hold_tvd": 0.1670778463878789,
+        "ranked": [
+          {
+            "name": "safe",
+            "hold_tvd": 0.23987038684166767
+          },
+          {
+            "name": "oracle_binomial",
+            "hold_tvd": 0.3819617722028067
+          },
+          {
+            "name": "gdr_param",
+            "hold_tvd": 0.18975034978798103
+          },
+          {
+            "name": "gdr_mid",
+            "hold_tvd": 0.18700607413654746
+          },
+          {
+            "name": "gdr_residual",
+            "hold_tvd": 0.43975468279523977
+          },
+          {
+            "name": "gdr_afterburn",
+            "hold_tvd": 0.43975468279523977
+          },
+          {
+            "name": "gdr_damped",
+            "hold_tvd": 0.1670778463878789
+          }
+        ]
+      },
+      "energy_ideal": -0.5708910227005368,
+      "random_id": 0
+    },
+    {
+      "hamiltonian_id": 0,
+      "ansatz": "ecd",
+      "ndepth": 5,
+      "params": "random_1",
+      "circuit_kind": "random",
+      "family": "comprehensive",
+      "kappa_tau": 0.003,
+      "readout": "readout_realistic",
+      "n_shots": 8192,
+      "n_train": 40,
+      "seed": 2027,
+      "twin_design": "span",
+      "twin_tag": "span_nr10_lo0.25_hi1.35_x0",
+      "noise": {
+        "timing": "per_ecd_pair",
+        "loss_model": "lindblad",
+        "kappa_tau_used": 0.003,
+        "tau_application_s": 6.5e-07,
+        "cumulative_kappa_t_nd5": 0.03,
+        "nth_cav": 0.01,
+        "kappa_phi": 0.0,
+        "t1_cav": 0.000436,
+        "tau_ecd": 6.5e-07,
+        "enable_transmon": true,
+        "t1_q": 5e-05,
+        "t2_q": 3e-05,
+        "nth_q": 0.0,
+        "rotation_rel_error": 0.01,
+        "ecd_amp_rel_error": 0.01,
+        "ecd_phase_error": 0.0,
+        "kerr": 3141.592653589793,
+        "cross_kerr": 0.0,
+        "chi_dispersive": 0.0
+      },
+      "readout_spec": {
+        "level": "readout_realistic",
+        "p01": 0.01,
+        "p10": 0.03,
+        "p_nn": 0.03,
+        "n_shots": 8192,
+        "seed": null
+      },
+      "metrics": {
+        "raw": {
+          "tvd": 0.08578604746163933,
+          "hellinger": 0.10220988791457906,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.7655580597609498,
+          "dE": 0.0930211456372868,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.0078125,
+          "dPgs": 0.0010813621296462822,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -4.120669444087731,
+          "dGibbs": 0.04775613014068725,
+          "has_histogram": true
+        },
+        "gdr_param": {
+          "tvd": 0.07908652723080276,
+          "hellinger": 0.09380768883501964,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.8449254925206857,
+          "dE": 0.013653712877550905,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.009172301264525146,
+          "dPgs": 0.0002784391348788634,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -4.192484048820774,
+          "dGibbs": 0.024058474592355772,
+          "has_histogram": true
+        },
+        "gdr_damped": {
+          "tvd": 0.07720194404835652,
+          "hellinger": 0.08512877962157055,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.8417999672155712,
+          "dE": 0.016779238182665468,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.009106269052172074,
+          "dPgs": 0.00021240692252579192,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -4.189441263172814,
+          "dGibbs": 0.021015688944395094,
+          "has_histogram": true
+        },
+        "gdr_mid": {
+          "tvd": 0.07946019856097196,
+          "hellinger": 0.09540826162556662,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.8217780605639375,
+          "dE": 0.03680114483429908,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.008162621885828732,
+          "dPgs": 0.0007312402438175505,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -4.16947490717242,
+          "dGibbs": 0.0010493329440013355,
+          "has_histogram": true
+        },
+        "gdr_select": {
+          "tvd": 0.07720194404835652,
+          "hellinger": 0.08512877962157055,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.8417999672155712,
+          "dE": 0.016779238182665468,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.009106269052172074,
+          "dPgs": 0.00021240692252579192,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -4.189441263172814,
+          "dGibbs": 0.021015688944395094,
+          "has_histogram": true
+        }
+      },
+      "select_fit": {
+        "kind": "gdr_select",
+        "chosen": "gdr_damped",
+        "damp_alpha": 0.05,
+        "residual_hops": 0.04058287851612862,
+        "residual_tfree": 0.10783988407507435,
+        "afterburn_tfree": 0.10783988419008719,
+        "gdr_tfree": 0.07134410687813632,
+        "oracle_tfree": 0.10246327579483734,
+        "hop_cap": 0.06,
+        "circuit_kind": "random",
+        "reason": "holdout",
+        "hold_tvd": 0.05664589832236007,
+        "ranked": [
+          {
+            "name": "safe",
+            "hold_tvd": 0.08289962586767302
+          },
+          {
+            "name": "oracle_binomial",
+            "hold_tvd": 0.06805953107442701
+          },
+          {
+            "name": "gdr_param",
+            "hold_tvd": 0.05668342225946147
+          },
+          {
+            "name": "gdr_mid",
+            "hold_tvd": 0.05991390919484903
+          },
+          {
+            "name": "gdr_residual",
+            "hold_tvd": 0.06724814894892718
+          },
+          {
+            "name": "gdr_afterburn",
+            "hold_tvd": 0.06724813717371214
+          },
+          {
+            "name": "gdr_damped",
+            "hold_tvd": 0.05664589832236007
+          }
+        ]
+      },
+      "energy_ideal": -0.8585792053982361,
+      "random_id": 1
+    },
+    {
+      "hamiltonian_id": 0,
+      "ansatz": "ecd",
+      "ndepth": 5,
+      "params": "random_1",
+      "circuit_kind": "random",
+      "family": "comprehensive",
+      "kappa_tau": 0.03,
+      "readout": "readout_realistic",
+      "n_shots": 8192,
+      "n_train": 40,
+      "seed": 2027,
+      "twin_design": "span",
+      "twin_tag": "span_nr10_lo0.25_hi1.35_x0",
+      "noise": {
+        "timing": "per_ecd_pair",
+        "loss_model": "lindblad",
+        "kappa_tau_used": 0.03,
+        "tau_application_s": 6.5e-07,
+        "cumulative_kappa_t_nd5": 0.3,
+        "nth_cav": 0.01,
+        "kappa_phi": 0.0,
+        "t1_cav": 0.000436,
+        "tau_ecd": 6.5e-07,
+        "enable_transmon": true,
+        "t1_q": 5e-05,
+        "t2_q": 3e-05,
+        "nth_q": 0.0,
+        "rotation_rel_error": 0.01,
+        "ecd_amp_rel_error": 0.01,
+        "ecd_phase_error": 0.0,
+        "kerr": 3141.592653589793,
+        "cross_kerr": 0.0,
+        "chi_dispersive": 0.0
+      },
+      "readout_spec": {
+        "level": "readout_realistic",
+        "p01": 0.01,
+        "p10": 0.03,
+        "p_nn": 0.03,
+        "n_shots": 8192,
+        "seed": null
+      },
+      "metrics": {
+        "raw": {
+          "tvd": 0.21260063861504785,
+          "hellinger": 0.21884855218885124,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.5076368655585872,
+          "dE": 0.3509423398396494,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.00537109375,
+          "dPgs": 0.003522768379646282,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -3.9327521506955905,
+          "dGibbs": 0.23567342353282816,
+          "has_histogram": true
+        },
+        "gdr_param": {
+          "tvd": 0.18238595821688297,
+          "hellinger": 0.19593184030370378,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.8028780480904183,
+          "dE": 0.05570115730781833,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.009947481775979504,
+          "dPgs": 0.0010536196463332217,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -4.18083255552887,
+          "dGibbs": 0.012406981300451037,
+          "has_histogram": true
+        },
+        "gdr_damped": {
+          "tvd": 0.16805990456881312,
+          "hellinger": 0.16969127600236225,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.7178347714115383,
+          "dE": 0.14074443398669834,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.00861877343277341,
+          "dPgs": 0.00027508869687287163,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -4.114890282728057,
+          "dGibbs": 0.05353529150036174,
+          "has_histogram": true
+        },
+        "gdr_mid": {
+          "tvd": 0.19600504922187056,
+          "hellinger": 0.20929080471403666,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.8519027639561858,
+          "dE": 0.006676441442050818,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.00836372049554219,
+          "dPgs": 0.0005301416341040917,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -4.16913913253072,
+          "dGibbs": 0.0007135583023014647,
+          "has_histogram": true
+        },
+        "gdr_select": {
+          "tvd": 0.16805990456881312,
+          "hellinger": 0.16969127600236225,
+          "energy_ideal": -0.8585792053982366,
+          "energy_mit": -0.7178347714115383,
+          "dE": 0.14074443398669834,
+          "p_gs_ideal": 0.008893862129646282,
+          "p_gs_mit": 0.00861877343277341,
+          "dPgs": 0.00027508869687287163,
+          "gibbs_ideal": -4.168425574228419,
+          "gibbs_mit": -4.114890282728057,
+          "dGibbs": 0.05353529150036174,
+          "has_histogram": true
+        }
+      },
+      "select_fit": {
+        "kind": "gdr_select",
+        "chosen": "gdr_damped",
+        "damp_alpha": 0.30000000000000004,
+        "residual_hops": 0.2441316638430393,
+        "residual_tfree": 0.5768243585506688,
+        "afterburn_tfree": 0.5768243559392676,
+        "gdr_tfree": 0.16753910820902398,
+        "oracle_tfree": 0.4936541746880641,
+        "hop_cap": 0.06,
+        "circuit_kind": "random",
+        "reason": "holdout",
+        "hold_tvd": 0.09552112490998879,
+        "ranked": [
+          {
+            "name": "safe",
+            "hold_tvd": 0.1369746964360554
+          },
+          {
+            "name": "oracle_binomial",
+            "hold_tvd": 0.22368295311880543
+          },
+          {
+            "name": "gdr_param",
+            "hold_tvd": 0.10127823645274736
+          },
+          {
+            "name": "gdr_mid",
+            "hold_tvd": 0.11508955738157949
+          },
+          {
+            "name": "gdr_residual",
+            "hold_tvd": 0.26867239103218427
+          },
+          {
+            "name": "gdr_afterburn",
+            "hold_tvd": 0.26867238783649583
+          },
+          {
+            "name": "gdr_damped",
+            "hold_tvd": 0.09552112490998879
+          }
+        ]
+      },
+      "energy_ideal": -0.8585792053982361,
+      "random_id": 1
+    }
+  ],
+  "second_h": 4
+}

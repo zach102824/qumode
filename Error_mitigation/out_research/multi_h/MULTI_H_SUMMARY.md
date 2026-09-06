@@ -28,8 +28,17 @@ Each cell: comprehensive + readout_realistic. Adaptive select on optimized **is*
 
 | H | κτ | raw TVD | adaptive select TVD | gdr_param TVD | raw \|ΔE\| | select \|ΔE\| | beat raw? |
 |---|---:|---:|---:|---:|---:|---:|:---:|
+| H000 | 0.003 | 0.3247 | 0.1012 | 0.1012 | 2.2885 | 0.6732 | yes |
+| H000 | 0.03 | 0.7809 | 0.4101 | 0.4101 | 5.5299 | 3.1220 | yes |
+| H000 | 0.1 | 0.9527 | 0.8688 | 0.8688 | 6.7282 | 7.4337 | yes |
+| H004 | 0.003 | 0.2007 | 0.0763 | 0.0763 | 0.9172 | 0.1865 | yes |
+| H004 | 0.03 | 0.6704 | 0.4460 | 0.4460 | 2.9691 | 1.8301 | yes |
+| H004 | 0.1 | 0.8527 | 0.7612 | 0.7612 | 4.1315 | 3.4286 | yes |
+| H009 | 0.003 | 0.2764 | 0.0932 | 0.0932 | 1.1754 | 0.3406 | yes |
+| H009 | 0.03 | 0.7398 | 0.4423 | 0.4423 | 3.5983 | 1.2283 | yes |
+| H009 | 0.1 | 0.9132 | 0.9670 | 0.9670 | 4.6140 | 2.9698 | no |
 
-Hamiltonians that beat raw at κτ=0.003 (comprehensive+readout_realistic): **0** (none).
+Hamiltonians that beat raw at κτ=0.003 (comprehensive+readout_realistic): **3** (H000, H004, H009).
 
 **Success bar 1 (≥4 H beat raw at κτ=0.003): NO.**
 
@@ -39,11 +48,11 @@ Hamiltonians that beat raw at κτ=0.003 (comprehensive+readout_realistic): **0*
 
 | κτ | raw TVD | adaptive select TVD | gdr_param TVD | seed flips (select loses to raw) |
 |---:|---:|---:|---:|---|
-| 0.003 |  |  |  | none |
-| 0.03 |  |  |  | none |
-| 0.1 |  |  |  | none |
+| 0.003 | 0.3169 ± 0.0057 | 0.0925 ± 0.0071 | 0.0925 ± 0.0071 | none |
+| 0.03 | 0.7911 ± 0.0051 | 0.4397 ± 0.0174 | 0.4397 ± 0.0174 | none |
+| 0.1 | 0.9523 ± 0.0012 | 0.8588 ± 0.0158 | 0.8588 ± 0.0158 | none |
 
-**Success bar 3 (H000 10-seed mean beats raw on the mild cell): incomplete.**
+**Success bar 3 (H000 10-seed mean beats raw on the mild cell): YES.**
 
 ## Phase D — random ECD targets
 
@@ -54,7 +63,7 @@ Not run or no ≥2 near-E0 SNAP opts.
 
 ## Headline
 
-≥4 H beat raw at κτ=0.003 under realistic device noise (comprehensive + readout_realistic): **NO** (0 H).
+≥4 H beat raw at κτ=0.003 under realistic device noise (comprehensive + readout_realistic): **NO** (3 H).
 
 Do not treat mid-quality VQE losses as a recipe bug. Official adaptive defaults were not changed.
 
