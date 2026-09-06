@@ -149,8 +149,27 @@
         2
       ],
       "file": "mixed_p_spin_p2-4_005.npz",
-      "status": "pending",
-      "new_restarts": 0
+      "status": "opt-failed",
+      "new_restarts": 1,
+      "restart_history": [
+        {
+          "hid": 5,
+          "kind": "random",
+          "local_index": 0,
+          "fun": -4.673406823667782,
+          "deficit": 2.3770083178900556,
+          "success": false,
+          "nfev": 8815,
+          "elapsed_s": 1131.3947370052338,
+          "unix": 1788702994.414194
+        }
+      ],
+      "fun": -4.673406823667782,
+      "deficit": 2.3770083178900556,
+      "nfev": 8815,
+      "elapsed_s": 1131.3947370052338,
+      "near_e0": false,
+      "h000_quality": false
     },
     "6": {
       "hamiltonian_id": 6,
@@ -162,8 +181,27 @@
         7
       ],
       "file": "mixed_p_spin_p2-4_006.npz",
-      "status": "pending",
-      "new_restarts": 0
+      "status": "opt-failed",
+      "new_restarts": 1,
+      "restart_history": [
+        {
+          "hid": 6,
+          "kind": "random",
+          "local_index": 0,
+          "fun": -5.089052989598059,
+          "deficit": 1.6021703693052025,
+          "success": false,
+          "nfev": 9184,
+          "elapsed_s": 1044.898474931717,
+          "unix": 1788704039.4310706
+        }
+      ],
+      "fun": -5.089052989598059,
+      "deficit": 1.6021703693052025,
+      "nfev": 9184,
+      "elapsed_s": 1044.898474931717,
+      "near_e0": false,
+      "h000_quality": false
     },
     "7": {
       "hamiltonian_id": 7,
@@ -238,6 +276,28 @@
       "nfev": 9143,
       "elapsed_s": 900.1331598758698,
       "unix": 1788701862.9086227
+    },
+    {
+      "hid": 5,
+      "kind": "random",
+      "local_index": 0,
+      "fun": -4.673406823667782,
+      "deficit": 2.3770083178900556,
+      "success": false,
+      "nfev": 8815,
+      "elapsed_s": 1131.3947370052338,
+      "unix": 1788702994.414194
+    },
+    {
+      "hid": 6,
+      "kind": "random",
+      "local_index": 0,
+      "fun": -5.089052989598059,
+      "deficit": 1.6021703693052025,
+      "success": false,
+      "nfev": 9184,
+      "elapsed_s": 1044.898474931717,
+      "unix": 1788704039.4310706
     }
   ]
 }

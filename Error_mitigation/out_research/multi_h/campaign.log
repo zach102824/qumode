@@ -7,3 +7,7 @@ Phase A H003 random #1  E0=-6.0743 remaining=209.8 min
 Phase A H004 random #1  E0=-5.3462 remaining=189.9 min
   → E=-5.020026 deficit=0.326188 nfev=9143 900.1s  best=-5.020026 near_e0=True
 Phase A H005 random #1  E0=-7.0504 remaining=174.9 min
+  → E=-4.673407 deficit=2.377008 nfev=8815 1131.4s  best=-4.673407 near_e0=False
+Phase A H006 random #1  E0=-6.6912 remaining=156.0 min
+  → E=-5.089053 deficit=1.602170 nfev=9184 1044.9s  best=-5.089053 near_e0=False
+Phase A H007 random #1  E0=-6.6168 remaining=138.6 min
