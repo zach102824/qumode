@@ -13,14 +13,29 @@
         4
       ],
       "file": "mixed_p_spin_p2-4_000.npz",
-      "fun": -6.229769511196412,
-      "deficit": 0.8808904807478264,
+      "fun": -6.229769511199498,
+      "deficit": 0.8808904807447409,
       "near_e0": false,
       "source": "Error_mitigation/out/optimized_params_ecd_h000_nd5.json",
-      "status": "opt-failed-incumbent",
-      "new_restarts": 0,
+      "status": "opt-failed",
+      "new_restarts": 1,
       "h000_quality": true,
-      "x_path": "/workspace/Error_mitigation/out_research/multi_h/phase_a/optimized_params_ecd_h000_nd5.json"
+      "x_path": "/workspace/Error_mitigation/out_research/multi_h/phase_a/optimized_params_ecd_h000_nd5.json",
+      "restart_history": [
+        {
+          "hid": 0,
+          "kind": "continue_best",
+          "local_index": 0,
+          "fun": -6.229769511199498,
+          "deficit": 0.8808904807447409,
+          "success": true,
+          "nfev": 123,
+          "elapsed_s": 13.633414506912231,
+          "unix": 1788699769.6317506
+        }
+      ],
+      "nfev": 123,
+      "elapsed_s": 13.633414506912231
     },
     "1": {
       "hamiltonian_id": 1,
@@ -152,5 +167,17 @@
       "new_restarts": 0
     }
   },
-  "restarts": []
+  "restarts": [
+    {
+      "hid": 0,
+      "kind": "continue_best",
+      "local_index": 0,
+      "fun": -6.229769511199498,
+      "deficit": 0.8808904807447409,
+      "success": true,
+      "nfev": 123,
+      "elapsed_s": 13.633414506912231,
+      "unix": 1788699769.6317506
+    }
+  ]
 }

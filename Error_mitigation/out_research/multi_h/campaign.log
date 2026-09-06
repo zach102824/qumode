@@ -1,0 +1,5 @@
+START 2026-09-06T13:02:33Z
+multi_h campaign phase=all deadline=11.5h root=/workspace/Error_mitigation/out_research/multi_h
+Phase A H000 continue_best #1  E0=-7.1107 remaining=210.0 min
+  → E=-6.229770 deficit=0.880890 nfev=123 13.6s  best=-6.229770 near_e0=False
+Phase A H003 random #1  E0=-6.0743 remaining=209.8 min

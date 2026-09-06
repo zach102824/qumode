@@ -1,7 +1,19 @@
 # multi_h campaign status
 
-Campaign driver is in `run_campaign.py`. Phase A has not started yet.
+updated_unix: 1788699770
+strict_gate: `0.5` (E_opt − E0)
 
-Locked settings: comprehensive + readout_realistic, κτ ∈ {0.003, 0.03, 0.1},
-8192 shots, n_train=40, adaptive twins. Keep gate `E_opt - E0 <= 0.5`.
-H000 frozen ECD from `Error_mitigation/out/` is the PR #8 reference.
+| H | E0 | E_opt | deficit | new_restarts | status |
+|---|---:|---:|---:|---:|---|
+| H000 | -7.1107 | -6.2298 | 0.8809 | 1 | opt-failed |
+| H001 | -6.0317 | -4.8195 | 1.2123 | 0 | opt-failed-incumbent |
+| H002 | -9.3715 | -8.0205 | 1.3510 | 0 | opt-failed-incumbent |
+| H003 | -6.0743 |  |  | 0 | pending |
+| H004 | -5.3462 |  |  | 0 | pending |
+| H005 | -7.0504 |  |  | 0 | pending |
+| H006 | -6.6912 |  |  | 0 | pending |
+| H007 | -6.6168 |  |  | 0 | pending |
+| H008 | -6.1975 |  |  | 0 | pending |
+| H009 | -5.2544 |  |  | 0 | pending |
+
+Phase A running.
