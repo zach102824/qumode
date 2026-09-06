@@ -1,0 +1,67 @@
+SMOKE_START 2026-09-04T09:48:29Z
+instance H000  file=mixed_p_spin_p2-4_000.npz  E0=-7.1107  ground=1111100 (1, 7, 4)
+
+=== ecd  N_d=5 ===
+  loaded optimized ecd params from optimized_params_ecd_h000_nd5.json
+  building 12 Gaussian twins for random ...
+  sim loss  κτ=0.003  random  (target + 12 twins) ...
+    physical histograms in 5.4s
+    ideal                 raw TVD=0.0616  gdr=0.0651  oracle=0.0700
+    readout_realistic     raw TVD=0.0683  gdr=0.0713  oracle=0.0725
+  sim loss_thermal_dephasing  κτ=0.003  random  (target + 12 twins) ...
+    physical histograms in 7.4s
+    ideal                 raw TVD=0.0624  gdr=0.0667  oracle=0.0733
+    readout_realistic     raw TVD=0.0672  gdr=0.0619  oracle=0.0710
+  sim comprehensive  κτ=0.003  random  (target + 12 twins) ...
+    physical histograms in 9.0s
+    ideal                 raw TVD=0.0926  gdr=0.1038  oracle=0.1136
+    readout_realistic     raw TVD=0.1070  gdr=0.1018  oracle=0.1190
+  building 12 Gaussian twins for optimized ...
+  sim loss  κτ=0.003  optimized  (target + 12 twins) ...
+    physical histograms in 3.9s
+    ideal                 raw TVD=0.0492  gdr=0.0464  oracle=0.0904
+    readout_realistic     raw TVD=0.0626  gdr=0.0488  oracle=0.0785
+  sim loss_thermal_dephasing  κτ=0.003  optimized  (target + 12 twins) ...
+    physical histograms in 4.2s
+    ideal                 raw TVD=0.0508  gdr=0.0439  oracle=0.0746
+    readout_realistic     raw TVD=0.0803  gdr=0.0530  oracle=0.0762
+  sim comprehensive  κτ=0.003  optimized  (target + 12 twins) ...
+    physical histograms in 8.7s
+    ideal                 raw TVD=0.1033  gdr=0.0655  oracle=0.1156
+    readout_realistic     raw TVD=0.1185  gdr=0.0677  oracle=0.1091
+
+=== snap  N_d=2 ===
+  snap restart 1/1: E=-4.123393 nfev=259
+  wrote optimized_params_snap_h000_nd2.json  E=-4.123393  (10.7s)
+  building 12 Gaussian twins for random ...
+  sim loss  κτ=0.003  random  (target + 12 twins) ...
+    physical histograms in 1.0s
+    ideal                 raw TVD=0.0347  gdr=0.0513  oracle=0.0436
+    readout_realistic     raw TVD=0.0499  gdr=0.0397  oracle=0.0393
+  sim loss_thermal_dephasing  κτ=0.003  random  (target + 12 twins) ...
+    physical histograms in 4.1s
+    ideal                 raw TVD=0.0388  gdr=0.0412  oracle=0.0389
+    readout_realistic     raw TVD=0.0553  gdr=0.0474  oracle=0.0435
+  sim comprehensive  κτ=0.003  random  (target + 12 twins) ...
+    physical histograms in 3.0s
+    ideal                 raw TVD=0.0390  gdr=0.0522  oracle=0.0517
+    readout_realistic     raw TVD=0.0574  gdr=0.0438  oracle=0.0442
+  building 12 Gaussian twins for optimized ...
+  sim loss  κτ=0.003  optimized  (target + 12 twins) ...
+    physical histograms in 0.7s
+    ideal                 raw TVD=0.0092  gdr=0.0091  oracle=0.0086
+    readout_realistic     raw TVD=0.0383  gdr=0.0226  oracle=0.0230
+  sim loss_thermal_dephasing  κτ=0.003  optimized  (target + 12 twins) ...
+    physical histograms in 1.4s
+    ideal                 raw TVD=0.0126  gdr=0.0112  oracle=0.0114
+    readout_realistic     raw TVD=0.0297  gdr=0.0120  oracle=0.0142
+  sim comprehensive  κτ=0.003  optimized  (target + 12 twins) ...
+    physical histograms in 1.5s
+    ideal                 raw TVD=0.0174  gdr=0.0144  oracle=0.0139
+    readout_realistic     raw TVD=0.0275  gdr=0.0190  oracle=0.0211
+
+wrote Error_mitigation/out_smoke/results.json
+wrote Error_mitigation/out_smoke/summary.txt
+Gaussian-twin product-state TVD: mean=2.196e-16  max=4.492e-16
+Gaussian-twin Poisson TVD (diagnostic): mean=3.096e-02  max=1.556e-01
+SMOKE_EXIT 0 2026-09-04T09:49:54Z
