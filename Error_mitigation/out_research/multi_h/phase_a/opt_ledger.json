@@ -13,12 +13,12 @@
         4
       ],
       "file": "mixed_p_spin_p2-4_000.npz",
-      "fun": -6.229769511199498,
-      "deficit": 0.8808904807447409,
+      "fun": -6.229769511200905,
+      "deficit": 0.880890480743334,
       "near_e0": false,
       "source": "Error_mitigation/out/optimized_params_ecd_h000_nd5.json",
       "status": "opt-failed",
-      "new_restarts": 1,
+      "new_restarts": 2,
       "h000_quality": true,
       "x_path": "/workspace/Error_mitigation/out_research/multi_h/phase_a/optimized_params_ecd_h000_nd5.json",
       "restart_history": [
@@ -32,10 +32,21 @@
           "nfev": 123,
           "elapsed_s": 13.633414506912231,
           "unix": 1788699769.6317506
+        },
+        {
+          "hid": 0,
+          "kind": "continue_best",
+          "local_index": 1,
+          "fun": -6.229769511200905,
+          "deficit": 0.880890480743334,
+          "success": true,
+          "nfev": 123,
+          "elapsed_s": 9.253376245498657,
+          "unix": 1788706820.641217
         }
       ],
       "nfev": 123,
-      "elapsed_s": 13.633414506912231
+      "elapsed_s": 22.88679075241089
     },
     "1": {
       "hamiltonian_id": 1,
@@ -277,8 +288,27 @@
         2
       ],
       "file": "mixed_p_spin_p2-4_009.npz",
-      "status": "pending",
-      "new_restarts": 0
+      "status": "opt-failed",
+      "new_restarts": 1,
+      "restart_history": [
+        {
+          "hid": 9,
+          "kind": "random",
+          "local_index": 0,
+          "fun": -4.351192989251905,
+          "deficit": 0.9032194276771204,
+          "success": true,
+          "nfev": 4428,
+          "elapsed_s": 719.5095369815826,
+          "unix": 1788706811.3789666
+        }
+      ],
+      "fun": -4.351192989251905,
+      "deficit": 0.9032194276771204,
+      "nfev": 4428,
+      "elapsed_s": 719.5095369815826,
+      "near_e0": false,
+      "h000_quality": false
     }
   },
   "restarts": [
@@ -358,6 +388,28 @@
       "nfev": 10045,
       "elapsed_s": 943.4698038101196,
       "unix": 1788706091.768526
+    },
+    {
+      "hid": 9,
+      "kind": "random",
+      "local_index": 0,
+      "fun": -4.351192989251905,
+      "deficit": 0.9032194276771204,
+      "success": true,
+      "nfev": 4428,
+      "elapsed_s": 719.5095369815826,
+      "unix": 1788706811.3789666
+    },
+    {
+      "hid": 0,
+      "kind": "continue_best",
+      "local_index": 1,
+      "fun": -6.229769511200905,
+      "deficit": 0.880890480743334,
+      "success": true,
+      "nfev": 123,
+      "elapsed_s": 9.253376245498657,
+      "unix": 1788706820.641217
     }
   ]
 }
