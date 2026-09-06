@@ -322,7 +322,7 @@
       ],
       "file": "mixed_p_spin_p2-4_009.npz",
       "status": "opt-failed",
-      "new_restarts": 2,
+      "new_restarts": 3,
       "restart_history": [
         {
           "hid": 9,
@@ -345,14 +345,25 @@
           "nfev": 123,
           "elapsed_s": 7.172969102859497,
           "unix": 1788708874.0912755
+        },
+        {
+          "hid": 9,
+          "kind": "random",
+          "local_index": 2,
+          "fun": -4.56338585799663,
+          "deficit": 0.6910265589323945,
+          "success": false,
+          "nfev": 9061,
+          "elapsed_s": 1185.221262216568,
+          "unix": 1788710059.3143475
         }
       ],
-      "fun": -4.351192989253958,
-      "deficit": 0.9032194276750669,
-      "nfev": 123,
-      "elapsed_s": 726.6825060844421,
+      "fun": -4.56338585799663,
+      "deficit": 0.6910265589323945,
+      "nfev": 9061,
+      "elapsed_s": 1911.9037683010101,
       "near_e0": false,
-      "h000_quality": false
+      "h000_quality": true
     }
   },
   "restarts": [
@@ -498,6 +509,17 @@
       "nfev": 123,
       "elapsed_s": 7.172969102859497,
       "unix": 1788708874.0912755
+    },
+    {
+      "hid": 9,
+      "kind": "random",
+      "local_index": 2,
+      "fun": -4.56338585799663,
+      "deficit": 0.6910265589323945,
+      "success": false,
+      "nfev": 9061,
+      "elapsed_s": 1185.221262216568,
+      "unix": 1788710059.3143475
     }
   ]
 }
