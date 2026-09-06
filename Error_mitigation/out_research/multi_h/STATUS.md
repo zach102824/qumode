@@ -1,6 +1,6 @@
 # multi_h campaign status
 
-updated_unix: 1788710059
+updated_unix: 1788711248
 strict_gate: `0.5` (E_opt − E0)
 
 | H | E0 | E_opt | deficit | new_restarts | status |
@@ -14,6 +14,6 @@ strict_gate: `0.5` (E_opt − E0)
 | H006 | -6.6912 | -5.0891 | 1.6022 | 1 | opt-failed |
 | H007 | -6.6168 | -4.6344 | 1.9823 | 1 | opt-failed |
 | H008 | -6.1975 | -3.8496 | 2.3479 | 1 | opt-failed |
-| H009 | -5.2544 | -4.5634 | 0.6910 | 3 | opt-failed |
+| H009 | -5.2544 | -4.7253 | 0.5291 | 4 | opt-failed |
 
 Phase A running.
