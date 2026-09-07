@@ -6,41 +6,46 @@ Hard rules: no `src/` edits; do not overwrite `out/` or `out_smoke/`; one heavy 
 
 **Question:** can anything that is *not* on the ban list beat frozen adaptive `gdr_select` on the hard cells, without regressing ECD opt comprehensive κτ=0.1 (0.343) or the multi-H mild H000/H004/H009 wins?
 
+**Answer:** **No.** See `BEST.md`. Official defaults unchanged.
+
 ## Setup
 
-- Official recipe left frozen until a method clearly wins.
-- Microbench: 8 cached cells, 8192 shots, `n_train=40`, fit-only replay (`Error_mitigation/run_round2.py`).
+- Official recipe left frozen.
+- Microbench: 8 cached cells, 8192 shots, `n_train=40`, fit-only (`Error_mitigation/run_round2.py`). Wall **298.5 s**.
 - Keep rule: beat same-run `gdr_select` by >0.005 TVD on at least one hard cell, and no protect-cell regression >0.003.
 
-Cells:
+Same-run adaptive `gdr_select` matched the frozen headlines on the cells that matter:
 
-| id | cell | cache |
-|----|------|-------|
-| `ecd_rand_loss_0.1` | ECD random loss κτ=0.1 ideal | PR #8 span |
-| `ecd_rand_comp_0.1` | ECD random comprehensive κτ=0.1 ideal | PR #8 span |
-| `ecd_opt_comp_0.1` | ECD opt comprehensive κτ=0.1 ideal (**protect**, 0.343) | PR #8 default twins |
-| `snap_rand_comp_0.003` | SNAP random comprehensive κτ=0.003 ideal (**protect**, gated floor) | PR #8 span |
-| `h000_opt_comp_rr_0.003` | H000 opt comprehensive+realistic κτ=0.003 (**protect**) | multi-H |
-| `h004_opt_comp_rr_0.003` | H004 same (**protect**) | multi-H |
-| `h009_opt_comp_rr_0.003` | H009 same (**protect**) | multi-H |
-| `ecd_rand_comp_0.003` | ECD random comprehensive κτ=0.003 ideal | PR #8 span |
+| cell | this select | PR #8 / multi-H headline |
+|------|------------:|-------------------------:|
+| ECD random loss 0.1 | 0.2011 | 0.203 |
+| ECD random comprehensive 0.1 | 0.3424 | 0.342 |
+| ECD opt comprehensive 0.1 | 0.3419 | 0.343 |
+| SNAP random comprehensive 0.003 (select) | 0.0417 | holdout can pick mid |
+| SNAP same (gated `gdr_damped`) | **0.0369** | **0.0369** |
+| H000 / H004 / H009 mild realistic | 0.1012 / 0.0763 / 0.0932 | same |
 
-## Ideas (not on the ban list)
+## Ideas tried
 
-| id | method | hypothesis |
-|----|--------|------------|
-| 1 | `gdr_anneal` | Pull η toward 1 at mild κτ; loosen at high κτ; holdout λ. |
-| 2 | `gdr_fisher` | Reweight twins by n(n−1) Fisher scale (not energy). |
-| 2b | `twin-design grid` | Chebyshev \|α\|² nodes on **random** only. New sims only if cache-replay of (1)/(2) is promising. |
-| 3 | `readout_then_gdr` / `gdr_then_rtz` | Invert readout then light η-GDR; or mix GDR with `readout_then_zne`. |
-| 4 | `gdr_select_kt` | Holdout selector with κτ/family gate; residual never on comprehensive high-κτ. |
-| 5 | `gdr_mild_residual` | Residual only on optimized loss/thermal κτ≤0.01. |
-| 6 | `gdr_eta` | Fit only (η1, η2). |
+| id | method | keep? | numbers |
+|----|--------|:-----:|---------|
+| 1 | `gdr_anneal` (η→1 at mild κτ, holdout λ) | **drop** | mean Δ +0.0053. H004 −0.0028; 0.343 cell +0.0022. No 0.005 beat. |
+| 2 | `gdr_fisher` (n(n−1) twin weights, not energy) | **drop** | mean Δ −0.0003. H004 −0.0048, mild-random comprehensive −0.0036, 0.343 −0.0007. Below keep bar. |
+| 2b | Chebyshev \|α\|² grid on random | **not run** | Cheap twin-v2 *is* Fisher reweight of existing span twins. No keep → skip new sims. |
+| 3a | `readout_then_gdr` (invert readout, η-only GDR) | **drop** | Collapses to `gdr_eta`. Regresses all protected optimized cells (+0.04 to +0.09). |
+| 3b | `gdr_then_rtz` (mix GDR with readout_then_zne / ZNE) | **drop** | Beats ECD random loss 0.1 (0.1944 vs 0.2011) but **0.343 → 0.408**. ECD random comprehensive 0.1 0.3424 → 0.3449. |
+| 4 | `gdr_select_kt` | **drop** | Identical to select on 7/8; picks fisher on ECD random comprehensive 0.003 (−0.0036). |
+| 5 | `gdr_mild_residual` | **drop** | Gate (optimized loss/thermal κτ≤0.01) never fired on this set. Equals `gdr_param`. Comprehensive high-κτ correctly refused residual. |
+| 6 | `gdr_eta` | **drop** | Under-parameterized on optimized comprehensive / readout. Protect regressions. |
 
-## Results
+Full table: `micro_scoreboard.md`. Raw JSON: `micro_results.json`.
 
-Pending `python -u Error_mitigation/run_round2.py`. Scoreboard: `micro_scoreboard.md`.
+## Notes
 
-## Verdict (fill after microbench)
+- `gdr_select` on SNAP random comprehensive 0.003 still picks `gdr_mid` (0.0417 > raw 0.0372). The shipped adaptive *scoreboard* already uses gated `gdr_damped` (0.0369) for that cell class. Round-2 did not find a holdout rule that recovers the floor without peeking at the target.
+- Banned methods were not revived. `CHEAP_METHODS` / `ROUND2_METHODS` omit `gdr_full`, interleave, split, band, afterburn, blend, energy-weighted fit.
+- Twin redesign that would put span on **optimized** was not run.
 
-See `BEST.md`.
+## Verdict
+
+Honest negative. Ban list + adaptive remains best. Do not wire the official runner.

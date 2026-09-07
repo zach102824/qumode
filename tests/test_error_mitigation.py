@@ -565,7 +565,14 @@ def test_round2_dropped_and_ban_list_on_disk():
     assert banned.isdisjoint(CHEAP_METHODS)
 
 
-def test_round2_hard_cells_have_caches():
+def test_round2_best_is_negative():
+    best = ROOT / "Error_mitigation" / "out_research" / "round2" / "BEST.md"
+    text = best.read_text()
+    assert "No beat of adaptive; recipe unchanged" in text
+    assert "0.3419" in text
+    assert "0.1012" in text
+    nb = ROOT / "Error_mitigation" / "out_research" / "round2" / "NOTEBOOK.md"
+    assert "Official defaults unchanged" in nb.read_text() or "Official defaults unchanged." in nb.read_text()
     from Error_mitigation.run_round2 import HARD_CELLS
 
     assert len(HARD_CELLS) == 8
