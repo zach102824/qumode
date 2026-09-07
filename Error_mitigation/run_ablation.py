@@ -1028,6 +1028,10 @@ def mitigate_research(
 
     if "gdr_shot_damp" in methods:
         floor = shot_damp_floor(spec.n_shots)
+        # Extra mix toward safe/raw is lethal on optimized high-κτ (raw~0.9 vs
+        # select~0.34). Optional schedule is random-only; 8192 floor is 0.
+        if str(circuit_kind or "").lower() != "random":
+            floor = 0.0
         if "gdr_select" in out:
             p_base = out["gdr_select"]["hist"]
             src = "gdr_select"
@@ -1046,6 +1050,7 @@ def mitigate_research(
                 "shot_floor": float(floor),
                 "n_shots": int(spec.n_shots),
                 "source": src,
+                "gated_random": str(circuit_kind or "").lower() == "random",
             },
         }
 
