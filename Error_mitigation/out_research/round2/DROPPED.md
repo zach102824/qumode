@@ -50,8 +50,21 @@ raw on H000.
 | SNAP Nd=2 opt transfer as a different winner | Adaptive still best at κτ 0.003/0.03 on H000 comprehensive+rr. H004 SNAP not near-E0 (skipped). |
 | Active +10 Fisher-greedy Gaussian twins | select50 comprehensive 0.1 −0.0058, but ECD random **loss** 0.1 **+0.008 worse**. |
 
+## Pass 3 also dropped (not a keep)
+
+| item | why it is dropped |
+|------|-------------------|
+| Ungated shot-damp on optimized | 2048 extra α=0.25 mixed the 0.343 cell toward raw: **0.351→0.489**. |
+| `gdr_family_eta` | Opposite-of-anneal η ridge. H004 mild −0.0033 (under bar); H009 mild **+0.0031**. Often λ=0. |
+| Cross-H twin-bank M | Mean Δ vs same-H param **+0.041**. H009→H004 −0.010 does not offset H004→H000 +0.094. |
+| `gdr_rl` / `gdr_rl_stop` | Holdout n_iter=8 over-unfolds. **0.343→0.464**. Soft-clip alone ≈ `gdr_param`. |
+
+Optional research note (not a default, not a ban): extra α=0.25 toward safe on
+**random** circuits at ≤2048 shots (`gdr_shot_damp`). Zero at 8192. Not wired
+into the official runner.
+
 ## Still allowed (round-2 search)
 
-Pass-1/pass-2 ideas above are **not** still allowed as contenders. Frozen
-adaptive remains the bar. Do not revive the original ban list. No new search
-unless asked.
+Pass-1/pass-2/pass-3 ideas above are **not** still allowed as contenders,
+except the optional 2048 random shot-damp note. Frozen adaptive remains the
+8192 bar. Do not revive the original ban list.

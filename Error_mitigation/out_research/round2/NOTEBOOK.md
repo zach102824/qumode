@@ -47,6 +47,32 @@ Holdout λ ∈ {0, 1e-4, …, 1e-2}. Almost always λ=0. Not energy-weighted twi
 
 select50 beats select40 on comprehensive 0.1 (−0.0058) but **loses** on loss 0.1 (+0.008). **drop.**
 
+## Pass 3 — shots, family η, cross-H, RL unfold
+
+### Shot sweep (`--stage shots`, wall 49 s)
+
+`shots_scoreboard.md`. GDR vs raw on 4 hard cells at 2048 / 8192 / 32768:
+
+- Random high-κτ: GDR’s TVD win **grows with shots** (loss 0.057 → 0.097 → 0.109).
+- ECD opt 0.343: win is huge and **shot-stable** (0.351 / 0.342 / 0.341) — leftover model error.
+- SNAP random comprehensive 0.003: select ≈ raw at 2048, **worse** than raw at 8192 (0.0415 vs 0.0372), better at 32768.
+
+Ungated extra α=0.25 at 2048 beat random high-κτ (−0.0098 / −0.0053) and **destroyed 0.343** (0.351→0.489). Gated to **random only**: 2048 beats stand, 0.343 untouched, 8192 identical (floor=0). **Optional, not official.** Official defaults unchanged.
+
+### Family-conditional η (`--stage family` / `c`, wall 140 s)
+
+Opposite of anneal: η ridge 0.3 at κτ=0.003, 10 at 0.1; holdout λ; comprehensive+rr only. 0.343 no-op (ideal readout).
+
+H004 mild −0.0033 (under bar). H009 mild **+0.0031** (protect). Often λ=0. **drop.**
+
+### Cross-H twin bank (`--stage xfer`, wall 12 s)
+
+Same-H diagonal matches. Off-diagonal mean Δ **+0.041** vs same-H `gdr_param`. H009→H004 −0.010 is a one-off; H004→H000 **+0.094**. M does not transfer. **drop.**
+
+### RL soft-clip + early-stop
+
+Holdout picks `n_iter=8` almost always. Soft-clip ≈ `gdr_param`. Early-stop **0.343→0.464**. **drop.**
+
 ## Verdict
 
-Two passes, four new directions, no keep. Stop new ideas; adaptive + ban list remains the recipe.
+Three passes. Official 8192 adaptive + ban list remains the recipe. Optional 2048 random extra-damp is a research note only; official runner not wired.
