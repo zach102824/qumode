@@ -34,11 +34,24 @@ raw on H000.
 | Span twins as default on **optimized** circuits | ECD opt comprehensive κτ=0.1: 0.416 vs PR #6 **0.343**. `opt_default`: 35 better / 19 tie / **0 worse** for U(0.5,1) vs span. |
 | Blind default-to-`gdr_residual` on optimized comprehensive | Hurts comprehensive and SNAP high-κτ on default twins (ECD comprehensive 0.1: residual ~0.41 vs `gdr_param` 0.34). |
 
+## Pass 1 also dropped (not a keep)
+
+`gdr_anneal`, `gdr_fisher`, `gdr_eta`, `gdr_select_kt`, `gdr_mild_residual`,
+`readout_then_gdr`, `gdr_then_rtz`. Closest: `gdr_fisher` mean Δ −0.0003.
+`gdr_then_rtz` won ECD random loss 0.1 (0.194 vs 0.201) and **regressed
+0.343→0.408**.
+
+## Pass 2 also dropped (not a keep)
+
+| item | why it is dropped |
+|------|-------------------|
+| `gdr_ensemble` (K=5 twin bootstrap) | Worse on ECD random high-κτ. SNAP opt 0.1 0.563 vs 0.590, but ECD 0.343 **+0.0042** and H009 mild **+0.012**. |
+| `gdr_joint` (histogram + top-8 \|E\| bins) | Holdout almost always picks λ=0 (= `gdr_param`). Distinct from banned energy-weighted twins; still not a keep. |
+| SNAP Nd=2 opt transfer as a different winner | Adaptive still best at κτ 0.003/0.03 on H000 comprehensive+rr. H004 SNAP not near-E0 (skipped). |
+| Active +10 Fisher-greedy Gaussian twins | select50 comprehensive 0.1 −0.0058, but ECD random **loss** 0.1 **+0.008 worse**. |
+
 ## Still allowed (round-2 search)
 
-- Stronger / annealed regularization on `gdr_param` with holdout (`gdr_anneal`).
-- Twin redesign **on random only**: amplitude grid / Fisher weights. Not span-on-optimized.
-- Two-stage readout ↔ GDR / `readout_then_zne` mixes under `readout_realistic`.
-- κτ-conditional selector trained on holdout twins (`gdr_select_kt`).
-- Mild-only residual **gated** so comprehensive high-κτ never selects it (`gdr_mild_residual`).
-- η-only light GDR (`gdr_eta`).
+Pass-1/pass-2 ideas above are **not** still allowed as contenders. Frozen
+adaptive remains the bar. Do not revive the original ban list. No new search
+unless asked.
