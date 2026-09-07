@@ -147,7 +147,7 @@ beats some high-κτ rr cells (H000/H009 rr 0.1) but **regresses 0.343 →
 
 Official 8192 adaptive recipe still unbeaten. Ban list stays banned.
 Optional 2048-shot extra damp on **random** circuits is a research note
-only — not a default change.
+only — not a default change. See `CONCLUSION.md`. Search stopped.
 
 Reproduce:
 

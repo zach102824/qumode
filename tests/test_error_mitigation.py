@@ -576,6 +576,12 @@ def test_round2_best_is_negative():
     assert "0.1012" in text
     nb = ROOT / "Error_mitigation" / "out_research" / "round2" / "NOTEBOOK.md"
     assert "Official defaults unchanged" in nb.read_text() or "Official defaults unchanged." in nb.read_text()
+    conclusion = ROOT / "Error_mitigation" / "out_research" / "round2" / "CONCLUSION.md"
+    ctext = conclusion.read_text()
+    assert "Adaptive is unbeaten" in ctext
+    assert "not a default" in ctext.lower() or "not the official default" in ctext
+    assert "0.343 is model error" in ctext
+    assert "Cross-H fails" in ctext
     from Error_mitigation.run_round2 import HARD_CELLS
 
     assert len(HARD_CELLS) == 8

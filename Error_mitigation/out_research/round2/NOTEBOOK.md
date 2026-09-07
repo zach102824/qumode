@@ -75,4 +75,4 @@ Holdout picks `n_iter=8` almost always. Soft-clip ≈ `gdr_param`. Early-stop **
 
 ## Verdict
 
-Three passes. Official 8192 adaptive + ban list remains the recipe. Optional 2048 random extra-damp is a research note only; official runner not wired.
+Three passes. Official 8192 adaptive + ban list remains the recipe. Optional 2048 random extra-damp is a research note only; official runner not wired. See `CONCLUSION.md`. Search stopped — no more kernels unless asked.

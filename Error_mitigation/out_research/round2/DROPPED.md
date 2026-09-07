@@ -63,8 +63,8 @@ Optional research note (not a default, not a ban): extra α=0.25 toward safe on
 **random** circuits at ≤2048 shots (`gdr_shot_damp`). Zero at 8192. Not wired
 into the official runner.
 
-## Still allowed (round-2 search)
+## Search closed
 
-Pass-1/pass-2/pass-3 ideas above are **not** still allowed as contenders,
-except the optional 2048 random shot-damp note. Frozen adaptive remains the
-8192 bar. Do not revive the original ban list.
+Pass-1/pass-2/pass-3 ideas above are **not** still allowed as contenders.
+Frozen adaptive remains the 8192 bar. Do not revive the original ban list.
+No more kernel search unless asked. See `CONCLUSION.md`.
