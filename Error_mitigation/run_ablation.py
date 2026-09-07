@@ -43,7 +43,9 @@ from Error_mitigation.mitigation import (
     fit_gdr_afterburn,
     fit_gdr_anneal,
     fit_gdr_eta,
+    fit_gdr_ensemble,
     fit_gdr_fisher,
+    fit_gdr_joint,
     fit_gdr_holdout,
     fit_gdr_interleave,
     fit_gdr_mid,
@@ -126,6 +128,8 @@ ALL_METHODS = (
     "gdr_mild_residual",
     "readout_then_gdr",
     "gdr_then_rtz",
+    "gdr_ensemble",
+    "gdr_joint",
     "gdr_split",
     "gdr_band",
     "scalar_cdr",
@@ -156,6 +160,8 @@ CHEAP_METHODS = (
     "gdr_mild_residual",
     "readout_then_gdr",
     "gdr_then_rtz",
+    "gdr_ensemble",
+    "gdr_joint",
     "zne_idle",
     "readout_then_zne",
     "zne_then_readout",
@@ -176,8 +182,19 @@ ROUND2_METHODS = (
     "gdr_mild_residual",
     "readout_then_gdr",
     "gdr_then_rtz",
+    "gdr_ensemble",
+    "gdr_joint",
     "readout_then_zne",
     "zne_idle",
+)
+
+STAGE_B_METHODS = (
+    "raw",
+    "gdr_param",
+    "gdr_damped",
+    "gdr_select",
+    "gdr_ensemble",
+    "gdr_joint",
 )
 
 
@@ -768,6 +785,51 @@ def mitigate_research(
                 "reason": reason,
                 "allowed": allow,
             },
+        }
+
+    if "gdr_ensemble" in methods:
+        ens_seed = 17 + int(round(1000 * (0.0 if kappa_tau is None else float(kappa_tau))))
+        hist_ens, info_ens = fit_gdr_ensemble(
+            p_twin,
+            q_twins,
+            q_obs,
+            cfg,
+            spec,
+            ndepth,
+            DIMS,
+            k=5,
+            seed=ens_seed,
+            maxiter=min(int(fit_maxiter), 80),
+        )
+        members = info_ens.pop("members", [])
+        member_tvds = [float(total_variation(m, p_ideal)) for m in members]
+        info_ens["member_tvd_mean"] = float(np.mean(member_tvds)) if member_tvds else None
+        info_ens["member_tvd_std"] = float(np.std(member_tvds)) if member_tvds else None
+        info_ens["member_tvds"] = member_tvds
+        out["gdr_ensemble"] = {
+            "hist": hist_ens,
+            "energy": energy_from_histogram(hist_ens, energy_tensor),
+            "fit": info_ens,
+        }
+
+    if "gdr_joint" in methods:
+        theta_j, info_j = fit_gdr_joint(
+            p_twin,
+            q_twins,
+            cfg,
+            spec,
+            ndepth,
+            DIMS,
+            energy_tensor,
+            maxiter=fit_maxiter,
+        )
+        cq, c1, c2 = _kernels_from_fit(theta_j, DIMS)
+        extra_kernels["gdr_joint"] = (cq, c1, c2)
+        p = unfold(q_obs, cq, c1, c2)
+        out["gdr_joint"] = {
+            "hist": p,
+            "energy": energy_from_histogram(p, energy_tensor),
+            "fit": info_j,
         }
 
     if "gdr_energy" in methods:

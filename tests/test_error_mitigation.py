@@ -45,8 +45,11 @@ from Error_mitigation.mitigation import (
     thermal_loss_kernel,
     zne_histogram,
     zne_then_readout,
+    top_energy_bin_indices,
+    average_unfolds,
+    fit_gdr_joint,
 )
-from Error_mitigation.twins import designed_twin_plan, designed_twin_plan_grid
+from Error_mitigation.twins import designed_twin_plan, designed_twin_plan_grid, eta_fisher_score
 from Error_mitigation.noise_models import (
     circuit_noise,
     is_trivial_readout,
@@ -580,3 +583,70 @@ def test_round2_best_is_negative():
         path = Path(cell["cache"])
         assert path.is_file(), path
         assert path.suffix == ".npz"
+
+
+def test_top_energy_bins_and_joint_kind():
+    e = np.zeros((2, 8, 8))
+    e[0, 0, 0] = -9.0
+    e[1, 7, 7] = 3.0
+    idx = top_energy_bin_indices(e, m=2)
+    assert idx.size == 2
+    flat = e.reshape(-1)
+    assert set(np.abs(flat[idx])) == {9.0, 3.0}
+    rng = np.random.default_rng(0)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    cfg = circuit_noise("loss", 0.003)
+    spec = readout_spec("ideal", n_shots=200)
+    _, info = fit_gdr_joint([p], [p], cfg, spec, 5, (2, 8, 8), e, maxiter=10, top_m=4)
+    assert info["kind"] == "gdr_joint"
+    assert "lam" in info
+
+
+def test_average_unfolds_renormalizes():
+    from Error_mitigation.mitigation import initial_theta, params_to_kernels
+
+    cfg = circuit_noise("loss", 0.03)
+    spec = readout_spec("ideal", n_shots=100)
+    th = initial_theta(cfg, spec, 5)
+    q = np.ones((2, 8, 8), dtype=float)
+    q = q / q.sum()
+    hist, members = average_unfolds(q, [th, th], (2, 8, 8))
+    assert hist.shape == (2, 8, 8)
+    assert hist.sum() == pytest.approx(1.0)
+    assert len(members) == 2
+
+
+def test_eta_fisher_score_vacuum_zero():
+    p = np.zeros((2, 8, 8))
+    p[0, 0, 0] = 1.0
+    assert eta_fisher_score(p) == pytest.approx(0.0)
+    p2 = np.zeros((2, 8, 8))
+    p2[0, 3, 3] = 1.0
+    assert eta_fisher_score(p2) > 0.0
+
+
+def test_snap_opt_comprehensive_caches_exist():
+    from Error_mitigation.run_round2 import SNAP_CELLS
+
+    assert len(SNAP_CELLS) == 3
+    for cell in SNAP_CELLS:
+        assert Path(cell["cache"]).is_file()
+        assert cell["readout"] == "readout_realistic"
+
+
+def test_stage_b_methods_exclude_ban_list():
+    from Error_mitigation.run_ablation import STAGE_B_METHODS
+
+    banned = {
+        "gdr_full",
+        "gdr_interleave",
+        "gdr_split",
+        "gdr_band",
+        "gdr_afterburn",
+        "gdr_blend",
+        "gdr_energy",
+    }
+    assert banned.isdisjoint(STAGE_B_METHODS)
+    assert "gdr_ensemble" in STAGE_B_METHODS
+    assert "gdr_joint" in STAGE_B_METHODS

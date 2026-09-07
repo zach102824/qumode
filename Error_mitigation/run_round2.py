@@ -32,6 +32,7 @@ from Error_mitigation.metrics import compare_histograms
 from Error_mitigation.noise_models import circuit_noise, readout_as_dict, readout_spec
 from Error_mitigation.run_ablation import (
     ROUND2_METHODS,
+    STAGE_B_METHODS,
     _observe_block,
     load_cache,
     mitigate_research,
@@ -157,16 +158,57 @@ NEW_METHODS = (
     "gdr_then_rtz",
 )
 
+STAGE_B_NEW = ("gdr_ensemble", "gdr_joint")
+
+SNAP_CELLS = (
+    {
+        "id": "snap_opt_comp_rr_0.003",
+        "ansatz": "snap",
+        "params": "optimized",
+        "family": "comprehensive",
+        "kappa_tau": 0.003,
+        "readout": "readout_realistic",
+        "instance": 0,
+        "cache": CACHE_PR8 / "snap_optimized_comprehensive_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0.npz",
+        "protect": False,
+        "note": "SNAP Nd=2 H000 opt comprehensive+realistic; deficit~1.93 not near-E0",
+    },
+    {
+        "id": "snap_opt_comp_rr_0.03",
+        "ansatz": "snap",
+        "params": "optimized",
+        "family": "comprehensive",
+        "kappa_tau": 0.03,
+        "readout": "readout_realistic",
+        "instance": 0,
+        "cache": CACHE_PR8 / "snap_optimized_comprehensive_kt0.03_n40_default_nr10_lo0.25_hi1.35_x0.npz",
+        "protect": False,
+        "note": "SNAP Nd=2 H000 opt comprehensive+realistic κτ=0.03",
+    },
+    {
+        "id": "snap_opt_comp_rr_0.1",
+        "ansatz": "snap",
+        "params": "optimized",
+        "family": "comprehensive",
+        "kappa_tau": 0.1,
+        "readout": "readout_realistic",
+        "instance": 0,
+        "cache": CACHE_PR8 / "snap_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz",
+        "protect": False,
+        "note": "SNAP Nd=2 H000 opt comprehensive+realistic κτ=0.1",
+    },
+)
+
 # Shot-noise scale from PR #8 bootstrap (~0.004–0.013). Require a clear beat.
 BEAT_EPS = 0.005
 REGRESS_EPS = 0.003
 
 
-def score_methods(records: list[dict]) -> dict:
+def score_methods(records: list[dict], new_methods: tuple[str, ...] = NEW_METHODS) -> dict:
     """Keep a method only if it beats select somewhere and never regresses protects."""
     protects = [r for r in records if r.get("protect")]
     summary = {}
-    for name in NEW_METHODS:
+    for name in new_methods:
         beats = []
         regressions = []
         deltas = []
@@ -206,9 +248,15 @@ def score_methods(records: list[dict]) -> dict:
     return summary
 
 
-def write_scoreboard(path: Path, records: list[dict], verdict: dict, header: str) -> None:
+def write_scoreboard(
+    path: Path,
+    records: list[dict],
+    verdict: dict,
+    header: str,
+    new_methods: tuple[str, ...] = NEW_METHODS,
+) -> None:
     lines = ["# Round-2 microbench", "", header, ""]
-    cols = ["id", "raw", "gdr_param", "gdr_select"] + list(NEW_METHODS)
+    cols = ["id", "raw", "gdr_param", "gdr_select"] + list(new_methods)
     lines.append("| " + " | ".join(cols) + " |")
     lines.append("|" + "|".join(["---"] * len(cols)) + "|")
 
@@ -218,7 +266,7 @@ def write_scoreboard(path: Path, records: list[dict], verdict: dict, header: str
     for rec in records:
         mets = rec["metrics"]
         row = [rec["id"]]
-        for m in ("raw", "gdr_param", "gdr_select") + NEW_METHODS:
+        for m in ("raw", "gdr_param", "gdr_select") + new_methods:
             row.append(f((mets.get(m) or {}).get("tvd")))
         lines.append("| " + " | ".join(row) + " |")
     lines += ["", "## Keep / drop vs adaptive `gdr_select`", ""]
@@ -305,13 +353,218 @@ def run_cell(cell: dict, *, shots: int, seed: int, fit_maxiter: int, methods: tu
     return rec
 
 
+ACTIVE_CELLS = (
+    {
+        "id": "ecd_rand_loss_0.1",
+        "family": "loss",
+        "kappa_tau": 0.1,
+        "readout": "ideal",
+        "cache": CACHE_PR8 / "ecd_random_loss_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz",
+        "protect": False,
+    },
+    {
+        "id": "ecd_rand_comp_0.1",
+        "family": "comprehensive",
+        "kappa_tau": 0.1,
+        "readout": "ideal",
+        "cache": CACHE_PR8 / "ecd_random_comprehensive_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0.npz",
+        "protect": False,
+    },
+)
+
+
+def run_active_twins(*, shots: int, seed: int, fit_maxiter: int, outdir: Path) -> dict:
+    """Add 10 Fisher-greedy Gaussian twins; resim those 10 only; refit."""
+    from Error_mitigation.metrics import total_variation
+    from Error_mitigation.run_mitigation_experiment import (
+        case_seed,
+        get_or_optimize_params,
+        make_sim,
+        physical_probs,
+    )
+    from Error_mitigation.twins import (
+        build_twins,
+        designed_twin_plan,
+        propose_active_gaussian_twins,
+    )
+
+    inst = load_instance(0)
+    energy_tensor = np.asarray(inst["energy_tensor"], dtype=float)
+    ground_qnm = tuple(int(v) for v in inst["ground_qnm"])
+    ndepth = int(ANSATZ_SPEC["ecd"]["ndepth"])
+    x_random, _, _ = get_or_optimize_params(
+        ansatz="ecd",
+        ndepth=ndepth,
+        energy_tensor=energy_tensor,
+        ground_qnm=ground_qnm,
+        outdir=RESEARCH,
+        hid=0,
+        seed_base=int(seed),
+        maxiter=200,
+        n_restarts=3,
+    )
+    sim_ideal = make_sim("ecd", ndepth, energy_tensor, ground_qnm)
+    p_check = physical_probs(sim_ideal, x_random)
+    tag = "span_nr10_lo0.25_hi1.35_x0"
+    rng_tw = np.random.default_rng(case_seed("twins", "ecd", "random", seed, tag))
+    t_list, scales = designed_twin_plan(40, ndepth, n_rank2=10, mag_lo=0.25, mag_hi=1.35)
+    twins40 = build_twins(sim_ideal, x_random, rng_tw, t_free_list=t_list, mag_scales=scales)
+
+    records = []
+    extra_cache = outdir / "cache"
+    extra_cache.mkdir(parents=True, exist_ok=True)
+    for cell in ACTIVE_CELLS:
+        phys = load_cache(Path(cell["cache"]))
+        if phys is None:
+            raise FileNotFoundError(cell["cache"])
+        tvd_tgt = total_variation(p_check, phys["p_ideal"])
+        print(f"  active {cell['id']}  x_random vs cache p_ideal TVD={tvd_tgt:.3e}")
+        if tvd_tgt > 1e-6:
+            raise RuntimeError(f"random x does not match cache target ({tvd_tgt})")
+        existing = [phys["twin_p_ideal"][i] for i in range(phys["twin_p_ideal"].shape[0])]
+        rng_act = np.random.default_rng(case_seed("active", "ecd", cell["family"], cell["kappa_tau"], seed))
+        proposed = propose_active_gaussian_twins(
+            sim_ideal, x_random, existing, rng_act, n_extra=10, n_pool=80
+        )
+        family = cell["family"]
+        kt = float(cell["kappa_tau"])
+        cfg = circuit_noise(family, kt, dims=DIMS)
+        extra_path = extra_cache / f"active10_{cell['id']}.npz"
+        extra_json = extra_path.with_suffix(".json")
+        if extra_path.is_file():
+            blob = dict(np.load(extra_path, allow_pickle=False))
+            extra_phys = blob["twin_phys"]
+            extra_ideal = blob["twin_p_ideal"]
+            print(f"    cache hit extra twins {extra_path.name}")
+        else:
+            sim_noisy = make_sim("ecd", ndepth, energy_tensor, ground_qnm, noise=cfg)
+            extra_ideal = []
+            extra_phys = []
+            t0 = time.time()
+            for i, cand in enumerate(proposed):
+                extra_ideal.append(cand["p_ideal"])
+                print(f"    sim extra twin {i+1}/10 fisher={cand['fisher']:.3f} ...", flush=True)
+                extra_phys.append(physical_probs(sim_noisy, cand["x"]))
+            extra_ideal = np.stack(extra_ideal, axis=0)
+            extra_phys = np.stack(extra_phys, axis=0)
+            np.savez_compressed(extra_path, twin_phys=extra_phys, twin_p_ideal=extra_ideal)
+            extra_json.write_text(
+                json.dumps(
+                    {
+                        "id": cell["id"],
+                        "n_extra": int(extra_phys.shape[0]),
+                        "fishers": [float(c["fisher"]) for c in proposed],
+                        "wall_s": time.time() - t0,
+                    },
+                    indent=2,
+                )
+            )
+            print(f"    wrote {extra_path.name} in {time.time() - t0:.1f}s")
+        phys50 = dict(phys)
+        phys50["twin_phys"] = np.concatenate([phys["twin_phys"], extra_phys], axis=0)
+        phys50["twin_p_ideal"] = np.concatenate([phys["twin_p_ideal"], extra_ideal], axis=0)
+        phys50["twin_t_free"] = np.concatenate(
+            [phys["twin_t_free"], np.zeros(extra_phys.shape[0], dtype=int)]
+        )
+        if "e_twin_ideal" in phys:
+            e_extra = np.array(
+                [energy_from_histogram(extra_ideal[i], energy_tensor) for i in range(extra_ideal.shape[0])]
+            )
+            phys50["e_twin_ideal"] = np.concatenate([phys["e_twin_ideal"], e_extra])
+        spec = readout_spec(cell["readout"], shots, seed=None)
+        q_obs, q_twins40, hist_by_scale = _observe_block(
+            phys, spec, "ecd", "random", family, kt, seed, f"s{shots}"
+        )
+        _, q_twins50, _ = _observe_block(
+            phys50, spec, "ecd", "random", family, kt, seed, f"s{shots}"
+        )
+        mit40 = mitigate_research(
+            phys=phys,
+            q_obs=q_obs,
+            q_twins=q_twins40,
+            hist_by_scale=hist_by_scale,
+            cfg=cfg,
+            spec=spec,
+            ndepth=ndepth,
+            energy_tensor=energy_tensor,
+            methods=("raw", "gdr_param", "gdr_damped", "gdr_select"),
+            fit_maxiter=fit_maxiter,
+            circuit_kind="random",
+            family=family,
+            kappa_tau=kt,
+        )
+        mit50 = mitigate_research(
+            phys=phys50,
+            q_obs=q_obs,
+            q_twins=q_twins50,
+            hist_by_scale=hist_by_scale,
+            cfg=cfg,
+            spec=spec,
+            ndepth=ndepth,
+            energy_tensor=energy_tensor,
+            methods=("gdr_param", "gdr_damped", "gdr_select"),
+            fit_maxiter=fit_maxiter,
+            circuit_kind="random",
+            family=family,
+            kappa_tau=kt,
+        )
+        metrics40 = {
+            name: compare_histograms(
+                blob.get("hist"), phys["p_ideal"], energy_tensor, ground_qnm, energy_mit=blob.get("energy")
+            )
+            for name, blob in mit40.items()
+        }
+        metrics50 = {
+            name: compare_histograms(
+                blob.get("hist"), phys["p_ideal"], energy_tensor, ground_qnm, energy_mit=blob.get("energy")
+            )
+            for name, blob in mit50.items()
+        }
+        rec = {
+            "id": cell["id"],
+            "ansatz": "ecd",
+            "params": "random",
+            "family": family,
+            "kappa_tau": kt,
+            "readout": cell["readout"],
+            "protect": False,
+            "n_train_40": 40,
+            "n_train_50": int(phys50["twin_phys"].shape[0]),
+            "metrics_40": metrics40,
+            "metrics_50": metrics50,
+            "metrics": {
+                "raw": metrics40.get("raw"),
+                "gdr_select": metrics40.get("gdr_select"),
+                "gdr_param": metrics40.get("gdr_param"),
+                "gdr_active50": metrics50.get("gdr_param"),
+                "gdr_select_50": metrics50.get("gdr_select"),
+            },
+            "x_random_tvd": float(tvd_tgt),
+            "extra_fishers": [float(c["fisher"]) for c in proposed],
+        }
+        sel = (metrics40.get("gdr_select") or {}).get("tvd")
+        a50 = (metrics50.get("gdr_param") or {}).get("tvd")
+        print(
+            f"    select40={sel if sel is None else f'{sel:.4f}'}  "
+            f"gdr50={a50 if a50 is None else f'{a50:.4f}'}"
+        )
+        records.append(rec)
+    return {"tag": "round2_active", "records": records}
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--outdir", type=Path, default=ROUND2_OUT)
     p.add_argument("--shots", type=int, default=8192)
     p.add_argument("--seed", type=int, default=SEED_BASE)
     p.add_argument("--fit-maxiter", type=int, default=120)
-    p.add_argument("--methods", default=",".join(ROUND2_METHODS))
+    p.add_argument("--methods", default="")
+    p.add_argument(
+        "--stage",
+        choices=("micro", "b", "active", "all"),
+        default="b",
+        help="micro: first-pass 8 cells; b: ensemble+joint+SNAP transfer; active: +10 Fisher twins.",
+    )
     p.add_argument(
         "--cells",
         default="all",
@@ -320,22 +573,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv)
-    outdir = Path(args.outdir)
-    outdir.mkdir(parents=True, exist_ok=True)
-    methods = tuple(x.strip() for x in args.methods.split(",") if x.strip())
-    if args.cells == "all":
-        cells = list(HARD_CELLS)
-    else:
-        want = {x.strip() for x in args.cells.split(",") if x.strip()}
-        cells = [c for c in HARD_CELLS if c["id"] in want]
-        missing = want - {c["id"] for c in cells}
-        if missing:
-            raise SystemExit(f"unknown cell ids: {sorted(missing)}")
+def _run_batch(cells, methods, new_methods, args, outdir, tag, json_name, md_name) -> dict:
     print(
-        f"round2 cells={len(cells)} shots={args.shots} fit_maxiter={args.fit_maxiter} "
-        f"methods={','.join(methods)}"
+        f"round2 stage={tag} cells={len(cells)} shots={args.shots} "
+        f"fit_maxiter={args.fit_maxiter} methods={','.join(methods)}"
     )
     t0 = time.time()
     records = []
@@ -349,9 +590,9 @@ def main(argv: list[str] | None = None) -> int:
                 methods=methods,
             )
         )
-    verdict = score_methods(records)
+    verdict = score_methods(records, new_methods=new_methods)
     payload = {
-        "tag": "round2_micro",
+        "tag": tag,
         "shots": int(args.shots),
         "seed": int(args.seed),
         "fit_maxiter": int(args.fit_maxiter),
@@ -363,15 +604,68 @@ def main(argv: list[str] | None = None) -> int:
         "verdict": verdict,
         "any_keep": any(v["keep"] for v in verdict.values()),
     }
-    (outdir / "micro_results.json").write_text(json.dumps(json_ready(payload), indent=2))
+    (outdir / json_name).write_text(json.dumps(json_ready(payload), indent=2))
     header = (
-        f"shots={args.shots} seed={args.seed} fit_maxiter={args.fit_maxiter} "
+        f"stage={tag} shots={args.shots} seed={args.seed} fit_maxiter={args.fit_maxiter} "
         f"wall={payload['wall_s']:.1f}s  any_keep={payload['any_keep']}"
     )
-    write_scoreboard(outdir / "micro_scoreboard.md", records, verdict, header)
-    print(f"\nwrote {outdir / 'micro_results.json'}")
-    print(f"wrote {outdir / 'micro_scoreboard.md'}")
+    write_scoreboard(outdir / md_name, records, verdict, header, new_methods=new_methods)
+    print(f"\nwrote {outdir / json_name}")
+    print(f"wrote {outdir / md_name}")
     print(f"any KEEP: {payload['any_keep']}")
+    return payload
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    outdir = Path(args.outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+    stage = args.stage
+    if stage == "micro":
+        methods = tuple(x.strip() for x in (args.methods or ",".join(ROUND2_METHODS)).split(",") if x.strip())
+        cells = list(HARD_CELLS) if args.cells == "all" else [c for c in HARD_CELLS if c["id"] in args.cells.split(",")]
+        _run_batch(cells, methods, NEW_METHODS, args, outdir, "round2_micro", "micro_results.json", "micro_scoreboard.md")
+        return 0
+    if stage in ("b", "all"):
+        methods = tuple(x.strip() for x in (args.methods or ",".join(STAGE_B_METHODS)).split(",") if x.strip())
+        cells = list(HARD_CELLS) + list(SNAP_CELLS)
+        _run_batch(
+            cells,
+            methods,
+            STAGE_B_NEW,
+            args,
+            outdir,
+            "round2_stage_b",
+            "stage_b_results.json",
+            "stage_b_scoreboard.md",
+        )
+    if stage in ("active", "all"):
+        t0 = time.time()
+        payload = run_active_twins(
+            shots=int(args.shots), seed=int(args.seed), fit_maxiter=int(args.fit_maxiter), outdir=outdir
+        )
+        payload["wall_s"] = time.time() - t0
+        (outdir / "active_results.json").write_text(json.dumps(json_ready(payload), indent=2))
+        lines = ["# Active twin add (40 span + 10 Fisher-greedy)", "", f"wall={payload['wall_s']:.1f}s", ""]
+        lines.append("| id | raw | select40 | gdr40 | gdr50 | select50 | Δ gdr50−select40 |")
+        lines.append("|---|---:|---:|---:|---:|---:|---:|")
+        for rec in payload["records"]:
+            m = rec["metrics"]
+
+            def f(name):
+                t = (m.get(name) or {}).get("tvd")
+                return "—" if t is None else f"{t:.4f}"
+
+            sel = (m.get("gdr_select") or {}).get("tvd")
+            g50 = (m.get("gdr_active50") or {}).get("tvd")
+            d = "—" if sel is None or g50 is None else f"{g50 - sel:+.4f}"
+            lines.append(
+                f"| {rec['id']} | {f('raw')} | {f('gdr_select')} | {f('gdr_param')} | "
+                f"{f('gdr_active50')} | {f('gdr_select_50')} | {d} |"
+            )
+        (outdir / "active_scoreboard.md").write_text("\n".join(lines) + "\n")
+        print(f"wrote {outdir / 'active_results.json'}")
+        print(f"wrote {outdir / 'active_scoreboard.md'}")
     return 0
 
 

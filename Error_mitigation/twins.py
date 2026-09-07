@@ -400,6 +400,78 @@ def designed_twin_plan_grid(
     return t_list, scales
 
 
+def eta_fisher_score(p_hist: np.ndarray) -> float:
+    """Predicted binomial-η Fisher scale: Σ n(n−1)p(n) on both modes."""
+    arr = np.clip(np.asarray(p_hist, dtype=float), 0.0, None)
+    total = float(arr.sum())
+    if total <= 0.0:
+        return 0.0
+    arr = arr / total
+    pn = arr.sum(axis=(0, 2))
+    pm = arr.sum(axis=(0, 1))
+    n = np.arange(pn.size, dtype=float)
+    m = np.arange(pm.size, dtype=float)
+    return float(np.dot(pn, n * (n - 1.0)) + np.dot(pm, m * (m - 1.0)))
+
+
+def propose_active_gaussian_twins(
+    sim,
+    x_target: np.ndarray,
+    existing_p: list[np.ndarray],
+    rng: np.random.Generator,
+    *,
+    n_extra: int = 10,
+    n_pool: int = 80,
+    mag_lo: float = 0.20,
+    mag_hi: float = 1.50,
+) -> list[dict]:
+    """Noiseless pool → pick n_extra Gaussian twins maximizing η-Fisher × diversity.
+
+    Diversity is min TVD to already-chosen / existing ideal histograms so the
+    extra twins are not copies of the span roster. Callers must still simulate
+    the noisy histograms (the expensive step).
+    """
+    from .metrics import total_variation
+
+    ansatz = str(sim.ansatz).lower()
+    ndepth = int(sim.ndepth)
+    n_extra = int(n_extra)
+    n_pool = int(max(n_pool, n_extra))
+    scales = np.geomspace(max(float(mag_lo), 1e-3), max(float(mag_hi), float(mag_lo)), num=n_pool)
+    pool = []
+    for s in scales:
+        mag = (float(s), float(s))
+        if ansatz == "ecd":
+            x = make_ecd_twin(x_target, ndepth, rng, t_free=0, mag_scale_range=mag)
+        else:
+            x = make_snap_twin(
+                x_target, ndepth, rng, t_free=0, nfocks=sim.nfocks, mag_scale_range=mag
+            )
+        p = statevector_histogram(sim, x)
+        pool.append({"x": np.asarray(x, dtype=float), "p_ideal": p, "fisher": eta_fisher_score(p)})
+    chosen: list[dict] = []
+    ref = [np.asarray(p, dtype=float) for p in existing_p]
+    for _ in range(n_extra):
+        best_i = None
+        best_score = -1.0
+        for i, cand in enumerate(pool):
+            if any(np.allclose(cand["x"], c["x"]) for c in chosen):
+                continue
+            dmin = min((total_variation(cand["p_ideal"], q) for q in ref), default=1.0)
+            score = float(cand["fisher"]) * float(max(dmin, 1e-6))
+            if score > best_score:
+                best_score = score
+                best_i = i
+        if best_i is None:
+            break
+        pick = pool[best_i]
+        pick = {**pick, "score": best_score, "t_free": 0}
+        chosen.append(pick)
+        ref.append(pick["p_ideal"])
+        pool.pop(best_i)
+    return chosen
+
+
 def build_twins(
     sim,
     x_target: np.ndarray,

@@ -900,6 +900,201 @@ def fit_gdr_eta(
     )
 
 
+JOINT_LAMBDAS = (0.0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2)
+JOINT_TOP_M = 8
+
+
+def top_energy_bin_indices(energy_tensor: np.ndarray, m: int = JOINT_TOP_M) -> np.ndarray:
+    """Indices of the M bins with largest |E| (raveled q,n,m). Not twin-energy weights."""
+    e = np.asarray(energy_tensor, dtype=float).reshape(-1)
+    m = int(max(1, min(int(m), e.size)))
+    return np.argsort(np.abs(e))[-m:]
+
+
+def multinomial_nll_joint(
+    theta: np.ndarray,
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    n_shots: int,
+    dims: tuple[int, int, int],
+    bin_idx: np.ndarray,
+    lam: float,
+) -> float:
+    nll = multinomial_nll(theta, p_ideals, q_obs, n_shots, dims)
+    if float(lam) <= 0.0:
+        return nll
+    cq, c1, c2 = params_to_kernels(theta, dims)
+    shots = max(int(n_shots), 1)
+    idx = np.asarray(bin_idx, dtype=int)
+    pen = 0.0
+    for p, q in zip(p_ideals, q_obs):
+        pred = np.clip(apply_transfer(p, cq, c1, c2).reshape(-1), 0.0, None)
+        obs = np.clip(np.asarray(q, dtype=float).reshape(-1), 0.0, None)
+        pred = pred / max(float(pred.sum()), EPS_PROB)
+        obs = obs / max(float(obs.sum()), EPS_PROB)
+        diff = pred[idx] - obs[idx]
+        pen += float(np.dot(diff, diff))
+    nll += 0.5 * float(lam) * shots * max(len(p_ideals), 1) * pen
+    return nll
+
+
+def fit_gdr_joint(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    energy_tensor: np.ndarray,
+    *,
+    maxiter: int = 200,
+    top_m: int = JOINT_TOP_M,
+    lambdas: tuple[float, ...] = JOINT_LAMBDAS,
+    holdout_frac: float = 0.25,
+    refit_all: bool = True,
+) -> tuple[np.ndarray, dict]:
+    """Histogram MLE plus a tiny holdout-tuned match on the top-|E| bins.
+
+    Distinct from banned energy-weighted *twin* weights: every twin still
+    counts equally; extra mass is only on a few Hamiltonian bins.
+    """
+    n = len(p_ideals)
+    train_i, hold_i = holdout_indices(n, holdout_frac)
+    p_tr, q_tr = _select(p_ideals, train_i), _select(q_obs, train_i)
+    p_h, q_h = _select(p_ideals, hold_i), _select(q_obs, hold_i)
+    bin_idx = top_energy_bin_indices(energy_tensor, top_m)
+    x0 = initial_theta(cfg, spec, ndepth)
+    best = None
+    path = []
+    for lam in lambdas:
+        result = optimize.minimize(
+            multinomial_nll_joint,
+            x0,
+            args=(p_tr, q_tr, spec.n_shots, dims, bin_idx, float(lam)),
+            method="L-BFGS-B",
+            bounds=PARAM_BOUNDS,
+            options={"maxiter": int(maxiter), "ftol": 1e-10},
+        )
+        theta = np.clip(
+            np.asarray(result.x, dtype=float),
+            [b[0] for b in PARAM_BOUNDS],
+            [b[1] for b in PARAM_BOUNDS],
+        )
+        cq, c1, c2 = params_to_kernels(theta, dims)
+        hold_tvd = score_unfold_tvd(p_h, q_h, cq, c1, c2)
+        rec = {"lam": float(lam), "hold_tvd": float(hold_tvd)}
+        path.append(rec)
+        if best is None or hold_tvd < best[0] - 1e-15:
+            best = (hold_tvd, float(lam), theta)
+    assert best is not None
+    lam_star, theta = best[1], best[2]
+    if refit_all:
+        result = optimize.minimize(
+            multinomial_nll_joint,
+            x0,
+            args=(p_ideals, q_obs, spec.n_shots, dims, bin_idx, lam_star),
+            method="L-BFGS-B",
+            bounds=PARAM_BOUNDS,
+            options={"maxiter": int(maxiter), "ftol": 1e-10},
+        )
+        theta = np.clip(
+            np.asarray(result.x, dtype=float),
+            [b[0] for b in PARAM_BOUNDS],
+            [b[1] for b in PARAM_BOUNDS],
+        )
+    return theta, _fit_info(
+        theta,
+        cfg,
+        spec,
+        ndepth,
+        {
+            "kind": "gdr_joint",
+            "lam": lam_star,
+            "hold_tvd": float(best[0]),
+            "top_m": int(top_m),
+            "path": path,
+        },
+    )
+
+
+def bootstrap_twin_thetas(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    k: int = 5,
+    seed: int = 0,
+    maxiter: int = 80,
+) -> list[np.ndarray]:
+    """K GDR fits on twin-bootstrap resamples (with replacement)."""
+    rng = np.random.default_rng(int(seed))
+    n = max(len(p_ideals), 1)
+    thetas: list[np.ndarray] = []
+    for _ in range(int(k)):
+        idx = rng.integers(0, n, size=n)
+        p_b = [p_ideals[int(i)] for i in idx]
+        q_b = [q_obs[int(i)] for i in idx]
+        theta, _ = fit_gdr_param(p_b, q_b, cfg, spec, ndepth, dims, maxiter=maxiter)
+        thetas.append(theta)
+    return thetas
+
+
+def average_unfolds(
+    q_obs: np.ndarray,
+    thetas: list[np.ndarray],
+    dims: tuple[int, int, int],
+) -> tuple[np.ndarray, list[np.ndarray]]:
+    members = []
+    acc = None
+    for theta in thetas:
+        p = unfold(q_obs, *params_to_kernels(theta, dims))
+        members.append(p)
+        acc = p if acc is None else acc + p
+    if acc is None:
+        p = np.clip(np.asarray(q_obs, dtype=float), 0.0, None)
+        s = float(p.sum())
+        p = p / s if s > 0.0 else np.full(p.shape, 1.0 / p.size)
+        return p, []
+    acc = np.clip(acc / max(len(thetas), 1), 0.0, None)
+    s = float(acc.sum())
+    acc = acc / s if s > 0.0 else np.full(acc.shape, 1.0 / acc.size)
+    return acc, members
+
+
+def fit_gdr_ensemble(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    q_target: np.ndarray,
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    k: int = 5,
+    seed: int = 0,
+    maxiter: int = 80,
+) -> tuple[np.ndarray, dict]:
+    """Average K bootstrap unfolds. Returns the averaged histogram, not θ."""
+    thetas = bootstrap_twin_thetas(
+        p_ideals, q_obs, cfg, spec, ndepth, dims, k=k, seed=seed, maxiter=maxiter
+    )
+    hist, members = average_unfolds(q_target, thetas, dims)
+    info = {
+        "kind": "gdr_ensemble",
+        "k": int(k),
+        "seed": int(seed),
+        "member_etas": [
+            {"eta1": float(th[0]), "eta2": float(th[1])} for th in thetas
+        ],
+        "n_members": len(members),
+        "members": members,
+    }
+    return hist, info
+
+
 def _freeze_bounds(free_idx: tuple[int, ...], x0: np.ndarray):
     bounds = []
     for i, (lo, hi) in enumerate(PARAM_BOUNDS):
