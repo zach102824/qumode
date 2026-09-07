@@ -25,12 +25,19 @@ from Error_mitigation.mitigation import (
     holdout_indices,
     observe_histogram,
     select_by_holdout,
+    select_kt_method,
     select_research_method,
     choose_mix_alpha,
     classify_opt_quality,
+    anneal_identity_weight,
+    anneal_prior_theta,
+    fisher_twin_weights,
     fit_gdr_afterburn,
+    fit_gdr_anneal,
     fit_gdr_band,
+    fit_gdr_eta,
     fit_gdr_split,
+    mild_residual_allowed,
     oracle_kernels,
     readout_then_zne,
     richardson_lucy,
@@ -39,7 +46,7 @@ from Error_mitigation.mitigation import (
     zne_histogram,
     zne_then_readout,
 )
-from Error_mitigation.twins import designed_twin_plan
+from Error_mitigation.twins import designed_twin_plan, designed_twin_plan_grid
 from Error_mitigation.noise_models import (
     circuit_noise,
     is_trivial_readout,
@@ -429,3 +436,140 @@ def test_slice_twin_indices_even_subset():
     assert keep10.size == 10
     assert keep10[0] == 0
     assert keep10[-1] == 39
+
+
+def test_anneal_prior_pulls_eta_to_one_at_mild_kt():
+    cfg = circuit_noise("loss", 0.003)
+    spec = readout_spec("ideal", n_shots=100)
+    assert anneal_identity_weight(0.003) == pytest.approx(1.0)
+    assert anneal_identity_weight(0.1) < 0.2
+    theta_mild = anneal_prior_theta(cfg, spec, 5, 0.003)
+    theta_high = anneal_prior_theta(cfg, spec, 5, 0.1)
+    assert theta_mild[0] == pytest.approx(1.0)
+    assert theta_mild[1] == pytest.approx(1.0)
+    assert theta_high[0] < theta_mild[0]
+
+
+def test_fit_gdr_anneal_and_eta_kinds():
+    rng = np.random.default_rng(0)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    q = p.copy()
+    cfg = circuit_noise("loss", 0.003)
+    spec = readout_spec("ideal", n_shots=200)
+    theta, info = fit_gdr_anneal([p], [q], cfg, spec, 5, (2, 8, 8), 0.003, maxiter=15)
+    assert info["kind"] == "gdr_anneal"
+    assert theta.shape == (11,)
+    theta_e, info_e = fit_gdr_eta([p], [q], cfg, spec, 5, (2, 8, 8), maxiter=15)
+    assert info_e["kind"] == "gdr_eta"
+    assert info_e["fitted"]["p_down"] == pytest.approx(0.0)
+
+
+def test_fisher_twin_weights_positive_and_normalized():
+    rng = np.random.default_rng(1)
+    ps = []
+    for _ in range(4):
+        a = rng.random((2, 8, 8))
+        ps.append(a / a.sum())
+    w = fisher_twin_weights(ps)
+    assert w.shape == (4,)
+    assert np.all(w > 0)
+    assert w.sum() == pytest.approx(4.0)
+
+
+def test_select_kt_never_residual_on_comprehensive_high():
+    name, extra = select_kt_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_residual", 0.01), ("gdr_damped", 0.03)],
+        kappa_tau=0.1,
+        family="comprehensive",
+        circuit_kind="optimized",
+        residual_hops=0.01,
+        residual_tfree=0.01,
+        gdr_tfree=0.05,
+    )
+    assert name == "gdr_param"
+    assert extra["reason"] == "optimized_gdr"
+    name_r, extra_r = select_kt_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.03)],
+        kappa_tau=0.1,
+        family="comprehensive",
+        circuit_kind="random",
+        residual_hops=0.01,
+        residual_tfree=0.01,
+        gdr_tfree=0.05,
+    )
+    assert name_r != "gdr_residual"
+    assert extra_r["reason"] == "kt_holdout"
+
+
+def test_mild_residual_gate():
+    assert mild_residual_allowed(circuit_kind="optimized", family="loss", kappa_tau=0.003)
+    assert not mild_residual_allowed(
+        circuit_kind="optimized", family="comprehensive", kappa_tau=0.003
+    )
+    assert not mild_residual_allowed(circuit_kind="optimized", family="loss", kappa_tau=0.1)
+    assert not mild_residual_allowed(circuit_kind="random", family="loss", kappa_tau=0.003)
+    name, extra = select_kt_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.03)],
+        kappa_tau=0.003,
+        family="loss",
+        circuit_kind="optimized",
+        residual_hops=0.02,
+        residual_tfree=0.02,
+        gdr_tfree=0.05,
+    )
+    assert name == "gdr_residual"
+    assert extra["reason"] == "mild_residual"
+
+
+def test_designed_twin_plan_grid_chebyshev():
+    t_free, scales = designed_twin_plan_grid(
+        12, ndepth=5, n_rank2=3, mag_lo=0.25, mag_hi=1.35, spacing="chebyshev"
+    )
+    assert len(t_free) == 12
+    assert len(scales) == 12
+    assert min(scales) == pytest.approx(0.25)
+    assert max(scales) == pytest.approx(1.35)
+    log_plan = designed_twin_plan(12, ndepth=5, n_rank2=3, mag_lo=0.25, mag_hi=1.35)[1]
+    assert scales != log_plan
+
+
+def test_round2_dropped_and_ban_list_on_disk():
+    dropped = ROOT / "Error_mitigation" / "out_research" / "round2" / "DROPPED.md"
+    text = dropped.read_text()
+    for token in (
+        "gdr_full",
+        "gdr_interleave",
+        "gdr_split",
+        "gdr_band",
+        "gdr_afterburn",
+        "gdr_blend",
+        "Energy-weighted",
+        "params=auto",
+        "Span twins",
+        "gdr_residual",
+    ):
+        assert token in text
+    from Error_mitigation.run_ablation import CHEAP_METHODS, ROUND2_METHODS
+
+    banned = {
+        "gdr_full",
+        "gdr_interleave",
+        "gdr_split",
+        "gdr_band",
+        "gdr_afterburn",
+        "gdr_blend",
+        "gdr_energy",
+    }
+    assert banned.isdisjoint(ROUND2_METHODS)
+    assert banned.isdisjoint(CHEAP_METHODS)
+
+
+def test_round2_hard_cells_have_caches():
+    from Error_mitigation.run_round2 import HARD_CELLS
+
+    assert len(HARD_CELLS) == 8
+    for cell in HARD_CELLS:
+        path = Path(cell["cache"])
+        assert path.is_file(), path
+        assert path.suffix == ".npz"

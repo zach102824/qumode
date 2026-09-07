@@ -572,7 +572,10 @@ def run_readout_only(
 RIDGE_WEIGHTS = np.array([1.0, 1.0, 8.0, 8.0, 8.0, 8.0, 8.0, 1.0, 1.0, 1.0, 1.0])
 # Structured middle ground: freeze nth / hops / leak, fit (η, readout) only.
 MID_FREE_IDX = (0, 1, 7, 8, 9, 10)
+# Light circuit-noise map: fit only (η1, η2).
+ETA_FREE_IDX = (0, 1)
 DEFAULT_LAMBDAS = (0.0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1)
+ANNEAL_LAMBDAS = (0.0, 1e-4, 1e-3, 1e-2, 3e-2, 1e-1, 3e-1)
 
 
 def holdout_indices(n: int, frac: float = 0.25) -> tuple[np.ndarray, np.ndarray]:
@@ -739,6 +742,161 @@ def fit_gdr_holdout(
         spec,
         ndepth,
         {"lam": lam_star, "hold_nll": float(best[0]), "path": path, "kind": "gdr_holdout"},
+    )
+
+
+def anneal_identity_weight(kappa_tau: float) -> float:
+    """How hard to pull η toward 1 (no loss) as a function of κτ.
+
+    Mild cells over-correct; high-κτ cells need a free η.  ``0.01/κτ`` is 1
+    at 0.003 (clipped), ~0.33 at 0.03, and 0.1 at 0.1.
+    """
+    kt = max(float(kappa_tau), 1e-6)
+    return float(np.clip(0.01 / kt, 0.0, 1.0))
+
+
+def anneal_prior_theta(cfg: NoiseConfig, spec: ReadoutSpec, ndepth: int, kappa_tau: float) -> np.ndarray:
+    """Blend identity (η=1, no hops) with the oracle prior; mild → identity."""
+    oracle = initial_theta(cfg, spec, ndepth)
+    identity = np.array(
+        [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, spec.p01, spec.p10, spec.p_nn, spec.p_nn],
+        dtype=float,
+    )
+    w = anneal_identity_weight(kappa_tau)
+    return w * identity + (1.0 - w) * oracle
+
+
+def anneal_ridge_weights(kappa_tau: float) -> np.ndarray:
+    """Stronger η ridge at mild κτ; heating/hops stay strongly pulled."""
+    kt = max(float(kappa_tau), 1e-6)
+    eta_w = float(np.clip(0.03 / kt, 1.0, 12.0))
+    return np.array([eta_w, eta_w, 8.0, 8.0, 8.0, 8.0, 8.0, 1.0, 1.0, 1.0, 1.0], dtype=float)
+
+
+def fit_gdr_anneal(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    kappa_tau: float,
+    *,
+    maxiter: int = 200,
+    holdout_frac: float = 0.25,
+    lambdas: tuple[float, ...] = ANNEAL_LAMBDAS,
+    weights: np.ndarray | None = None,
+    refit_all: bool = True,
+) -> tuple[np.ndarray, dict]:
+    """Holdout-λ GDR with a κτ-annealed prior toward η=1 at mild noise."""
+    n = len(p_ideals)
+    train_i, hold_i = holdout_indices(n, holdout_frac)
+    x0 = anneal_prior_theta(cfg, spec, ndepth, kappa_tau)
+    rw = anneal_ridge_weights(kappa_tau)
+    w = None if weights is None else np.asarray(weights, dtype=float)
+    w_tr = None if w is None else w[train_i]
+    p_tr, q_tr = _select(p_ideals, train_i), _select(q_obs, train_i)
+    p_h, q_h = _select(p_ideals, hold_i), _select(q_obs, hold_i)
+    best = None
+    path = []
+    for lam in lambdas:
+        theta = _minimize_theta(
+            x0,
+            PARAM_BOUNDS,
+            (p_tr, q_tr, spec.n_shots, dims, w_tr, x0, float(lam), rw),
+            maxiter,
+        )
+        hold_nll = multinomial_nll_weighted(theta, p_h, q_h, spec.n_shots, dims, None, None, 0.0, None)
+        rec = {"lam": float(lam), "hold_nll": float(hold_nll)}
+        path.append(rec)
+        if best is None or hold_nll < best[0]:
+            best = (hold_nll, float(lam), theta)
+    assert best is not None
+    lam_star, theta = best[1], best[2]
+    if refit_all:
+        theta = _minimize_theta(
+            x0,
+            PARAM_BOUNDS,
+            (p_ideals, q_obs, spec.n_shots, dims, w, x0, lam_star, rw),
+            maxiter,
+        )
+    return theta, _fit_info(
+        theta,
+        cfg,
+        spec,
+        ndepth,
+        {
+            "lam": lam_star,
+            "hold_nll": float(best[0]),
+            "path": path,
+            "kind": "gdr_anneal",
+            "identity_weight": anneal_identity_weight(kappa_tau),
+            "kappa_tau": float(kappa_tau),
+        },
+    )
+
+
+def fisher_twin_weights(p_ideals: list[np.ndarray]) -> np.ndarray:
+    """Weight twins by Σ n(n−1)p(n) (binomial-η Fisher scale). Not energy."""
+    ws = []
+    for p in p_ideals:
+        arr = np.clip(np.asarray(p, dtype=float), 0.0, None)
+        total = float(arr.sum())
+        if total <= 0.0:
+            ws.append(1e-6)
+            continue
+        arr = arr / total
+        pn = arr.sum(axis=(0, 2))
+        pm = arr.sum(axis=(0, 1))
+        n = np.arange(pn.size, dtype=float)
+        m = np.arange(pm.size, dtype=float)
+        g = float(np.dot(pn, n * (n - 1.0)) + np.dot(pm, m * (m - 1.0)))
+        ws.append(max(g, 1e-6))
+    w = np.asarray(ws, dtype=float)
+    return w * (w.size / float(w.sum()))
+
+
+def fit_gdr_fisher(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 200,
+) -> tuple[np.ndarray, dict]:
+    """Holdout-λ GDR with Fisher (n(n−1)) twin weights — not energy weights."""
+    w = fisher_twin_weights(p_ideals)
+    theta, info = fit_gdr_holdout(
+        p_ideals, q_obs, cfg, spec, ndepth, dims, maxiter=maxiter, weights=w
+    )
+    info["kind"] = "gdr_fisher"
+    info["fisher_weights"] = [float(x) for x in w]
+    return theta, info
+
+
+def fit_gdr_eta(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    *,
+    maxiter: int = 200,
+    weights: np.ndarray | None = None,
+) -> tuple[np.ndarray, dict]:
+    """Fit only (η1, η2); freeze heating, hops, leak, and readout."""
+    x0 = initial_theta(cfg, spec, ndepth)
+    theta = _minimize_theta(
+        x0,
+        _freeze_bounds(ETA_FREE_IDX, x0),
+        (p_ideals, q_obs, spec.n_shots, dims, weights, None, 0.0, None),
+        maxiter,
+    )
+    return theta, _fit_info(
+        theta, cfg, spec, ndepth, {"kind": "gdr_eta", "free": [PARAM_NAMES[i] for i in ETA_FREE_IDX]}
     )
 
 
@@ -1361,6 +1519,87 @@ def select_research_method(
         return "gdr_afterburn", extra
     name, score, ranked = select_by_holdout(cand_hold)
     extra.update({"reason": "holdout", "hold_tvd": float(score), "ranked": ranked})
+    return name, extra
+
+
+# Methods that lost microbenches in PR #8. Keep the functions, never select them.
+BANNED_SELECT_NAMES = frozenset(
+    {
+        "gdr_full",
+        "gdr_interleave",
+        "gdr_split",
+        "gdr_band",
+        "gdr_afterburn",
+        "gdr_blend",
+        "gdr_energy",
+    }
+)
+
+
+def mild_residual_allowed(
+    *,
+    circuit_kind: str | None,
+    family: str | None,
+    kappa_tau: float | None,
+) -> bool:
+    """Residual only on optimized loss/thermal at κτ≤0.01. Never on comprehensive."""
+    kind = str(circuit_kind or "").lower()
+    fam = str(family or "").lower()
+    if kind != "optimized":
+        return False
+    if fam not in ("loss", "loss_thermal_dephasing"):
+        return False
+    if kappa_tau is None:
+        return False
+    return float(kappa_tau) <= 0.01 + 1e-12
+
+
+def select_kt_method(
+    cand_hold: list[tuple[str, float]],
+    *,
+    kappa_tau: float,
+    family: str,
+    circuit_kind: str | None = None,
+    residual_hops: float | None = None,
+    residual_tfree: float | None = None,
+    gdr_tfree: float | None = None,
+    hop_cap: float = 0.06,
+    tfree_margin: float = 0.005,
+) -> tuple[str, dict]:
+    """Holdout selector with a κτ/family gate. Does not peek at the target.
+
+    Distinct from ``select_research_method``: residual is allowed only on
+    optimized mild loss/thermal, never on comprehensive or high-κτ, and
+    banned PR #8 losers are stripped from the pool.
+    """
+    kind = None if circuit_kind is None else str(circuit_kind).lower()
+    fam = str(family or "").lower()
+    kt = float(kappa_tau)
+    extra: dict = {
+        "reason": "kt_holdout",
+        "circuit_kind": kind,
+        "family": fam,
+        "kappa_tau": kt,
+        "residual_hops": None if residual_hops is None else float(residual_hops),
+    }
+    if mild_residual_allowed(circuit_kind=kind, family=fam, kappa_tau=kt):
+        hops = 0.0 if residual_hops is None else float(residual_hops)
+        if (
+            residual_tfree is not None
+            and gdr_tfree is not None
+            and hops <= hop_cap
+            and float(residual_tfree) <= float(gdr_tfree) - tfree_margin
+        ):
+            extra["reason"] = "mild_residual"
+            return "gdr_residual", extra
+    if kind == "optimized":
+        extra["reason"] = "optimized_gdr"
+        return "gdr_param", extra
+    cands = [(n, s) for n, s in cand_hold if n not in BANNED_SELECT_NAMES and n != "gdr_residual"]
+    if not cands:
+        cands = list(cand_hold)
+    name, score, ranked = select_by_holdout(cands)
+    extra.update({"hold_tvd": float(score), "ranked": ranked})
     return name, extra
 
 

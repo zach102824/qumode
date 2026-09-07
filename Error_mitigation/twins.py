@@ -354,6 +354,52 @@ def designed_twin_plan(
     return t_list, scales
 
 
+def designed_twin_plan_grid(
+    n_train: int,
+    ndepth: int,
+    *,
+    n_rank2: int | None = None,
+    mag_lo: float = 0.25,
+    mag_hi: float = 1.35,
+    extra_t_free: int = 0,
+    spacing: str = "chebyshev",
+) -> tuple[list[int], list[float]]:
+    """Amplitude grid in |α|² for random-circuit twins (not span-on-optimized).
+
+    Chebyshev nodes on [|α_lo|², |α_hi|²] put Fisher mass at the ends and
+    the interior, unlike log-spaced |α| (``designed_twin_plan``). Linear
+    spacing is the other cheap grid. Do not use this plan as the optimized
+    default — span-on-optimized is a known loser.
+    """
+    t_list, _ = designed_twin_plan(
+        n_train,
+        ndepth,
+        n_rank2=n_rank2,
+        mag_lo=mag_lo,
+        mag_hi=mag_hi,
+        extra_t_free=extra_t_free,
+    )
+    n_tot = len(t_list)
+    if n_tot == 0:
+        return [], []
+    lo = max(float(mag_lo), 1e-3)
+    hi = max(float(mag_hi), lo)
+    n2_lo, n2_hi = lo * lo, hi * hi
+    kind = str(spacing).lower()
+    if n_tot == 1:
+        n2 = np.array([0.5 * (n2_lo + n2_hi)])
+    elif kind == "linear":
+        n2 = np.linspace(n2_lo, n2_hi, num=n_tot)
+    else:
+        k = np.arange(n_tot, dtype=float)
+        xs = np.cos(np.pi * (k + 0.5) / n_tot)
+        n2 = np.sort(0.5 * (n2_hi + n2_lo) + 0.5 * (n2_hi - n2_lo) * xs)
+    scales = [float(np.sqrt(max(v, 1e-12))) for v in n2]
+    scales[0] = lo
+    scales[-1] = hi
+    return t_list, scales
+
+
 def build_twins(
     sim,
     x_target: np.ndarray,

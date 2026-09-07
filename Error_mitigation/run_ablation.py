@@ -41,6 +41,9 @@ from Error_mitigation.mitigation import (
     holdout_indices,
     score_unfold_tvd,
     fit_gdr_afterburn,
+    fit_gdr_anneal,
+    fit_gdr_eta,
+    fit_gdr_fisher,
     fit_gdr_holdout,
     fit_gdr_interleave,
     fit_gdr_mid,
@@ -52,6 +55,7 @@ from Error_mitigation.mitigation import (
     fit_gdr_tfree,
     choose_mix_alpha,
     classify_opt_quality,
+    select_kt_method,
     select_research_method,
     tfree_indices,
     fit_scalar_cdr,
@@ -65,6 +69,7 @@ from Error_mitigation.mitigation import (
     unfold,
     zne_histogram,
     zne_then_readout,
+    mild_residual_allowed,
 )
 from Error_mitigation.noise_models import (
     CIRCUIT_FAMILIES,
@@ -86,7 +91,7 @@ from Error_mitigation.run_mitigation_experiment import (
     physical_probs,
     write_summary_txt,
 )
-from Error_mitigation.twins import build_twins, designed_twin_plan
+from Error_mitigation.twins import build_twins, designed_twin_plan, designed_twin_plan_grid
 
 HERE = Path(__file__).resolve().parent
 BASELINE_OUT = HERE / "out"
@@ -114,6 +119,13 @@ ALL_METHODS = (
     "gdr_blend",
     "gdr_energy",
     "gdr_select",
+    "gdr_anneal",
+    "gdr_eta",
+    "gdr_fisher",
+    "gdr_select_kt",
+    "gdr_mild_residual",
+    "readout_then_gdr",
+    "gdr_then_rtz",
     "gdr_split",
     "gdr_band",
     "scalar_cdr",
@@ -122,6 +134,7 @@ ALL_METHODS = (
     "zne_then_readout",
 )
 
+# Ban-list methods stay importable but are not the default ablation path.
 CHEAP_METHODS = (
     "raw",
     "readout_only",
@@ -135,15 +148,36 @@ CHEAP_METHODS = (
     "gdr_mid",
     "gdr_tfree",
     "gdr_residual",
-    "gdr_afterburn",
-    "gdr_interleave",
-    "gdr_blend",
     "gdr_select",
-    "gdr_split",
-    "gdr_band",
+    "gdr_anneal",
+    "gdr_eta",
+    "gdr_fisher",
+    "gdr_select_kt",
+    "gdr_mild_residual",
+    "readout_then_gdr",
+    "gdr_then_rtz",
     "zne_idle",
     "readout_then_zne",
     "zne_then_readout",
+)
+
+ROUND2_METHODS = (
+    "raw",
+    "readout_only",
+    "oracle_binomial",
+    "gdr_param",
+    "gdr_damped",
+    "gdr_mid",
+    "gdr_select",
+    "gdr_anneal",
+    "gdr_eta",
+    "gdr_fisher",
+    "gdr_select_kt",
+    "gdr_mild_residual",
+    "readout_then_gdr",
+    "gdr_then_rtz",
+    "readout_then_zne",
+    "zne_idle",
 )
 
 
@@ -199,6 +233,18 @@ def save_cache(path: Path, blob: dict) -> None:
     path.with_suffix(".json").write_text(json.dumps(json_ready(meta), indent=2))
 
 
+def find_cache_file(cache_dir: Path, key: str, extra_dirs: list[Path] | None = None) -> Path:
+    """Look in cache_dir first, then extra search paths (PR #8 / multi_h caches)."""
+    name = f"{key}.npz"
+    candidates = [Path(cache_dir) / name]
+    for d in extra_dirs or []:
+        candidates.append(Path(d) / name)
+    for path in candidates:
+        if path.is_file():
+            return path
+    return Path(cache_dir) / name
+
+
 def load_cache(path: Path) -> dict | None:
     if not path.is_file():
         return None
@@ -225,10 +271,11 @@ def build_or_load_physics(
     tag = twin_tag(args)
     hid = int(getattr(args, "instance", 0) or 0)
     key = cache_key(ansatz, pset, family, kt, n_train, tag, hid=hid)
-    path = cache_dir / f"{key}.npz"
+    extra = [Path(p) for p in (getattr(args, "cache_dirs", None) or [])]
+    path = find_cache_file(cache_dir, key, extra)
     cached = None if args.no_cache else load_cache(path)
     if cached is not None:
-        print(f"    cache hit {path.name}")
+        print(f"    cache hit {path}")
         return cached
 
     ndepth = int(ANSATZ_SPEC[ansatz]["ndepth"])
@@ -242,6 +289,17 @@ def build_or_load_physics(
             mag_lo=args.mag_lo,
             mag_hi=args.mag_hi,
             extra_t_free=args.extra_t_free,
+        )
+        twins = build_twins(sim_ideal, xvec, rng_tw, t_free_list=t_list, mag_scales=scales)
+    elif args.twin_design == "grid":
+        t_list, scales = designed_twin_plan_grid(
+            n_train,
+            ndepth,
+            n_rank2=args.n_rank2,
+            mag_lo=args.mag_lo,
+            mag_hi=args.mag_hi,
+            extra_t_free=args.extra_t_free,
+            spacing=getattr(args, "grid_spacing", "chebyshev") or "chebyshev",
         )
         twins = build_twins(sim_ideal, xvec, rng_tw, t_free_list=t_list, mag_scales=scales)
     elif args.twin_design == "more_tfree":
@@ -389,6 +447,7 @@ def mitigate_research(
     p_safe_twins = [safe_histogram(q, spec, DIMS) for q in q_twins]
     out: dict = {}
     kernels: dict[str, tuple] = {}
+    extra_kernels: dict[str, tuple] = {}
 
     if "raw" in methods:
         out["raw"] = {"hist": q_obs, "energy": e_obs}
@@ -422,6 +481,9 @@ def mitigate_research(
             "gdr_reg",
             "gdr_full",
             "gdr_select",
+            "gdr_select_kt",
+            "gdr_mild_residual",
+            "gdr_then_rtz",
             "gdr_split",
             "gdr_band",
         )
@@ -517,7 +579,7 @@ def mitigate_research(
         out["gdr_tfree"] = {"hist": p, "energy": energy_from_histogram(p, energy_tensor), "fit": info}
 
     info_res: dict | None = None
-    if "gdr_residual" in methods or "gdr_select" in methods:
+    if "gdr_residual" in methods or "gdr_select" in methods or "gdr_mild_residual" in methods or "gdr_select_kt" in methods:
         (cq, c1, c2), info_res = fit_gdr_residual(
             p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=min(fit_maxiter, 120), t_free=t_free
         )
@@ -605,6 +667,107 @@ def mitigate_research(
             "energy": energy_from_histogram(p, energy_tensor),
             "fit": info_bd,
             "residual_tvd": oracle_residual(p_ideal, q_obs, cq, c1, c2),
+        }
+
+    kt_fit = 0.03 if kappa_tau is None else float(kappa_tau)
+    if "gdr_anneal" in methods or "gdr_select_kt" in methods:
+        theta_an, info_an = fit_gdr_anneal(
+            p_twin, q_twins, cfg, spec, ndepth, DIMS, kt_fit, maxiter=fit_maxiter
+        )
+        cq, c1, c2 = _kernels_from_fit(theta_an, DIMS)
+        extra_kernels["gdr_anneal"] = (cq, c1, c2)
+        p = unfold(q_obs, cq, c1, c2)
+        if "gdr_anneal" in methods:
+            out["gdr_anneal"] = {
+                "hist": p,
+                "energy": energy_from_histogram(p, energy_tensor),
+                "fit": info_an,
+            }
+
+    if "gdr_eta" in methods or "gdr_select_kt" in methods:
+        theta_e, info_e = fit_gdr_eta(p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter)
+        cq, c1, c2 = _kernels_from_fit(theta_e, DIMS)
+        extra_kernels["gdr_eta"] = (cq, c1, c2)
+        p = unfold(q_obs, cq, c1, c2)
+        if "gdr_eta" in methods:
+            out["gdr_eta"] = {
+                "hist": p,
+                "energy": energy_from_histogram(p, energy_tensor),
+                "fit": info_e,
+            }
+
+    if "gdr_fisher" in methods or "gdr_select_kt" in methods:
+        theta_f, info_f = fit_gdr_fisher(
+            p_twin, q_twins, cfg, spec, ndepth, DIMS, maxiter=fit_maxiter
+        )
+        cq, c1, c2 = _kernels_from_fit(theta_f, DIMS)
+        extra_kernels["gdr_fisher"] = (cq, c1, c2)
+        p = unfold(q_obs, cq, c1, c2)
+        if "gdr_fisher" in methods:
+            out["gdr_fisher"] = {
+                "hist": p,
+                "energy": energy_from_histogram(p, energy_tensor),
+                "fit": info_f,
+            }
+
+    if "readout_then_gdr" in methods:
+        from dataclasses import replace as _replace
+
+        q_corr = [safe_histogram(q, spec, DIMS) for q in q_twins]
+        q_tgt = p_safe_target
+        spec_ideal = _replace(spec, p01=0.0, p10=0.0, p_nn=0.0, level="ideal")
+        theta_rg, info_rg = fit_gdr_eta(
+            p_twin, q_corr, cfg, spec_ideal, ndepth, DIMS, maxiter=fit_maxiter
+        )
+        cq, c1, c2 = _kernels_from_fit(theta_rg, DIMS)
+        extra_kernels["readout_then_gdr"] = (cq, c1, c2)
+        p = unfold(q_tgt, cq, c1, c2)
+        info_rg = {**info_rg, "kind": "readout_then_gdr"}
+        out["readout_then_gdr"] = {
+            "hist": p,
+            "energy": energy_from_histogram(p, energy_tensor),
+            "fit": info_rg,
+        }
+
+    if "gdr_then_rtz" in methods and "gdr_param" in kernels:
+        p_g = unfold(q_obs, *kernels["gdr_param"])
+        if 1 in hist_by_scale and 2 in hist_by_scale:
+            p_z = readout_then_zne(hist_by_scale, spec, DIMS)
+        else:
+            p_z = p_safe_target
+        gdr_u = [unfold(q, *kernels["gdr_param"]) for q in q_twins]
+        beta, binfo = choose_mix_alpha(p_twin, gdr_u, p_safe_twins)
+        p_mix = damp_histogram(p_g, p_z, beta)
+        out["gdr_then_rtz"] = {
+            "hist": p_mix,
+            "energy": energy_from_histogram(p_mix, energy_tensor),
+            "fit": {**(fit_info_base or {}), **binfo, "kind": "gdr_then_rtz"},
+        }
+
+    if "gdr_mild_residual" in methods:
+        allow = mild_residual_allowed(
+            circuit_kind=circuit_kind, family=family, kappa_tau=kappa_tau
+        )
+        if allow and "gdr_residual" in kernels:
+            cq, c1, c2 = kernels["gdr_residual"]
+            p = unfold(q_obs, cq, c1, c2)
+            reason = "mild_residual"
+        elif "gdr_param" in kernels:
+            cq, c1, c2 = kernels["gdr_param"]
+            p = unfold(q_obs, cq, c1, c2)
+            reason = "fallback_gdr"
+        else:
+            p = p_safe_target
+            reason = "fallback_safe"
+        out["gdr_mild_residual"] = {
+            "hist": p,
+            "energy": energy_from_histogram(p, energy_tensor),
+            "fit": {
+                **(info_res or {}),
+                "kind": "gdr_mild_residual",
+                "reason": reason,
+                "allowed": allow,
+            },
         }
 
     if "gdr_energy" in methods:
@@ -714,6 +877,77 @@ def mitigate_research(
             },
         }
 
+    if "gdr_select_kt" in methods:
+        train_i, hold_i = holdout_indices(len(p_twin), 0.25)
+        if hold_i.size == 0:
+            hold_i = train_i
+        tf_i = tfree_indices(t_free)
+        if tf_i.size == 0:
+            tf_i = hold_i
+        pool = dict(kernels)
+        pool.update(extra_kernels)
+        cand_kt: list[tuple[str, float]] = [
+            (
+                "safe",
+                float(np.mean([total_variation(p_safe_twins[int(i)], p_twin[int(i)]) for i in hold_i])),
+            )
+        ]
+        for name, (cq, c1, c2) in pool.items():
+            cand_kt.append((name, score_unfold_tvd(p_twin, q_twins, cq, c1, c2, hold_i)))
+        damp_alpha_kt = 0.0
+        if "gdr_param" in pool:
+            cq, c1, c2 = pool["gdr_param"]
+            damp_alpha_kt, _ = choose_damp_alpha(
+                [p_twin[int(i)] for i in hold_i],
+                [q_twins[int(i)] for i in hold_i],
+                cq,
+                c1,
+                c2,
+                [p_safe_twins[int(i)] for i in hold_i],
+            )
+            d_tvds = []
+            for i in hold_i:
+                mix = damp_histogram(
+                    unfold(q_twins[int(i)], cq, c1, c2), p_safe_twins[int(i)], damp_alpha_kt
+                )
+                d_tvds.append(total_variation(mix, p_twin[int(i)]))
+            cand_kt.append(("gdr_damped", float(np.mean(d_tvds))))
+        res_hops_kt = None if info_res is None else float(info_res.get("hops", 0.0))
+        res_tf_kt = (
+            score_unfold_tvd(p_twin, q_twins, *pool["gdr_residual"], tf_i)
+            if "gdr_residual" in pool
+            else None
+        )
+        gdr_tf_kt = (
+            score_unfold_tvd(p_twin, q_twins, *pool["gdr_param"], tf_i) if "gdr_param" in pool else None
+        )
+        chosen_kt, extra_kt = select_kt_method(
+            cand_kt,
+            kappa_tau=0.03 if kappa_tau is None else float(kappa_tau),
+            family=str(family or ""),
+            circuit_kind=circuit_kind,
+            residual_hops=res_hops_kt,
+            residual_tfree=res_tf_kt,
+            gdr_tfree=gdr_tf_kt,
+        )
+        if chosen_kt == "safe":
+            hist_kt = p_safe_target
+        elif chosen_kt == "gdr_damped":
+            cq, c1, c2 = pool["gdr_param"]
+            hist_kt = damp_histogram(unfold(q_obs, cq, c1, c2), p_safe_target, damp_alpha_kt)
+        else:
+            hist_kt = unfold(q_obs, *pool[chosen_kt])
+        out["gdr_select_kt"] = {
+            "hist": hist_kt,
+            "energy": energy_from_histogram(hist_kt, energy_tensor),
+            "fit": {
+                "kind": "gdr_select_kt",
+                "chosen": chosen_kt,
+                "damp_alpha": float(damp_alpha_kt),
+                **extra_kt,
+            },
+        }
+
     return out
 
 
@@ -814,6 +1048,14 @@ def run(args: argparse.Namespace) -> dict:
     outdir.mkdir(parents=True, exist_ok=True)
     cache_dir = outdir / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
+    extra_dirs = [Path(p) for p in (getattr(args, "cache_dirs", None) or [])]
+    for shared in (DEFAULT_OUT / "cache", DEFAULT_OUT / "multi_h" / "cache"):
+        if not shared.is_dir():
+            continue
+        extra_res = {p.resolve() for p in extra_dirs}
+        if shared.resolve() not in extra_res and shared.resolve() != cache_dir.resolve():
+            extra_dirs.append(shared)
+    args.cache_dirs = extra_dirs
     copy_optimized_params(outdir)
 
     shots = int(args.shots)
@@ -1062,14 +1304,29 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--fit-maxiter", type=int, default=120)
     p.add_argument(
         "--twin-design",
-        choices=("default", "wide", "span", "more_tfree", "adaptive"),
+        choices=("default", "wide", "span", "more_tfree", "adaptive", "grid"),
         default="default",
+    )
+    p.add_argument(
+        "--grid-spacing",
+        choices=("chebyshev", "linear"),
+        default="chebyshev",
+        help="|α|² node rule for --twin-design grid (random-circuit research only).",
     )
     p.add_argument("--n-rank2", type=int, default=None)
     p.add_argument("--mag-lo", type=float, default=0.25)
     p.add_argument("--mag-hi", type=float, default=1.35)
     p.add_argument("--extra-t-free", type=int, default=0)
     p.add_argument("--no-cache", action="store_true")
+    p.add_argument(
+        "--cache-dir",
+        action="append",
+        default=None,
+        dest="cache_dirs",
+        type=Path,
+        help="Extra physics-cache directories to search (repeatable). "
+        "Writes still go to <outdir>/cache.",
+    )
     return p.parse_args(argv)
 
 
