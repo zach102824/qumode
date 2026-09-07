@@ -33,6 +33,8 @@ from Error_mitigation.noise_models import circuit_noise, readout_as_dict, readou
 from Error_mitigation.run_ablation import (
     ROUND2_METHODS,
     STAGE_B_METHODS,
+    STAGE_C_METHODS,
+    SHOT_METHODS,
     _observe_block,
     load_cache,
     mitigate_research,
@@ -159,6 +161,8 @@ NEW_METHODS = (
 )
 
 STAGE_B_NEW = ("gdr_ensemble", "gdr_joint")
+STAGE_C_NEW = ("gdr_family_eta", "gdr_shot_damp", "gdr_rl", "gdr_rl_soft", "gdr_rl_stop")
+SHOT_NEW = ("gdr_shot_damp",)
 
 SNAP_CELLS = (
     {
@@ -199,7 +203,60 @@ SNAP_CELLS = (
     },
 )
 
-# Shot-noise scale from PR #8 bootstrap (~0.004–0.013). Require a clear beat.
+# Four headline hard cells for the shot-count sweep (not a new method).
+SHOT_CELLS = (
+    HARD_CELLS[0],  # ecd_rand_loss_0.1
+    HARD_CELLS[1],  # ecd_rand_comp_0.1
+    HARD_CELLS[2],  # ecd_opt_comp_0.1  (0.343 protect)
+    HARD_CELLS[3],  # snap_rand_comp_0.003 (gated floor)
+)
+SHOT_COUNTS = (2048, 8192, 32768)
+
+# Extra comprehensive+readout_realistic cells at κτ=0.1 (tighter η prior).
+FAMILY_EXTRA = (
+    {
+        "id": "h000_opt_comp_rr_0.1",
+        "ansatz": "ecd",
+        "params": "optimized",
+        "family": "comprehensive",
+        "kappa_tau": 0.1,
+        "readout": "readout_realistic",
+        "instance": 0,
+        "cache": CACHE_MH / "ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0.npz",
+        "protect": False,
+        "note": "H000 opt comprehensive+realistic κτ=0.1 — tighter η prior",
+    },
+    {
+        "id": "h004_opt_comp_rr_0.1",
+        "ansatz": "ecd",
+        "params": "optimized",
+        "family": "comprehensive",
+        "kappa_tau": 0.1,
+        "readout": "readout_realistic",
+        "instance": 4,
+        "cache": CACHE_MH / "ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0_h004.npz",
+        "protect": False,
+        "note": "H004 opt comprehensive+realistic κτ=0.1",
+    },
+    {
+        "id": "h009_opt_comp_rr_0.1",
+        "ansatz": "ecd",
+        "params": "optimized",
+        "family": "comprehensive",
+        "kappa_tau": 0.1,
+        "readout": "readout_realistic",
+        "instance": 9,
+        "cache": CACHE_MH / "ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0_h009.npz",
+        "protect": False,
+        "note": "H009 opt comprehensive+realistic κτ=0.1",
+    },
+)
+
+XFER_CELLS = (
+    HARD_CELLS[4],  # h000 mild rr
+    HARD_CELLS[5],  # h004
+    HARD_CELLS[6],  # h009
+)
 BEAT_EPS = 0.005
 REGRESS_EPS = 0.003
 
@@ -552,6 +609,213 @@ def run_active_twins(*, shots: int, seed: int, fit_maxiter: int, outdir: Path) -
     return {"tag": "round2_active", "records": records}
 
 
+def run_shots(cells, args, outdir: Path) -> dict:
+    """Adaptive vs raw at 2048/8192/32768, plus optional shot-damp schedule."""
+    methods = SHOT_METHODS
+    t0 = time.time()
+    records = []
+    print(f"round2 stage=shots cells={len(cells)} counts={list(SHOT_COUNTS)} methods={','.join(methods)}")
+    for n_shots in SHOT_COUNTS:
+        print(f"  -- n_shots={n_shots}")
+        for cell in cells:
+            rec = run_cell(
+                cell,
+                shots=int(n_shots),
+                seed=int(args.seed),
+                fit_maxiter=int(args.fit_maxiter),
+                methods=methods,
+            )
+            rec["shot_floor"] = float(
+                (rec.get("fits") or {}).get("gdr_shot_damp", {}).get("shot_floor", 0.0)
+            )
+            records.append(rec)
+    # Score shot_damp at 2048 (must beat) and 8192 (must not hurt).
+    recs_2048 = [r for r in records if int(r["n_shots"]) == 2048]
+    recs_8192 = [r for r in records if int(r["n_shots"]) == 8192]
+    verdict = {
+        "gdr_shot_damp": {
+            **score_methods(recs_2048, new_methods=SHOT_NEW)["gdr_shot_damp"],
+            "at_8192": score_methods(recs_8192, new_methods=SHOT_NEW)["gdr_shot_damp"],
+        }
+    }
+    keep_2048 = bool(verdict["gdr_shot_damp"]["keep"])
+    hurt_8192 = bool(verdict["gdr_shot_damp"]["at_8192"]["regressions"])
+    any_keep = keep_2048 and not hurt_8192
+    payload = {
+        "tag": "round2_shots",
+        "shot_counts": list(SHOT_COUNTS),
+        "seed": int(args.seed),
+        "fit_maxiter": int(args.fit_maxiter),
+        "methods": list(methods),
+        "beat_eps": BEAT_EPS,
+        "regress_eps": REGRESS_EPS,
+        "wall_s": time.time() - t0,
+        "records": records,
+        "verdict": verdict,
+        "any_keep": any_keep,
+        "keep_2048": keep_2048,
+        "hurt_8192": hurt_8192,
+    }
+    (outdir / "shots_results.json").write_text(json.dumps(json_ready(payload), indent=2))
+    lines = [
+        "# Shot-count sweep (adaptive vs raw + optional shot-damp)",
+        "",
+        f"wall={payload['wall_s']:.1f}s  keep_2048={keep_2048}  hurt_8192={hurt_8192}  any_keep={any_keep}",
+        "",
+        "| id | shots | raw | gdr_param | gdr_select | gdr_shot_damp | Δ damp−select |",
+        "|---|---:|---:|---:|---:|---:|---:|",
+    ]
+
+    def f(mets, name):
+        t = (mets.get(name) or {}).get("tvd")
+        return "—" if t is None else f"{t:.4f}"
+
+    for rec in records:
+        mets = rec["metrics"]
+        sel = (mets.get("gdr_select") or {}).get("tvd")
+        sd = (mets.get("gdr_shot_damp") or {}).get("tvd")
+        d = "—" if sel is None or sd is None else f"{sd - sel:+.4f}"
+        lines.append(
+            f"| {rec['id']} | {rec['n_shots']} | {f(mets, 'raw')} | {f(mets, 'gdr_param')} | "
+            f"{f(mets, 'gdr_select')} | {f(mets, 'gdr_shot_damp')} | {d} |"
+        )
+    (outdir / "shots_scoreboard.md").write_text("\n".join(lines) + "\n")
+    print(f"wrote {outdir / 'shots_results.json'}")
+    print(f"wrote {outdir / 'shots_scoreboard.md'}")
+    return payload
+
+
+def run_cross_h(*, shots: int, seed: int, fit_maxiter: int, outdir: Path) -> dict:
+    """Fit M on one H's twins; unfold another H's target (same noise, κτ=0.003)."""
+    from Error_mitigation.mitigation import PARAM_NAMES, params_to_kernels, unfold
+
+    t0 = time.time()
+    packed = []
+    for cell in XFER_CELLS:
+        phys = load_cache(Path(cell["cache"]))
+        if phys is None:
+            raise FileNotFoundError(cell["cache"])
+        hid = int(cell["instance"])
+        inst = load_instance(hid)
+        energy_tensor = np.asarray(inst["energy_tensor"], dtype=float)
+        ground_qnm = tuple(int(v) for v in inst["ground_qnm"])
+        ansatz = cell["ansatz"]
+        pset = cell["params"]
+        family = cell["family"]
+        kt = float(cell["kappa_tau"])
+        ndepth = int(ANSATZ_SPEC[ansatz]["ndepth"])
+        spec = readout_spec(cell["readout"], shots, seed=None)
+        cfg = circuit_noise(family, kt, dims=DIMS)
+        q_obs, q_twins, hist_by_scale = _observe_block(
+            phys, spec, ansatz, pset, family, kt, seed, f"s{shots}"
+        )
+        mit = mitigate_research(
+            phys=phys,
+            q_obs=q_obs,
+            q_twins=q_twins,
+            hist_by_scale=hist_by_scale,
+            cfg=cfg,
+            spec=spec,
+            ndepth=ndepth,
+            energy_tensor=energy_tensor,
+            methods=("raw", "gdr_param", "gdr_damped", "gdr_select"),
+            fit_maxiter=fit_maxiter,
+            circuit_kind=pset,
+            family=family,
+            kappa_tau=kt,
+        )
+        fitted = (mit.get("gdr_param") or {}).get("fit", {}).get("fitted") or {}
+        theta = np.array([float(fitted[n]) for n in PARAM_NAMES], dtype=float)
+        packed.append(
+            {
+                "cell": cell,
+                "phys": phys,
+                "q_obs": q_obs,
+                "energy_tensor": energy_tensor,
+                "ground_qnm": ground_qnm,
+                "theta": theta,
+                "kernels": params_to_kernels(theta, DIMS),
+                "same": {
+                    name: compare_histograms(
+                        blob.get("hist"),
+                        phys["p_ideal"],
+                        energy_tensor,
+                        ground_qnm,
+                        energy_mit=blob.get("energy"),
+                    )
+                    for name, blob in mit.items()
+                },
+            }
+        )
+        sel = packed[-1]["same"]["gdr_select"]["tvd"]
+        print(f"  xfer fit {cell['id']}  same-H select={sel:.4f}")
+
+    pairs = []
+    for src in packed:
+        for tgt in packed:
+            hist = unfold(tgt["q_obs"], *src["kernels"])
+            mets = compare_histograms(
+                hist, tgt["phys"]["p_ideal"], tgt["energy_tensor"], tgt["ground_qnm"]
+            )
+            same_sel = src["same"]["gdr_select"]["tvd"] if src["cell"]["id"] == tgt["cell"]["id"] else tgt["same"]["gdr_select"]["tvd"]
+            same_param = tgt["same"]["gdr_param"]["tvd"]
+            rec = {
+                "source": src["cell"]["id"],
+                "target": tgt["cell"]["id"],
+                "cross": src["cell"]["id"] != tgt["cell"]["id"],
+                "tvd_xfer": float(mets["tvd"]),
+                "tvd_same_param": float(same_param),
+                "tvd_same_select": float(same_sel),
+                "delta_vs_same_param": float(mets["tvd"]) - float(same_param),
+                "delta_vs_same_select": float(mets["tvd"]) - float(same_sel),
+            }
+            pairs.append(rec)
+            mark = "same" if not rec["cross"] else "XFER"
+            print(
+                f"    {mark} {rec['source']} -> {rec['target']}  "
+                f"xfer={rec['tvd_xfer']:.4f}  same_param={rec['tvd_same_param']:.4f}  "
+                f"Δ={rec['delta_vs_same_param']:+.4f}"
+            )
+
+    cross = [p for p in pairs if p["cross"]]
+    beats = [p for p in cross if p["delta_vs_same_select"] < -BEAT_EPS]
+    regressions = [p for p in cross if p["delta_vs_same_select"] > REGRESS_EPS]
+    # Transfer "keep" if it matches or beats same-H fit (mean Δ ≤ 0) without
+    # a >0.003 regression vs same-H select on any pair.
+    mean_d = float(np.mean([p["delta_vs_same_param"] for p in cross])) if cross else None
+    keep = bool(cross) and mean_d is not None and mean_d <= 0.0 and not regressions
+    payload = {
+        "tag": "round2_xfer",
+        "shots": int(shots),
+        "seed": int(seed),
+        "fit_maxiter": int(fit_maxiter),
+        "wall_s": time.time() - t0,
+        "pairs": pairs,
+        "mean_delta_vs_same_param": mean_d,
+        "beats": [f"{p['source']}->{p['target']}" for p in beats],
+        "regressions": [f"{p['source']}->{p['target']}" for p in regressions],
+        "any_keep": keep,
+    }
+    (outdir / "xfer_results.json").write_text(json.dumps(json_ready(payload), indent=2))
+    lines = [
+        "# Cross-H twin bank (fit M on source twins, unfold target)",
+        "",
+        f"wall={payload['wall_s']:.1f}s  mean Δ vs same-H param={mean_d if mean_d is None else f'{mean_d:+.4f}'}  keep={keep}",
+        "",
+        "| source | target | xfer | same_param | same_select | Δ vs param | Δ vs select |",
+        "|---|---|---:|---:|---:|---:|---:|",
+    ]
+    for p in pairs:
+        lines.append(
+            f"| {p['source']} | {p['target']} | {p['tvd_xfer']:.4f} | {p['tvd_same_param']:.4f} | "
+            f"{p['tvd_same_select']:.4f} | {p['delta_vs_same_param']:+.4f} | {p['delta_vs_same_select']:+.4f} |"
+        )
+    (outdir / "xfer_scoreboard.md").write_text("\n".join(lines) + "\n")
+    print(f"wrote {outdir / 'xfer_results.json'}")
+    print(f"wrote {outdir / 'xfer_scoreboard.md'}")
+    return payload
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--outdir", type=Path, default=ROUND2_OUT)
@@ -561,9 +825,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--methods", default="")
     p.add_argument(
         "--stage",
-        choices=("micro", "b", "active", "all"),
+        choices=("micro", "b", "active", "c", "shots", "family", "xfer", "all"),
         default="b",
-        help="micro: first-pass 8 cells; b: ensemble+joint+SNAP transfer; active: +10 Fisher twins.",
+        help="micro: pass 1; b: pass 2; c: pass 3 (shots+family+xfer+rl); "
+        "shots/family/xfer: pass-3 pieces.",
     )
     p.add_argument(
         "--cells",
@@ -666,6 +931,30 @@ def main(argv: list[str] | None = None) -> int:
         (outdir / "active_scoreboard.md").write_text("\n".join(lines) + "\n")
         print(f"wrote {outdir / 'active_results.json'}")
         print(f"wrote {outdir / 'active_scoreboard.md'}")
+    if stage in ("shots", "c"):
+        run_shots(list(SHOT_CELLS), args, outdir)
+    if stage in ("family", "c"):
+        methods = tuple(
+            x.strip() for x in (args.methods or ",".join(STAGE_C_METHODS)).split(",") if x.strip()
+        )
+        cells = list(HARD_CELLS) + list(FAMILY_EXTRA) + [SNAP_CELLS[0], SNAP_CELLS[2]]
+        _run_batch(
+            cells,
+            methods,
+            STAGE_C_NEW,
+            args,
+            outdir,
+            "round2_stage_c",
+            "stage_c_results.json",
+            "stage_c_scoreboard.md",
+        )
+    if stage in ("xfer", "c"):
+        run_cross_h(
+            shots=int(args.shots),
+            seed=int(args.seed),
+            fit_maxiter=int(args.fit_maxiter),
+            outdir=outdir,
+        )
     return 0
 
 

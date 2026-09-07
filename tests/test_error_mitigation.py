@@ -650,3 +650,72 @@ def test_stage_b_methods_exclude_ban_list():
     assert banned.isdisjoint(STAGE_B_METHODS)
     assert "gdr_ensemble" in STAGE_B_METHODS
     assert "gdr_joint" in STAGE_B_METHODS
+
+
+def test_family_eta_is_opposite_of_anneal():
+    from Error_mitigation.mitigation import anneal_ridge_weights, family_eta_ridge_weights
+
+    mild = family_eta_ridge_weights(0.003)[0]
+    harsh = family_eta_ridge_weights(0.1)[0]
+    assert mild < harsh
+    assert anneal_ridge_weights(0.003)[0] > anneal_ridge_weights(0.1)[0]
+
+
+def test_family_eta_gated_to_comprehensive_readout():
+    from Error_mitigation.mitigation import family_eta_allowed
+
+    rr = readout_spec("readout_realistic", n_shots=100)
+    ideal = readout_spec("ideal", n_shots=100)
+    assert family_eta_allowed(family="comprehensive", spec=rr) is True
+    assert family_eta_allowed(family="comprehensive", spec=ideal) is False
+    assert family_eta_allowed(family="loss", spec=rr) is False
+
+
+def test_shot_damp_floor_zero_at_official_shots():
+    from Error_mitigation.mitigation import shot_damp_floor
+
+    assert shot_damp_floor(2048) > 0.0
+    assert shot_damp_floor(8192) == 0.0
+    assert shot_damp_floor(32768) == 0.0
+
+
+def test_rl_soft_clip_and_early_stop():
+    from Error_mitigation.mitigation import choose_rl_niter, richardson_lucy
+
+    rng = np.random.default_rng(0)
+    q = rng.random((2, 4, 4))
+    q = q / q.sum()
+    eye2, eye4 = np.eye(2), np.eye(4)
+    p_hard = richardson_lucy(q, eye2, eye4, eye4, n_iter=5, soft_clip=False)
+    p_soft = richardson_lucy(q, eye2, eye4, eye4, n_iter=5, soft_clip=True)
+    assert p_hard.shape == q.shape
+    assert p_soft.sum() == pytest.approx(1.0)
+    assert np.all(p_soft >= 0.0)
+    n_iter, info = choose_rl_niter(
+        [q], [q], eye2, eye4, eye4, 50, soft_clip=True, niters=(4, 8)
+    )
+    assert n_iter in (4, 8)
+    assert "hold_nll" in info
+
+
+def test_stage_c_methods_exclude_ban_list():
+    from Error_mitigation.run_ablation import STAGE_C_METHODS
+
+    banned = {
+        "gdr_full",
+        "gdr_interleave",
+        "gdr_split",
+        "gdr_band",
+        "gdr_afterburn",
+        "gdr_blend",
+        "gdr_energy",
+    }
+    assert banned.isdisjoint(STAGE_C_METHODS)
+    assert "gdr_family_eta" in STAGE_C_METHODS
+    assert "gdr_rl" in STAGE_C_METHODS
+    from Error_mitigation.run_round2 import FAMILY_EXTRA, SHOT_CELLS, XFER_CELLS
+
+    assert len(SHOT_CELLS) == 4
+    assert len(XFER_CELLS) == 3
+    for cell in list(SHOT_CELLS) + list(XFER_CELLS) + list(FAMILY_EXTRA):
+        assert Path(cell["cache"]).is_file(), cell["cache"]

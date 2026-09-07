@@ -212,6 +212,15 @@ def kron_matrix(cq: np.ndarray, c1: np.ndarray, c2: np.ndarray) -> np.ndarray:
     return np.kron(cq, np.kron(c1, c2))
 
 
+def _softplus_nonneg(p: np.ndarray, soft_eps: float) -> np.ndarray:
+    """Smooth ReLU so numerical negatives are softly clipped, not hard-zeroed."""
+    p = np.asarray(p, dtype=float)
+    eps = max(float(soft_eps), 0.0)
+    if eps <= 0.0:
+        return np.clip(p, 0.0, None)
+    return 0.5 * (p + np.sqrt(p * p + eps))
+
+
 def richardson_lucy(
     q: np.ndarray,
     cq: np.ndarray,
@@ -220,6 +229,8 @@ def richardson_lucy(
     *,
     n_iter: int = 80,
     eps: float = EPS_PROB,
+    soft_clip: bool = False,
+    soft_eps: float = 1e-10,
 ) -> np.ndarray:
     """Nonnegative simplex unfolding of q ≈ M p."""
     qn = np.clip(np.asarray(q, dtype=float), 0.0, None)
@@ -231,7 +242,10 @@ def richardson_lucy(
     for _ in range(int(n_iter)):
         mp = np.clip(apply_transfer(p, cq, c1, c2), eps, None)
         p = p * apply_transfer_T(qn / mp, cq, c1, c2)
-        p = np.clip(p, 0.0, None)
+        if soft_clip:
+            p = _softplus_nonneg(p, soft_eps)
+        else:
+            p = np.clip(p, 0.0, None)
         s = float(p.sum())
         p = p / s if s > 0.0 else np.full(qn.shape, 1.0 / qn.size)
     return p
@@ -263,10 +277,11 @@ def unfold(
     *,
     method: str = "rl",
     n_iter: int = 80,
+    soft_clip: bool = False,
 ) -> np.ndarray:
     if method == "nnls":
         return nnls_unfold(q, cq, c1, c2)
-    return richardson_lucy(q, cq, c1, c2, n_iter=n_iter)
+    return richardson_lucy(q, cq, c1, c2, n_iter=n_iter, soft_clip=soft_clip)
 
 
 def confusion_from_measurement(measurement, dims: tuple[int, int, int]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -576,6 +591,8 @@ MID_FREE_IDX = (0, 1, 7, 8, 9, 10)
 ETA_FREE_IDX = (0, 1)
 DEFAULT_LAMBDAS = (0.0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1)
 ANNEAL_LAMBDAS = (0.0, 1e-4, 1e-3, 1e-2, 3e-2, 1e-1, 3e-1)
+FAMILY_LAMBDAS = (0.0, 1e-4, 1e-3, 1e-2, 3e-2, 1e-1)
+RL_NITERS = (8, 16, 32, 48, 80)
 
 
 def holdout_indices(n: int, frac: float = 0.25) -> tuple[np.ndarray, np.ndarray]:
@@ -834,6 +851,145 @@ def fit_gdr_anneal(
             "kappa_tau": float(kappa_tau),
         },
     )
+
+
+def family_eta_allowed(*, family: str | None, spec: ReadoutSpec | None) -> bool:
+    """Family-conditional η prior: comprehensive + non-ideal readout only."""
+    if str(family or "").lower() != "comprehensive":
+        return False
+    if spec is None:
+        return False
+    return not is_trivial_readout(spec)
+
+
+def family_eta_ridge_weights(kappa_tau: float) -> np.ndarray:
+    """Opposite of anneal: looser η at mild κτ, tighter at high κτ.
+
+    ``kt/0.01`` is 0.3 at 0.003, 3 at 0.03, and 10 (clipped) at 0.1.
+    Heating/hops stay strongly pulled toward the oracle prior.
+    """
+    kt = max(float(kappa_tau), 1e-6)
+    eta_w = float(np.clip(kt / 0.01, 0.25, 10.0))
+    return np.array([eta_w, eta_w, 8.0, 8.0, 8.0, 8.0, 8.0, 1.0, 1.0, 1.0, 1.0], dtype=float)
+
+
+def fit_gdr_family_eta(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cfg: NoiseConfig,
+    spec: ReadoutSpec,
+    ndepth: int,
+    dims: tuple[int, int, int],
+    kappa_tau: float,
+    *,
+    maxiter: int = 200,
+    holdout_frac: float = 0.25,
+    lambdas: tuple[float, ...] = FAMILY_LAMBDAS,
+    refit_all: bool = True,
+) -> tuple[np.ndarray, dict]:
+    """Holdout-λ GDR with a family-conditional η ridge (oracle prior, not identity)."""
+    n = len(p_ideals)
+    train_i, hold_i = holdout_indices(n, holdout_frac)
+    x0 = initial_theta(cfg, spec, ndepth)
+    rw = family_eta_ridge_weights(kappa_tau)
+    p_tr, q_tr = _select(p_ideals, train_i), _select(q_obs, train_i)
+    p_h, q_h = _select(p_ideals, hold_i), _select(q_obs, hold_i)
+    best = None
+    path = []
+    for lam in lambdas:
+        theta = _minimize_theta(
+            x0,
+            PARAM_BOUNDS,
+            (p_tr, q_tr, spec.n_shots, dims, None, x0, float(lam), rw),
+            maxiter,
+        )
+        hold_nll = multinomial_nll_weighted(theta, p_h, q_h, spec.n_shots, dims, None, None, 0.0, None)
+        rec = {"lam": float(lam), "hold_nll": float(hold_nll)}
+        path.append(rec)
+        if best is None or hold_nll < best[0]:
+            best = (hold_nll, float(lam), theta)
+    assert best is not None
+    lam_star, theta = best[1], best[2]
+    if refit_all:
+        theta = _minimize_theta(
+            x0,
+            PARAM_BOUNDS,
+            (p_ideals, q_obs, spec.n_shots, dims, None, x0, lam_star, rw),
+            maxiter,
+        )
+    return theta, _fit_info(
+        theta,
+        cfg,
+        spec,
+        ndepth,
+        {
+            "lam": lam_star,
+            "hold_nll": float(best[0]),
+            "path": path,
+            "kind": "gdr_family_eta",
+            "eta_ridge": float(rw[0]),
+            "kappa_tau": float(kappa_tau),
+        },
+    )
+
+
+def shot_damp_floor(n_shots: int) -> float:
+    """Extra mix toward the safe histogram at low shot counts.
+
+    Zero at the official 8192-shot scoreboard so 8192 matches adaptive.
+    """
+    n = int(n_shots)
+    if n <= 2048:
+        return 0.25
+    if n < 8192:
+        return 0.10
+    return 0.0
+
+
+def unfold_recovery_nll(p_hat: np.ndarray, p_ideal: np.ndarray, n_shots: int) -> float:
+    """Multinomial NLL of an unfolded histogram vs a known twin ideal."""
+    pred = np.clip(np.asarray(p_hat, dtype=float), EPS_PROB, None)
+    pred = pred / pred.sum()
+    counts = np.clip(np.asarray(p_ideal, dtype=float), 0.0, None)
+    total = float(counts.sum())
+    if total <= 0.0:
+        return 0.0
+    counts = counts / total * max(int(n_shots), 1)
+    return -float(np.sum(counts * np.log(pred)))
+
+
+def choose_rl_niter(
+    p_ideals: list[np.ndarray],
+    q_obs: list[np.ndarray],
+    cq: np.ndarray,
+    c1: np.ndarray,
+    c2: np.ndarray,
+    n_shots: int,
+    *,
+    soft_clip: bool = False,
+    niters: tuple[int, ...] = RL_NITERS,
+    holdout_frac: float = 0.25,
+) -> tuple[int, dict]:
+    """Pick Richardson-Lucy iteration count by twin-holdout recovery NLL."""
+    n = len(p_ideals)
+    _, hold_i = holdout_indices(n, holdout_frac)
+    if hold_i.size == 0:
+        hold_i = np.arange(n, dtype=int)
+    best = None
+    path = []
+    for n_iter in niters:
+        nlls = []
+        for i in hold_i:
+            p_hat = richardson_lucy(
+                q_obs[int(i)], cq, c1, c2, n_iter=int(n_iter), soft_clip=soft_clip
+            )
+            nlls.append(unfold_recovery_nll(p_hat, p_ideals[int(i)], n_shots))
+        mean = float(np.mean(nlls)) if nlls else 0.0
+        path.append({"n_iter": int(n_iter), "hold_nll": mean})
+        if best is None or mean < best[0]:
+            best = (mean, int(n_iter))
+    assert best is not None
+    return int(best[1]), {"n_iter": int(best[1]), "hold_nll": float(best[0]), "path": path}
 
 
 def fisher_twin_weights(p_ideals: list[np.ndarray]) -> np.ndarray:

@@ -36,7 +36,11 @@ from Error_mitigation.metrics import compare_histograms, total_variation
 from Error_mitigation.mitigation import (
     apply_scalar_cdr,
     choose_damp_alpha,
+    choose_rl_niter,
     damp_histogram,
+    family_eta_allowed,
+    fit_gdr_family_eta,
+    shot_damp_floor,
     energy_weights,
     holdout_indices,
     score_unfold_tvd,
@@ -130,6 +134,11 @@ ALL_METHODS = (
     "gdr_then_rtz",
     "gdr_ensemble",
     "gdr_joint",
+    "gdr_family_eta",
+    "gdr_shot_damp",
+    "gdr_rl",
+    "gdr_rl_soft",
+    "gdr_rl_stop",
     "gdr_split",
     "gdr_band",
     "scalar_cdr",
@@ -162,6 +171,11 @@ CHEAP_METHODS = (
     "gdr_then_rtz",
     "gdr_ensemble",
     "gdr_joint",
+    "gdr_family_eta",
+    "gdr_shot_damp",
+    "gdr_rl",
+    "gdr_rl_soft",
+    "gdr_rl_stop",
     "zne_idle",
     "readout_then_zne",
     "zne_then_readout",
@@ -195,6 +209,26 @@ STAGE_B_METHODS = (
     "gdr_select",
     "gdr_ensemble",
     "gdr_joint",
+)
+
+STAGE_C_METHODS = (
+    "raw",
+    "gdr_param",
+    "gdr_damped",
+    "gdr_select",
+    "gdr_family_eta",
+    "gdr_shot_damp",
+    "gdr_rl",
+    "gdr_rl_soft",
+    "gdr_rl_stop",
+)
+
+SHOT_METHODS = (
+    "raw",
+    "gdr_param",
+    "gdr_damped",
+    "gdr_select",
+    "gdr_shot_damp",
 )
 
 
@@ -503,6 +537,11 @@ def mitigate_research(
             "gdr_then_rtz",
             "gdr_split",
             "gdr_band",
+            "gdr_shot_damp",
+            "gdr_family_eta",
+            "gdr_rl",
+            "gdr_rl_soft",
+            "gdr_rl_stop",
         )
     ):
         theta_base, fit_info_base = fit_gdr_param(
@@ -536,6 +575,30 @@ def mitigate_research(
                 "energy": energy_from_histogram(p_d, energy_tensor),
                 "fit": {**(fit_info_base or {}), **ainfo, "kind": "gdr_damped"},
             }
+        if any(m in methods for m in ("gdr_rl", "gdr_rl_soft", "gdr_rl_stop")):
+            def _rl_blob(name: str, *, soft_clip: bool, early_stop: bool) -> dict:
+                info = {**(fit_info_base or {}), "kind": name, "soft_clip": bool(soft_clip)}
+                n_iter = 80
+                if early_stop:
+                    n_iter, ninfo = choose_rl_niter(
+                        p_twin, q_twins, cq, c1, c2, spec.n_shots, soft_clip=soft_clip
+                    )
+                    info.update(ninfo)
+                else:
+                    info["n_iter"] = n_iter
+                hist = unfold(q_obs, cq, c1, c2, n_iter=int(n_iter), soft_clip=soft_clip)
+                return {
+                    "hist": hist,
+                    "energy": energy_from_histogram(hist, energy_tensor),
+                    "fit": info,
+                }
+
+            if "gdr_rl_soft" in methods:
+                out["gdr_rl_soft"] = _rl_blob("gdr_rl_soft", soft_clip=True, early_stop=False)
+            if "gdr_rl_stop" in methods:
+                out["gdr_rl_stop"] = _rl_blob("gdr_rl_stop", soft_clip=False, early_stop=True)
+            if "gdr_rl" in methods:
+                out["gdr_rl"] = _rl_blob("gdr_rl", soft_clip=True, early_stop=True)
         if "gdr_floor" in methods:
             alpha_f, finfo = choose_damp_alpha(
                 p_twin, q_twins, cq, c1, c2, p_safe_twins, slack=0.003, safe_gap=0.01
@@ -832,6 +895,30 @@ def mitigate_research(
             "fit": info_j,
         }
 
+    if "gdr_family_eta" in methods:
+        allowed = family_eta_allowed(family=family, spec=spec)
+        kt_fam = 0.03 if kappa_tau is None else float(kappa_tau)
+        if allowed:
+            theta_fe, info_fe = fit_gdr_family_eta(
+                p_twin, q_twins, cfg, spec, ndepth, DIMS, kt_fam, maxiter=fit_maxiter
+            )
+            cq, c1, c2 = _kernels_from_fit(theta_fe, DIMS)
+            extra_kernels["gdr_family_eta"] = (cq, c1, c2)
+            p = unfold(q_obs, cq, c1, c2)
+            info_fe["applied"] = True
+        elif "gdr_param" in kernels:
+            cq, c1, c2 = kernels["gdr_param"]
+            p = unfold(q_obs, cq, c1, c2)
+            info_fe = {**(fit_info_base or {}), "kind": "gdr_family_eta", "applied": False, "reason": "not_comp_rr"}
+        else:
+            p = p_safe_target
+            info_fe = {"kind": "gdr_family_eta", "applied": False, "reason": "fallback_safe"}
+        out["gdr_family_eta"] = {
+            "hist": p,
+            "energy": energy_from_histogram(p, energy_tensor),
+            "fit": info_fe,
+        }
+
     if "gdr_energy" in methods:
         w = energy_weights(e_twin_ideal, "absE")
         theta, info = fit_gdr_ridge(
@@ -936,6 +1023,29 @@ def mitigate_research(
                 "chosen": chosen,
                 "damp_alpha": float(damp_alpha),
                 **extra,
+            },
+        }
+
+    if "gdr_shot_damp" in methods:
+        floor = shot_damp_floor(spec.n_shots)
+        if "gdr_select" in out:
+            p_base = out["gdr_select"]["hist"]
+            src = "gdr_select"
+        elif "gdr_param" in kernels:
+            p_base = unfold(q_obs, *kernels["gdr_param"])
+            src = "gdr_param"
+        else:
+            p_base = p_safe_target
+            src = "safe"
+        p_sd = damp_histogram(p_base, p_safe_target, floor)
+        out["gdr_shot_damp"] = {
+            "hist": p_sd,
+            "energy": energy_from_histogram(p_sd, energy_tensor),
+            "fit": {
+                "kind": "gdr_shot_damp",
+                "shot_floor": float(floor),
+                "n_shots": int(spec.n_shots),
+                "source": src,
             },
         }
 
