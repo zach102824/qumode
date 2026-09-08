@@ -203,10 +203,22 @@ def write_comparison(rows: list[dict]) -> dict:
         groups["family"][r["family"]].append(r["delta"])
 
     n = len(deltas)
-    nearly_all_ok = n > 0 and (w + t) >= max(1, math.ceil(0.9 * n)) and (overall["mean"] or 0.0) >= -TIE_EPS
+    # Need the ECD priority matrix (24 cells) before proposing a default change.
+    min_for_call = 20
+    nearly_all_ok = (
+        n >= min_for_call
+        and (w + t) >= math.ceil(0.9 * n)
+        and (overall["mean"] or 0.0) >= -TIE_EPS
+        and l <= max(1, n // 10)
+    )
     mix_helps = n > 0 and (l > w) and (overall["mean"] or 0.0) < 0.0
     if n == 0:
         rec_line = "No paired cells yet."
+    elif n < min_for_call:
+        rec_line = (
+            f"**Recommendation:** pending — {n} paired cell(s); need the ECD priority "
+            f"matrix (≥{min_for_call} cells) before a keep-vs-switch call."
+        )
     elif nearly_all_ok:
         rec_line = (
             "**Recommendation:** fully Gaussian is OK as the `gdr_param` default "

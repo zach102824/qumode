@@ -1,0 +1,9 @@
+{
+  "n": 1,
+  "mean_delta": 0.0003660540718782093,
+  "median_delta": 0.0003660540718782093,
+  "gauss_better": 0,
+  "tie": 1,
+  "mix_better": 0,
+  "recommendation": "**Recommendation:** pending \u2014 1 paired cell(s); need the ECD priority matrix (\u226520 cells) before a keep-vs-switch call."
+}

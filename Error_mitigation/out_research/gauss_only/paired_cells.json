@@ -1,0 +1,17 @@
+[
+  {
+    "ansatz": "ecd",
+    "params": "random",
+    "family": "loss",
+    "kappa_tau": 0.003,
+    "readout": "ideal",
+    "raw_default": 0.043445739133559404,
+    "raw_nr0": 0.043445739133559404,
+    "gdr_default": 0.044763436833499405,
+    "gdr_nr0": 0.044397382761621196,
+    "delta": 0.0003660540718782093,
+    "verdict": "tie",
+    "twin_tag_default": "span_nr10_lo0.25_hi1.35_x0",
+    "twin_tag_nr0": "span_nr0_lo0.25_hi1.35_x0"
+  }
+]
