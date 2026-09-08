@@ -1,0 +1,62 @@
+Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)
+Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, zne_idle, readout_then_zne
+
+Headline at κτ = 0.003  (readout_only vs gdr_param vs gdr_select vs oracle_binomial)
+
+ecd  loss_thermal_dephasing    ideal                 raw.TVD=0.0489 dE=0.1663  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.0175 dE=0.0812  gdr_select.TVD=   —    dE=   —   
+ecd  loss_thermal_dephasing    readout_realistic     raw.TVD=0.0894 dE=0.2934  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.0164 dE=0.0681  gdr_select.TVD=   —    dE=   —   
+snap  loss_thermal_dephasing    ideal                 raw.TVD=0.0598 dE=0.1503  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.0131 dE=0.0363  gdr_select.TVD=   —    dE=   —   
+snap  loss_thermal_dephasing    readout_realistic     raw.TVD=0.0988 dE=0.2458  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.0180 dE=0.0196  gdr_select.TVD=   —    dE=   —   
+
+Full table (all cases)
+
+ansatz params     family                       kt readout            method                  TVD       dE     dPgs
+------------------------------------------------------------------------------------------------------------------
+ecd    random     loss_thermal_dephasing    0.003 ideal              raw                  0.0535   0.0785   0.0002
+ecd    random     loss_thermal_dephasing    0.003 ideal              gdr_param            0.0456   0.0848   0.0000
+ecd    random     loss_thermal_dephasing    0.003 readout_realistic  raw                  0.0606   0.0642   0.0003
+ecd    random     loss_thermal_dephasing    0.003 readout_realistic  gdr_param            0.0476   0.0718   0.0001
+ecd    random     loss_thermal_dephasing    0.030 ideal              raw                  0.1744   0.1670   0.0008
+ecd    random     loss_thermal_dephasing    0.030 ideal              gdr_param            0.1157   0.1690   0.0001
+ecd    random     loss_thermal_dephasing    0.030 readout_realistic  raw                  0.1915   0.0646   0.0016
+ecd    random     loss_thermal_dephasing    0.030 readout_realistic  gdr_param            0.1279   0.0135   0.0018
+ecd    random     loss_thermal_dephasing    0.100 ideal              raw                  0.3356   0.2086   0.0021
+ecd    random     loss_thermal_dephasing    0.100 ideal              gdr_param            0.2633   0.1769   0.0052
+ecd    random     loss_thermal_dephasing    0.100 readout_realistic  raw                  0.3368   0.1924   0.0016
+ecd    random     loss_thermal_dephasing    0.100 readout_realistic  gdr_param            0.2642   0.0637   0.0033
+ecd    optimized  loss_thermal_dephasing    0.003 ideal              raw                  0.0489   0.1663   0.0000
+ecd    optimized  loss_thermal_dephasing    0.003 ideal              gdr_param            0.0175   0.0812   0.0000
+ecd    optimized  loss_thermal_dephasing    0.003 readout_realistic  raw                  0.0894   0.2934   0.0000
+ecd    optimized  loss_thermal_dephasing    0.003 readout_realistic  gdr_param            0.0164   0.0681   0.0000
+ecd    optimized  loss_thermal_dephasing    0.030 ideal              raw                  0.3966   1.3804   0.0000
+ecd    optimized  loss_thermal_dephasing    0.030 ideal              gdr_param            0.1174   0.6206   0.0000
+ecd    optimized  loss_thermal_dephasing    0.030 readout_realistic  raw                  0.4164   1.5117   0.0000
+ecd    optimized  loss_thermal_dephasing    0.030 readout_realistic  gdr_param            0.1210   0.6675   0.0000
+ecd    optimized  loss_thermal_dephasing    0.100 ideal              raw                  0.7696   3.0330   0.0000
+ecd    optimized  loss_thermal_dephasing    0.100 ideal              gdr_param            0.2769   1.6281   0.0000
+ecd    optimized  loss_thermal_dephasing    0.100 readout_realistic  raw                  0.7792   3.0364   0.0000
+ecd    optimized  loss_thermal_dephasing    0.100 readout_realistic  gdr_param            0.2698   1.4880   0.0003
+snap   random     loss_thermal_dephasing    0.003 ideal              raw                  0.0291   0.0401   0.0000
+snap   random     loss_thermal_dephasing    0.003 ideal              gdr_param            0.0285   0.0510   0.0000
+snap   random     loss_thermal_dephasing    0.003 readout_realistic  raw                  0.0487   0.0561   0.0004
+snap   random     loss_thermal_dephasing    0.003 readout_realistic  gdr_param            0.0287   0.0292   0.0002
+snap   random     loss_thermal_dephasing    0.030 ideal              raw                  0.1505   0.0180   0.0000
+snap   random     loss_thermal_dephasing    0.030 ideal              gdr_param            0.0893   0.0607   0.0000
+snap   random     loss_thermal_dephasing    0.030 readout_realistic  raw                  0.1741   0.0711   0.0001
+snap   random     loss_thermal_dephasing    0.030 readout_realistic  gdr_param            0.0907   0.1992   0.0000
+snap   random     loss_thermal_dephasing    0.100 ideal              raw                  0.3433   0.2473   0.0000
+snap   random     loss_thermal_dephasing    0.100 ideal              gdr_param            0.1987   0.3407   0.0000
+snap   random     loss_thermal_dephasing    0.100 readout_realistic  raw                  0.3460   0.1975   0.0002
+snap   random     loss_thermal_dephasing    0.100 readout_realistic  gdr_param            0.1773   0.2249   0.0000
+snap   optimized  loss_thermal_dephasing    0.003 ideal              raw                  0.0598   0.1503   0.0000
+snap   optimized  loss_thermal_dephasing    0.003 ideal              gdr_param            0.0131   0.0363   0.0000
+snap   optimized  loss_thermal_dephasing    0.003 readout_realistic  raw                  0.0988   0.2458   0.0000
+snap   optimized  loss_thermal_dephasing    0.003 readout_realistic  gdr_param            0.0180   0.0196   0.0000
+snap   optimized  loss_thermal_dephasing    0.030 ideal              raw                  0.3928   1.4126   0.0000
+snap   optimized  loss_thermal_dephasing    0.030 ideal              gdr_param            0.0841   0.4825   0.0000
+snap   optimized  loss_thermal_dephasing    0.030 readout_realistic  raw                  0.4219   1.4935   0.0000
+snap   optimized  loss_thermal_dephasing    0.030 readout_realistic  gdr_param            0.0868   0.4610   0.0000
+snap   optimized  loss_thermal_dephasing    0.100 ideal              raw                  0.6967   3.2082   0.0000
+snap   optimized  loss_thermal_dephasing    0.100 ideal              gdr_param            0.3878   1.3606   0.0000
+snap   optimized  loss_thermal_dephasing    0.100 readout_realistic  raw                  0.7029   3.3283   0.0000
+snap   optimized  loss_thermal_dephasing    0.100 readout_realistic  gdr_param            0.4071   1.3426   0.0000
