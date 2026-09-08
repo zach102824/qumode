@@ -1,9 +1,17 @@
 {
-  "n": 1,
-  "mean_delta": 0.0003660540718782093,
-  "median_delta": 0.0003660540718782093,
-  "gauss_better": 0,
-  "tie": 1,
-  "mix_better": 0,
-  "recommendation": "**Recommendation:** pending \u2014 1 paired cell(s); need the ECD priority matrix (\u226520 cells) before a keep-vs-switch call."
+  "n": 72,
+  "mean_delta": -0.026018566907184067,
+  "median_delta": -0.0079042076270917,
+  "gauss_better": 11,
+  "tie": 15,
+  "mix_better": 46,
+  "recommendation": "**Recommendation:** keep the ~25% `t_free=2` mix (`n_rank2 = n_train//4`). Fully Gaussian is not strictly better; the mix still helps enough on `gdr_param`.",
+  "ecd_priority": {
+    "n": 24,
+    "mean_delta": -0.00972576129803823,
+    "median_delta": 0.00013181027927024191,
+    "gauss_better": 7,
+    "tie": 7,
+    "mix_better": 10
+  }
 }
