@@ -261,6 +261,44 @@ def test_optimize_gibbs_adaptive_uses_sampled_tail():
     assert rec.eta_history
 
 
+def test_optimize_gibbs_adaptive_fixed_eta_is_held():
+    rng = np.random.default_rng(6)
+    rec = optimize_gibbs_adaptive(
+        np.array([0.2, 0.0, 0.0, 0.0, 0.0], dtype=float),
+        np.zeros(8),
+        ndepth=1,
+        nfocks=(4, 4),
+        outer_iter=2,
+        spsa_iter=0,
+        rng=rng,
+        energy_tensor=hybrid_energy_tensor((4, 4)),
+        fixed_eta=2.5,
+    )
+    assert rec.eta_policy == "fixed"
+    assert rec.eta == pytest.approx(2.5)
+    assert rec.eta0 == pytest.approx(2.5)
+    assert rec.eta_history
+    assert all(float(h["eta"]) == pytest.approx(2.5) for h in rec.eta_history)
+
+
+def test_optimize_gibbs_adaptive_can_freeze_sampled_tail():
+    rng = np.random.default_rng(8)
+    rec = optimize_gibbs_adaptive(
+        np.zeros(5),
+        np.zeros(8),
+        ndepth=1,
+        nfocks=(4, 4),
+        outer_iter=2,
+        spsa_iter=0,
+        rng=rng,
+        energy_tensor=hybrid_energy_tensor((4, 4)),
+        eta_adaptive=False,
+    )
+    assert rec.eta_policy == "sampled_tail_frozen"
+    assert rec.eta == pytest.approx(rec.eta0)
+    assert rec.eta > 0
+
+
 def test_spsa_step_scale_zero_freezes_coordinate():
     from qumode_vqe.vqe import run_spsa
 

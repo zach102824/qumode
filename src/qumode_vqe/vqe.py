@@ -670,6 +670,8 @@ def optimize_gibbs_adaptive(
     energy_tensor: np.ndarray | None = None,
     hamiltonian: qt.Qobj | None = None,
     ansatz: str = "ecd",
+    fixed_eta: float | None = None,
+    eta_adaptive: bool = True,
 ) -> AdaptiveGibbsResult:
     """Joint prep+ansatz SPSA (default: 70 steps, prep never frozen).
 
@@ -687,9 +689,12 @@ def optimize_gibbs_adaptive(
     ``prep_step_scale`` multiplies the SPSA update on the five preparation
     coordinates during the joint stage (ansatz coordinates keep gain 1).
 
-    Gibbs η is always ``sampled_tail``: probability-weighted 5%/25% energy
+    Gibbs η defaults to ``sampled_tail``: probability-weighted 5%/25% energy
     quantiles of the current histogram, EMA-smoothed, refreshed at the
     unperturbed iterate and held fixed for both SPSA probes of that step.
+    Optional diagnostics: ``fixed_eta`` holds η constant (no quantile
+    updates); ``eta_adaptive=False`` freezes the initial sampled_tail value.
+    Production callers should leave both unset.
     """
     rng = rng or np.random.default_rng()
     nfocks = (int(nfocks[0]), int(nfocks[1]))
@@ -724,6 +729,8 @@ def optimize_gibbs_adaptive(
         **ham_kw,
     )
     policy = SampledTailEta()
+    held_eta = None if fixed_eta is None else float(fixed_eta)
+    refresh_eta = (held_eta is None) and bool(eta_adaptive)
 
     ansatz_bounds = _ansatz_bounds(sim)
     x0 = _clip_bounds(x0, ansatz_bounds)
@@ -735,9 +742,26 @@ def optimize_gibbs_adaptive(
         return np.asarray(ev.measurement.physical_probs, dtype=float)
 
     init_probs = current_probs(x0)
-    st0 = policy.initialize(sim.energy_tensor, init_probs)
-    sim.gibbs_eta = float(st0.eta)
-    eta0 = float(st0.eta)
+    if held_eta is not None:
+        policy.name = "fixed"
+        policy.eta = float(held_eta)
+        policy.history.append(
+            {
+                "step": 0,
+                "eta": float(held_eta),
+                "scale": None,
+                "fallback": None,
+                "clamped": False,
+            }
+        )
+        sim.gibbs_eta = float(held_eta)
+        eta0 = float(held_eta)
+    else:
+        st0 = policy.initialize(sim.energy_tensor, init_probs)
+        sim.gibbs_eta = float(st0.eta)
+        eta0 = float(st0.eta)
+        if not refresh_eta:
+            policy.name = "sampled_tail_frozen"
 
     def project_joint(z: np.ndarray) -> np.ndarray:
         z = np.asarray(z, dtype=float).copy()
@@ -752,6 +776,9 @@ def optimize_gibbs_adaptive(
     def before_joint(k: int, z: np.ndarray) -> None:
         z = np.asarray(z, dtype=float)
         sim.initial_state = prep_params_to_ket(z[:N_PREP_PARAMS], nfocks)
+        if not refresh_eta:
+            sim.gibbs_eta = float(policy.eta)
+            return
         probs = current_probs(z[N_PREP_PARAMS:])
         st = policy.maybe_update(k, total_steps, sim.energy_tensor, probs)
         sim.gibbs_eta = float(st.eta)
@@ -794,6 +821,9 @@ def optimize_gibbs_adaptive(
         return sim.cost(x, objective="gibbs", gibbs_eta=float(policy.eta))
 
     def before_ansatz(k: int, x: np.ndarray) -> None:
+        if not refresh_eta:
+            sim.gibbs_eta = float(policy.eta)
+            return
         probs = current_probs(x)
         st = policy.maybe_update(int(outer_iter) + k, total_steps, sim.energy_tensor, probs)
         sim.gibbs_eta = float(st.eta)

@@ -246,6 +246,8 @@ def run_trial(job: dict) -> dict:
         prep_step_scale=prep_step_scale,
         energy_tensor=energy_tensor,
         ansatz=ansatz,
+        fixed_eta=job.get("fixed_eta"),
+        eta_adaptive=bool(job.get("eta_adaptive", True)),
     )
     warm = _eval_fields(result.eval_warmup, result.fun_warmup, energy_tensor)
     final = _eval_fields(result.eval_final, result.fun, energy_tensor)
@@ -274,7 +276,7 @@ def run_trial(job: dict) -> dict:
         "nfev_warmup": int(result.nfev_warmup),
         "nfev_ansatz": int(result.nfev_ansatz),
         "nfev": int(result.nfev),
-        "eta_policy": "sampled_tail",
+        "eta_policy": str(result.eta_policy),
         "eta0": float(result.eta0),
         "eta": float(result.eta),
         "n_eta_clamps": int(result.n_eta_clamps),

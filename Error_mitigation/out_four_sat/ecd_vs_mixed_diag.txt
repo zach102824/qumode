@@ -1,0 +1,46 @@
+# ECD vs mixed p-spin / 4-SAT diagnostic dump
+
+Encoding: both families dim=128, nfocks=[8, 8], n_qubits=7. 4-SAT untilted GS energy=0.000e+00 (identity=1.125).
+Ansatz params: ECD L4=32, L5=40, L8=64; SNAP L2=36, L3=54.
+four_sat: Emin=0.000, spread=3.450, gap=1.000 (min 1.000), Hamming-1 ΔE mean=1.021 (min 1.000), all 7 neighbors rigid≥1: True, unique energies=6.0, n_terms=37.0.
+mixed_p_spin: Emin=-6.432, spread=13.537, gap=0.407 (min 0.045), Hamming-1 ΔE mean=4.949 (min 0.237), all 7 neighbors rigid≥1: False, unique energies=128.0, n_terms=91.0.
+## mixed_ecd
+  L1: n=20  GS-hits=6/20  near-E0=0/20  GS-but-highE=6  mean deficit=4.901  best=1.592  mean η=3.64 (η0=3.72)  H with a passer=0/20
+  L2: n=20  GS-hits=9/20  near-E0=0/20  GS-but-highE=9  mean deficit=4.899  best=1.958  mean η=2.60 (η0=1.52)  H with a passer=0/20
+  L3: n=20  GS-hits=13/20  near-E0=0/20  GS-but-highE=13  mean deficit=4.620  best=1.785  mean η=3.82 (η0=1.35)  H with a passer=0/20
+  L4: n=20  GS-hits=18/20  near-E0=0/20  GS-but-highE=18  mean deficit=4.276  best=2.057  mean η=5.71 (η0=1.30)  H with a passer=0/20
+  L5: n=20  GS-hits=16/20  near-E0=0/20  GS-but-highE=16  mean deficit=4.374  best=2.926  mean η=3.03 (η0=1.23)  H with a passer=0/20
+## mixed_snap
+  L1: n=20  GS-hits=9/20  near-E0=0/20  GS-but-highE=9  mean deficit=5.321  best=3.623  mean η=2.97 (η0=1.46)  H with a passer=0/20
+  L2: n=20  GS-hits=14/20  near-E0=0/20  GS-but-highE=14  mean deficit=4.039  best=1.976  mean η=2.90 (η0=1.30)  H with a passer=0/20
+## sat_ecd
+  L4: n=216  GS-hits=203/216  near-E0=4/216  GS-but-highE=199  mean deficit=0.807  best=0.326  mean η=7.60 (η0=42.59)  H with a passer=2/20
+## sat_snap
+  L3: n=160  GS-hits=153/160  near-E0=61/160  GS-but-highE=92  mean deficit=0.572  best=0.147  mean η=12.49 (η0=44.52)  H with a passer=20/20
+## sat_ecd_scout_n8
+  L1: n=8  GS-hits=3/8  near-E0=0/8  GS-but-highE=3  mean deficit=1.159  best=0.996  mean η=3.10 (η0=11.31)  H with a passer=0/1
+  L2: n=8  GS-hits=7/8  near-E0=0/8  GS-but-highE=7  mean deficit=1.110  best=0.954  mean η=3.00 (η0=36.44)  H with a passer=0/1
+  L3: n=8  GS-hits=8/8  near-E0=0/8  GS-but-highE=8  mean deficit=1.039  best=0.768  mean η=5.24 (η0=23.41)  H with a passer=0/1
+  L4: n=8  GS-hits=8/8  near-E0=0/8  GS-but-highE=8  mean deficit=0.998  best=0.814  mean η=4.12 (η0=39.82)  H with a passer=0/1
+  L5: n=8  GS-hits=8/8  near-E0=0/8  GS-but-highE=8  mean deficit=0.938  best=0.774  mean η=5.83 (η0=38.77)  H with a passer=0/1
+  L6: n=8  GS-hits=8/8  near-E0=0/8  GS-but-highE=8  mean deficit=0.952  best=0.757  mean η=4.14 (η0=44.12)  H with a passer=0/1
+  L7: n=8  GS-hits=7/8  near-E0=0/8  GS-but-highE=7  mean deficit=0.996  best=0.860  mean η=9.79 (η0=44.12)  H with a passer=0/1
+  L8: n=8  GS-hits=7/8  near-E0=0/8  GS-but-highE=7  mean deficit=1.049  best=0.961  mean η=13.73 (η0=50.00)  H with a passer=0/1
+## sat_snap_scout_n5
+  L1: n=5  GS-hits=2/5  near-E0=0/5  GS-but-highE=2  mean deficit=1.208  best=1.000  mean η=3.35 (η0=32.44)  H with a passer=0/1
+  L2: n=5  GS-hits=5/5  near-E0=0/5  GS-but-highE=5  mean deficit=0.757  best=0.602  mean η=10.19 (η0=50.00)  H with a passer=0/1
+  L3: n=5  GS-hits=5/5  near-E0=3/5  GS-but-highE=2  mean deficit=0.474  best=0.345  mean η=11.98 (η0=50.00)  H with a passer=1/1
+  L4: n=5  GS-hits=5/5  near-E0=3/5  GS-but-highE=2  mean deficit=0.563  best=0.407  mean η=10.25 (η0=50.00)  H with a passer=1/1
+## sat_ecd_l6_400
+  L6: n=3  GS-hits=3/3  near-E0=0/3  GS-but-highE=3  mean deficit=0.866  best=0.851  mean η=12.00 (η0=50.00)  H with a passer=0/1
+## Reconstructed endpoints
+  ecd H000 L5 scout: ⟨H⟩ json=0.7738 replay=0.7738 match=True  p_GS=0.308 p_Hamming1=0.162 1-p_GS=0.692 bits=1010001
+  ecd H000 L6 scout: ⟨H⟩ json=0.7569 replay=0.7569 match=True  p_GS=0.324 p_Hamming1=0.081 1-p_GS=0.676 bits=1010001
+  ecd H000 L8 scout: ⟨H⟩ json=0.9613 replay=0.9613 match=True  p_GS=0.234 p_Hamming1=0.110 1-p_GS=0.766 bits=1010001
+  ecd H000 L4 fleet: ⟨H⟩ json=0.8314 replay=0.8314 match=True  p_GS=0.205 p_Hamming1=0.252 1-p_GS=0.795 bits=1010001
+  ecd H016 L4 passer: ⟨H⟩ json=0.3257 replay=0.3257 match=True  p_GS=0.699 p_Hamming1=0.196 1-p_GS=0.301 bits=1110110
+  snap H000 L3 fleet: ⟨H⟩ json=0.3765 replay=0.3765 match=True  p_GS=0.666 p_Hamming1=0.190 1-p_GS=0.334 bits=1010001
+  snap H010 L3 best: ⟨H⟩ json=0.1473 replay=0.1473 match=True  p_GS=0.858 p_Hamming1=0.093 1-p_GS=0.142 bits=1111001
+  ecd mixed H000 L5: ⟨H⟩ json=-1.9813 replay=-1.9813 match=True  p_GS=0.178 p_Hamming1=0.156 1-p_GS=0.822 bits=1111100
+  ecd mixed H004 L5: ⟨H⟩ json=-1.1863 replay=-1.1863 match=True  p_GS=0.010 p_Hamming1=0.042 1-p_GS=0.990 bits=0110010
+  snap mixed H000 L2: ⟨H⟩ json=-2.9494 replay=-2.9494 match=True  p_GS=0.311 p_Hamming1=0.268 1-p_GS=0.689 bits=1111100

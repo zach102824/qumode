@@ -1,0 +1,16 @@
+# ECD L5 4-SAT η ablation
+
+H=[0]  trials=5  joint SPSA=200  gate=0.5
+any arm with energy_physical−E0 ≤ 0.5: False
+best arm: fixed_sat_snap  best deficit=0.7803
+
+policy             nearE0  best⟨H⟩  mean⟨H⟩  best def   mean η
+tail_adaptive      0/5       0.837    0.920     0.837    6.579
+tail_frozen        0/5       0.781    0.895     0.781   50.000
+fixed_soft         0/5       1.109    1.123     1.109    0.100
+fixed_paper        0/5       0.996    1.029     0.996    1.667
+fixed_mixed_l5     0/5       0.869    0.987     0.869    3.000
+fixed_sat_ecd      0/5       0.784    0.948     0.784    7.200
+fixed_sat_snap     0/5       0.780    0.892     0.780   12.500
+fixed_sharp        0/5       0.781    0.895     0.781   26.000
+
