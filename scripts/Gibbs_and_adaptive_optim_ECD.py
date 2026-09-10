@@ -293,6 +293,8 @@ def run_trial(job: dict) -> dict:
         rec["family"] = str(job.get("family", rec["kind"]))
         rec.update(_score_tensor(final["most_likely"], energy_tensor))
         rec["ground_bitstring"] = bitstring_from_bits(bits_from_qnm(*rec["ground_qnm"]))
+        # JSON `success` is mode-finding: most_likely_bitstring == ground_bitstring.
+        rec["success"] = str(rec["most_likely_bitstring"]) == str(rec["ground_bitstring"])
         inst_d = job.get("instance")
         if inst_d is not None:
             inst = BKPInstance(
@@ -381,6 +383,33 @@ def _run_jobs(jobs: list[dict], workers: int) -> list[dict]:
         )
     )
     return records
+
+
+def _summarize_by_hamiltonian(recs: list[dict]) -> dict:
+    """Per-H mode-finding counts and the success-then-cost GDR pick."""
+    groups: dict[int, list[dict]] = {}
+    for rec in recs:
+        groups.setdefault(int(rec.get("hamiltonian_id", -1)), []).append(rec)
+    out: dict[str, dict] = {}
+    for hid, group in sorted(groups.items()):
+        n = len(group)
+        n_success = int(sum(bool(r.get("success")) for r in group))
+        succ = [r for r in group if r.get("success")]
+        pool = succ or group
+        pick = min(pool, key=lambda t: (float(t["cost"]), float(t["energy_physical"])))
+        energies = [float(r["energy_physical"]) for r in group]
+        out[str(int(hid))] = {
+            "n": n,
+            "n_success": n_success,
+            "success_rate": n_success / max(n, 1),
+            "pick_trial": int(pick["trial"]),
+            "pick_cost": float(pick["cost"]),
+            "pick_success": bool(pick.get("success")),
+            "pick_energy_physical": float(pick["energy_physical"]),
+            "pick_most_likely_bitstring": str(pick.get("most_likely_bitstring", "")),
+            "mean_energy_physical": float(np.mean(energies)) if energies else float("nan"),
+        }
+    return out
 
 
 def _summarize_group(recs: list[dict]) -> dict:
@@ -808,6 +837,7 @@ def run_energy_trial(job: dict) -> dict:
     }
     rec.update(_score_tensor(rec["most_likely"], energy_tensor))
     rec["ground_bitstring"] = bitstring_from_bits(bits_from_qnm(*rec["ground_qnm"]))
+    rec["success"] = str(rec["most_likely_bitstring"]) == str(rec["ground_bitstring"])
     inst_d = job.get("instance")
     if inst_d is not None:
         inst = BKPInstance(
@@ -1669,6 +1699,7 @@ def run_saved_hamiltonian_suite(
 
     n_success = int(sum(bool(r.get("success")) for r in records))
     method = f"{ansatz}_gibbs_spsa"
+    by_hamiltonian = _summarize_by_hamiltonian(records)
     payload = {
         "method": method,
         "ansatz": ansatz,
@@ -1676,6 +1707,7 @@ def run_saved_hamiltonian_suite(
         "objective": "gibbs",
         "eta_policy": "sampled_tail",
         "initial_state": "vacuum",
+        "success_metric": "most_likely_bitstring == ground_bitstring",
         "n_hamiltonians": len(instances),
         "n_trials_per_hamiltonian": n_t,
         "hamiltonian_ids": [int(inst["hamiltonian_id"]) for inst in instances],
@@ -1691,6 +1723,7 @@ def run_saved_hamiltonian_suite(
         "ham_dir": str(Path(ham_dir)),
         "n_success": n_success,
         "success_rate": n_success / max(len(records), 1),
+        "by_hamiltonian": by_hamiltonian,
         "mean_rel_gap": float(np.mean([r["rel_gap"] for r in records])) if records else float("nan"),
         "mean_eta": float(np.mean([r["eta"] for r in records])) if records else float("nan"),
         "mean_energy_physical": (

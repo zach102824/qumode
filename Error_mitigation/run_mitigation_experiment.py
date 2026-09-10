@@ -219,8 +219,20 @@ def physical_probs(sim: HybridSimulator, xvec: np.ndarray) -> np.ndarray:
     return joint_probabilities(rho, sim.dims)
 
 
-def load_gibbs_trial(path: Path, hid: int, ansatz: str, ndepth: int) -> dict:
-    """Pick the lowest-⟨H⟩ Gibbs trial for this (H, ansatz, depth)."""
+def load_gibbs_trial(
+    path: Path,
+    hid: int,
+    ansatz: str,
+    ndepth: int,
+    pick: str = "energy",
+) -> dict:
+    """Pick one Gibbs trial for this (H, ansatz, depth).
+
+    ``energy`` (default, official): lowest ⟨H⟩.
+    ``success_then_cost``: lowest Gibbs cost among mode-finding successes
+    (``success`` / most_likely_bitstring == ground_bitstring); if none
+    succeeded, lowest cost among all matching trials.
+    """
     payload = json.loads(Path(path).read_text())
     matches = [
         t
@@ -233,6 +245,13 @@ def load_gibbs_trial(path: Path, hid: int, ansatz: str, ndepth: int) -> dict:
         raise FileNotFoundError(
             f"no Gibbs trial for {ansatz} H{int(hid):03d} nd={int(ndepth)} in {path}"
         )
+    key = pick.strip().lower()
+    if key == "success_then_cost":
+        succ = [t for t in matches if t.get("success")]
+        pool = succ or matches
+        return min(pool, key=lambda t: (float(t.get("cost", t["energy_physical"])), float(t["energy_physical"])))
+    if key not in {"energy", "energy_physical"}:
+        raise ValueError(f"unknown gibbs pick {pick!r}; use energy or success_then_cost")
     return min(matches, key=lambda t: float(t["energy_physical"]))
 
 
@@ -260,6 +279,7 @@ def get_or_optimize_params(
     maxiter: int,
     n_restarts: int,
     gibbs_json: Path | None = None,
+    gibbs_pick: str = "energy",
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """Return (x_random, x_optimized, meta). Cache the optimized vector."""
     rng = np.random.default_rng(int(seed_base) + 17 * (0 if ansatz == "ecd" else 1) + hid)
@@ -270,7 +290,7 @@ def get_or_optimize_params(
 
     cache_path = outdir / f"optimized_params_{ansatz}_h{hid:03d}_nd{ndepth}.json"
     if gibbs_json is not None:
-        trial = load_gibbs_trial(Path(gibbs_json), hid, ansatz, ndepth)
+        trial = load_gibbs_trial(Path(gibbs_json), hid, ansatz, ndepth, pick=gibbs_pick)
         x_opt = np.asarray(trial["x"], dtype=float)
         prep = trial.get("prep")
         meta = {
@@ -282,10 +302,16 @@ def get_or_optimize_params(
             "n_restarts": int(n_restarts),
             "fun": float(trial["energy_physical"]),
             "energy_physical": float(trial["energy_physical"]),
+            "cost": trial.get("cost"),
             "energy_min": trial.get("energy_min"),
             "gap_to_min": trial.get("gap_to_min"),
             "source": "gibbs",
             "gibbs_json": str(gibbs_json),
+            "gibbs_pick": str(gibbs_pick),
+            "gibbs_trial": trial.get("trial"),
+            "success": trial.get("success"),
+            "most_likely_bitstring": trial.get("most_likely_bitstring"),
+            "ground_bitstring": trial.get("ground_bitstring"),
             "prep": None if prep is None else np.asarray(prep, dtype=float).tolist(),
             "x": x_opt.tolist(),
             "x_random": np.asarray(x_random, dtype=float).tolist(),
@@ -294,6 +320,7 @@ def get_or_optimize_params(
         cache_path.write_text(json.dumps(json_ready(meta), indent=2))
         print(
             f"  loaded Gibbs {ansatz} params from {Path(gibbs_json).name}  "
+            f"pick={gibbs_pick} trial={meta.get('gibbs_trial')} success={meta.get('success')}  "
             f"E={meta['fun']:.6f}  deficit={float(trial.get('energy_physical', 0.0)) - float(trial.get('energy_min') or 0.0):.4f}"
         )
         return x_random, x_opt, meta
@@ -499,21 +526,29 @@ def write_summary_txt(path: Path, records: list[dict], headline_kt: float, ham_f
         bits = []
         for m in head_methods:
             met = rec["metrics"].get(m) or {}
-            bits.append(f"{m}.TVD={_fmt(met.get('tvd'))} dE={_fmt(met.get('dE'))}")
+            gs = met.get("success_gs")
+            gs_s = "" if gs is None else f" GS={'Y' if gs else 'N'}"
+            bits.append(f"{m}.TVD={_fmt(met.get('tvd'))} dE={_fmt(met.get('dE'))}{gs_s}")
+        ideal_gs = rec.get("ideal_success_gs")
+        if ideal_gs is not None:
+            bits.append(f"ideal_GS={'Y' if ideal_gs else 'N'}")
         lines.append(tag + "  " + "  ".join(bits))
     lines += ["", "Full table (all cases)", ""]
     header = (
         f"{'ansatz':<6} {'params':<10} {'family':<24} {'kt':>6} {'readout':<18} "
-        f"{'method':<18} {'TVD':>8} {'dE':>8} {'dPgs':>8}"
+        f"{'method':<18} {'TVD':>8} {'dE':>8} {'dPgs':>8} {'GS':>4}"
     )
     lines.append(header)
     lines.append("-" * len(header))
     for rec in records:
         for method, met in rec["metrics"].items():
+            gs = met.get("success_gs")
+            gs_s = "   —" if gs is None else ("   Y" if gs else "   N")
             lines.append(
                 f"{rec['ansatz']:<6} {rec['params']:<10} {rec['family']:<24} "
                 f"{rec['kappa_tau']:6.3f} {rec['readout']:<18} {method:<18} "
                 f"{_fmt(met.get('tvd')):>8} {_fmt(met.get('dE')):>8} {_fmt(met.get('dPgs')):>8}"
+                f"{gs_s}"
             )
     path.write_text("\n".join(lines) + "\n")
 
@@ -779,6 +814,7 @@ def run(args: argparse.Namespace) -> dict:
             maxiter=int(preset["opt_maxiter"]),
             n_restarts=int(preset["opt_restarts"]),
             gibbs_json=getattr(args, "gibbs_json", None),
+            gibbs_pick=str(getattr(args, "gibbs_pick", None) or "energy"),
         )
         param_sets = {"random": x_random, "optimized": x_opt}
         if param_filter != "both":
@@ -918,6 +954,9 @@ def run(args: argparse.Namespace) -> dict:
                             "noise": noise_as_dict(cfg),
                             "readout_spec": readout_as_dict(spec),
                             "metrics": metrics,
+                            "ideal_success_gs": bool(
+                                (metrics.get("raw") or {}).get("success_gs_ideal")
+                            ),
                             "oracle_residual_tvd": mitigated.get("oracle_binomial", {}).get("residual_tvd"),
                             "gdr_fit": mitigated.get("gdr_param", {}).get("fit"),
                             "scalar_cdr": {
@@ -979,6 +1018,7 @@ def run(args: argparse.Namespace) -> dict:
         "n_train": n_train,
         "ndepth": getattr(args, "ndepth", None),
         "gibbs_json": None if getattr(args, "gibbs_json", None) is None else str(args.gibbs_json),
+        "gibbs_pick": str(getattr(args, "gibbs_pick", None) or "energy"),
         "families": list(families),
         "family_descriptions": {f: family_description(f) for f in families},
         "kappa_tau": list(kappas),
@@ -1032,6 +1072,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         dest="gibbs_json",
         help="Load noiseless Gibbs (x, prep) for this instance instead of energy L-BFGS-B.",
+    )
+    p.add_argument(
+        "--gibbs-pick",
+        choices=("energy", "success_then_cost"),
+        default="energy",
+        dest="gibbs_pick",
+        help="How to pick a trial from --gibbs-json. Default energy (lowest ⟨H⟩). "
+        "success_then_cost: best Gibbs cost among mode-finding successes.",
     )
     p.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR)
     p.add_argument("--shots", type=int, default=None)
