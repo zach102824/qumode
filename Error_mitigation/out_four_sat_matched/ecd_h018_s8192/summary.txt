@@ -1,0 +1,95 @@
+Gaussian Data Regression on four_sat (hybrid ECD / SNAP)
+Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, zne_idle, readout_then_zne
+
+Headline at κτ = 0.003  (readout_only vs gdr_param vs gdr_select vs oracle_binomial)
+
+ecd  comprehensive             readout_realistic     raw.TVD=0.1838 dE=0.1245 GS=Y  readout_only.TVD=0.1401 dE=0.0914 GS=Y  oracle_binomial.TVD=0.1138 dE=0.0102 GS=Y  gdr_param.TVD=0.0713 dE=0.0014 GS=Y  gdr_select.TVD=0.0713 dE=0.0014 GS=Y  ideal_GS=Y
+
+Full table (all cases)
+
+ansatz params     family                       kt readout            method                  TVD       dE     dPgs   GS
+-----------------------------------------------------------------------------------------------------------------------
+ecd    random     comprehensive             0.003 readout_realistic  raw                  0.0973   0.0058   0.0011   N
+ecd    random     comprehensive             0.003 readout_realistic  readout_only         0.0835   0.0069   0.0004   N
+ecd    random     comprehensive             0.003 readout_realistic  oracle_binomial      0.0820   0.0095   0.0061   N
+ecd    random     comprehensive             0.003 readout_realistic  gdr_param            0.0662   0.0019   0.0037   N
+ecd    random     comprehensive             0.003 readout_realistic  gdr_damped           0.0621   0.0029   0.0028   N
+ecd    random     comprehensive             0.003 readout_realistic  gdr_mid              0.0639   0.0016   0.0020   N
+ecd    random     comprehensive             0.003 readout_realistic  gdr_residual         0.0864   0.0062   0.0067   N
+ecd    random     comprehensive             0.003 readout_realistic  gdr_afterburn        0.0864   0.0062   0.0067   N
+ecd    random     comprehensive             0.003 readout_realistic  gdr_blend            0.0662   0.0019   0.0037   N
+ecd    random     comprehensive             0.003 readout_realistic  gdr_select           0.0615   0.0034   0.0024   N
+ecd    random     comprehensive             0.003 readout_realistic  gdr_full             0.1231   0.0050   0.0103   N
+ecd    random     comprehensive             0.003 readout_realistic  scalar_cdr             —      0.0078     —      —
+ecd    random     comprehensive             0.003 readout_realistic  zne_idle             0.1842   0.0105   0.0014   N
+ecd    random     comprehensive             0.003 readout_realistic  readout_then_zne     0.1901   0.0108   0.0018   N
+ecd    random     comprehensive             0.030 readout_realistic  raw                  0.2519   0.0334   0.0101   N
+ecd    random     comprehensive             0.030 readout_realistic  readout_only         0.2479   0.0353   0.0100   N
+ecd    random     comprehensive             0.030 readout_realistic  oracle_binomial      0.3435   0.0146   0.0121   N
+ecd    random     comprehensive             0.030 readout_realistic  gdr_param            0.1929   0.0030   0.0025   N
+ecd    random     comprehensive             0.030 readout_realistic  gdr_damped           0.1874   0.0079   0.0036   N
+ecd    random     comprehensive             0.030 readout_realistic  gdr_mid              0.1823   0.0068   0.0040   N
+ecd    random     comprehensive             0.030 readout_realistic  gdr_residual         0.2739   0.0531   0.0422   Y
+ecd    random     comprehensive             0.030 readout_realistic  gdr_afterburn        0.2739   0.0531   0.0422   Y
+ecd    random     comprehensive             0.030 readout_realistic  gdr_blend            0.1922   0.0036   0.0018   N
+ecd    random     comprehensive             0.030 readout_realistic  gdr_select           0.1823   0.0068   0.0040   N
+ecd    random     comprehensive             0.030 readout_realistic  gdr_full             0.2890   0.0035   0.0116   N
+ecd    random     comprehensive             0.030 readout_realistic  scalar_cdr             —      0.0263     —      —
+ecd    random     comprehensive             0.030 readout_realistic  zne_idle             0.2417   0.0154   0.0002   N
+ecd    random     comprehensive             0.030 readout_realistic  readout_then_zne     0.2462   0.0163   0.0004   N
+ecd    random     comprehensive             0.100 readout_realistic  raw                  0.4267   0.0878   0.0153   N
+ecd    random     comprehensive             0.100 readout_realistic  readout_only         0.4265   0.0914   0.0152   N
+ecd    random     comprehensive             0.100 readout_realistic  oracle_binomial      0.7021   0.0369   0.0162   N
+ecd    random     comprehensive             0.100 readout_realistic  gdr_param            0.3282   0.0144   0.0080   N
+ecd    random     comprehensive             0.100 readout_realistic  gdr_damped           0.3264   0.0182   0.0084   N
+ecd    random     comprehensive             0.100 readout_realistic  gdr_mid              0.3326   0.0249   0.0097   N
+ecd    random     comprehensive             0.100 readout_realistic  gdr_residual         0.4756   0.0771   0.0095   N
+ecd    random     comprehensive             0.100 readout_realistic  gdr_afterburn        0.4756   0.0771   0.0095   N
+ecd    random     comprehensive             0.100 readout_realistic  gdr_blend            0.3271   0.0155   0.0085   N
+ecd    random     comprehensive             0.100 readout_realistic  gdr_select           0.3264   0.0182   0.0084   N
+ecd    random     comprehensive             0.100 readout_realistic  gdr_full             0.4685   0.0016   0.0000   N
+ecd    random     comprehensive             0.100 readout_realistic  scalar_cdr             —      0.0191     —      —
+ecd    random     comprehensive             0.100 readout_realistic  zne_idle             0.3564   0.0752   0.0138   N
+ecd    random     comprehensive             0.100 readout_realistic  readout_then_zne     0.3597   0.0799   0.0139   N
+ecd    optimized  comprehensive             0.003 readout_realistic  raw                  0.1838   0.1245   0.1306   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  readout_only         0.1401   0.0914   0.0978   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  oracle_binomial      0.1138   0.0102   0.0146   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  gdr_param            0.0713   0.0014   0.0105   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  gdr_damped           0.0713   0.0014   0.0105   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  gdr_mid              0.0685   0.0033   0.0104   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  gdr_residual         0.1194   0.0656   0.0592   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  gdr_afterburn        0.1194   0.0656   0.0592   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  gdr_blend            0.0713   0.0014   0.0105   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  gdr_select           0.0713   0.0014   0.0105   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  gdr_full             0.2305   0.0309   0.0436   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  scalar_cdr             —      0.0383     —      —
+ecd    optimized  comprehensive             0.003 readout_realistic  zne_idle             0.1426   0.0990   0.0892   Y
+ecd    optimized  comprehensive             0.003 readout_realistic  readout_then_zne     0.1146   0.0711   0.0609   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  raw                  0.5489   0.3699   0.3602   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  readout_only         0.5342   0.3597   0.3503   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  oracle_binomial      0.9700   0.4900   0.5158   N
+ecd    optimized  comprehensive             0.030 readout_realistic  gdr_param            0.3103   0.1355   0.1508   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  gdr_damped           0.3204   0.1691   0.1807   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  gdr_mid              0.3280   0.1623   0.1664   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  gdr_residual         0.8000   0.4956   0.5097   N
+ecd    optimized  comprehensive             0.030 readout_realistic  gdr_afterburn        0.8000   0.4956   0.5097   N
+ecd    optimized  comprehensive             0.030 readout_realistic  gdr_blend            0.3103   0.1355   0.1508   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  gdr_select           0.3103   0.1355   0.1508   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  gdr_full             0.3935   0.0982   0.1223   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  scalar_cdr             —      0.2088     —      —
+ecd    optimized  comprehensive             0.030 readout_realistic  zne_idle             0.4354   0.2698   0.2731   Y
+ecd    optimized  comprehensive             0.030 readout_realistic  readout_then_zne     0.4176   0.2559   0.2594   Y
+ecd    optimized  comprehensive             0.100 readout_realistic  raw                  0.7783   0.5879   0.4755   N
+ecd    optimized  comprehensive             0.100 readout_realistic  readout_only         0.7748   0.5899   0.4737   N
+ecd    optimized  comprehensive             0.100 readout_realistic  oracle_binomial      0.9941   0.4886   0.5158   N
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_param            0.9365   0.5095   0.5140   N
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_damped           0.8754   0.5216   0.5079   N
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_mid              0.9445   0.5088   0.5151   N
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_residual         0.9927   0.4886   0.5158   N
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_afterburn        0.9927   0.4886   0.5158   N
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_blend            0.9365   0.5095   0.5140   N
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_select           0.9365   0.5095   0.5140   N
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_full             0.5252   0.3432   0.3010   N
+ecd    optimized  comprehensive             0.100 readout_realistic  scalar_cdr             —      0.3379     —      —
+ecd    optimized  comprehensive             0.100 readout_realistic  zne_idle             0.7221   0.4802   0.4384   N
+ecd    optimized  comprehensive             0.100 readout_realistic  readout_then_zne     0.7182   0.4791   0.4354   N

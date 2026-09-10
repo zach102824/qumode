@@ -1,0 +1,2796 @@
+{
+  "success_metric": "most_likely_bitstring == ground_bitstring (JSON success flag)",
+  "energy_bar_used": false,
+  "n_hamiltonians": 20,
+  "n_trials_per_hamiltonian": 10,
+  "seed_base": 4000,
+  "outer_iter": 200,
+  "eta_policy": "sampled_tail",
+  "initial_state": "vacuum",
+  "noiseless": {
+    "snap": {
+      "ansatz": "snap",
+      "ndepths": [
+        3
+      ],
+      "n_trials_per_hamiltonian": 10,
+      "seed_base": 4000,
+      "n_trials": 200,
+      "n_success": 193,
+      "success_pct": 96.5,
+      "success_metric": "most_likely_bitstring == ground_bitstring",
+      "mean_energy_physical": 0.5744559542762491,
+      "by_hamiltonian": [
+        {
+          "hamiltonian_id": 0,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 2,
+          "pick_success": true,
+          "pick_cost": 0.4059810680555098,
+          "pick_energy_physical": 0.3764726654613765,
+          "mean_energy_physical": 0.591215263046691,
+          "best_energy_physical": 0.3764726654613765
+        },
+        {
+          "hamiltonian_id": 1,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 9,
+          "pick_success": true,
+          "pick_cost": 0.4183991049086303,
+          "pick_energy_physical": 0.3612885988958361,
+          "mean_energy_physical": 0.5216990837369613,
+          "best_energy_physical": 0.3612885988958361
+        },
+        {
+          "hamiltonian_id": 2,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 2,
+          "pick_success": true,
+          "pick_cost": 0.4409623135979129,
+          "pick_energy_physical": 0.390574566149384,
+          "mean_energy_physical": 0.6652604542619085,
+          "best_energy_physical": 0.390574566149384
+        },
+        {
+          "hamiltonian_id": 3,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 2,
+          "pick_success": true,
+          "pick_cost": 0.29590904729804907,
+          "pick_energy_physical": 0.29053712927298686,
+          "mean_energy_physical": 0.46343562666987126,
+          "best_energy_physical": 0.29053712927298686
+        },
+        {
+          "hamiltonian_id": 4,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 2,
+          "pick_success": true,
+          "pick_cost": 0.6283447398481878,
+          "pick_energy_physical": 0.6329036940108909,
+          "mean_energy_physical": 0.8018773947479383,
+          "best_energy_physical": 0.6329036940108909
+        },
+        {
+          "hamiltonian_id": 5,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 1,
+          "pick_success": true,
+          "pick_cost": 0.41086707703909436,
+          "pick_energy_physical": 0.3626994942871219,
+          "mean_energy_physical": 0.6265899925292898,
+          "best_energy_physical": 0.3626994942871219
+        },
+        {
+          "hamiltonian_id": 6,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 2,
+          "pick_success": true,
+          "pick_cost": 0.19927044611928724,
+          "pick_energy_physical": 0.19992289447200975,
+          "mean_energy_physical": 0.5834041388743751,
+          "best_energy_physical": 0.19992289447200975
+        },
+        {
+          "hamiltonian_id": 7,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 4,
+          "pick_success": true,
+          "pick_cost": 0.41491493394489903,
+          "pick_energy_physical": 0.3816352595191183,
+          "mean_energy_physical": 0.6381570542486346,
+          "best_energy_physical": 0.3816352595191183
+        },
+        {
+          "hamiltonian_id": 8,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 4,
+          "pick_success": true,
+          "pick_cost": 0.2919361516001909,
+          "pick_energy_physical": 0.26237996718390466,
+          "mean_energy_physical": 0.45755123634400807,
+          "best_energy_physical": 0.26237996718390466
+        },
+        {
+          "hamiltonian_id": 9,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 3,
+          "pick_success": true,
+          "pick_cost": 0.26164824284133825,
+          "pick_energy_physical": 0.29214452215634223,
+          "mean_energy_physical": 0.5734673338506637,
+          "best_energy_physical": 0.29214452215634223
+        },
+        {
+          "hamiltonian_id": 10,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 7,
+          "pick_success": true,
+          "pick_cost": 0.15284858218648856,
+          "pick_energy_physical": 0.1472680043312586,
+          "mean_energy_physical": 0.5256295230209767,
+          "best_energy_physical": 0.1472680043312586
+        },
+        {
+          "hamiltonian_id": 11,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 2,
+          "pick_success": true,
+          "pick_cost": 0.31392716189881914,
+          "pick_energy_physical": 0.28089539204589575,
+          "mean_energy_physical": 0.5512701387615945,
+          "best_energy_physical": 0.28089539204589575
+        },
+        {
+          "hamiltonian_id": 12,
+          "n_success": 7,
+          "n": 10,
+          "success_rate": 0.7,
+          "pick_trial": 4,
+          "pick_success": true,
+          "pick_cost": 0.465018931678113,
+          "pick_energy_physical": 0.4181702026024151,
+          "mean_energy_physical": 0.6429854218826263,
+          "best_energy_physical": 0.41713830806571917
+        },
+        {
+          "hamiltonian_id": 13,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 1,
+          "pick_success": true,
+          "pick_cost": 0.22675624323985494,
+          "pick_energy_physical": 0.230371349283187,
+          "mean_energy_physical": 0.41687780225876836,
+          "best_energy_physical": 0.230371349283187
+        },
+        {
+          "hamiltonian_id": 14,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 1,
+          "pick_success": true,
+          "pick_cost": 0.3414293585338083,
+          "pick_energy_physical": 0.44427128072118816,
+          "mean_energy_physical": 0.7293987192756439,
+          "best_energy_physical": 0.44427128072118816
+        },
+        {
+          "hamiltonian_id": 15,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 8,
+          "pick_success": true,
+          "pick_cost": 0.2084129738117822,
+          "pick_energy_physical": 0.26210828017596827,
+          "mean_energy_physical": 0.5728925660569916,
+          "best_energy_physical": 0.26210828017596827
+        },
+        {
+          "hamiltonian_id": 16,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 5,
+          "pick_success": true,
+          "pick_cost": 0.3820148880234749,
+          "pick_energy_physical": 0.3350035400898425,
+          "mean_energy_physical": 0.44694083594013206,
+          "best_energy_physical": 0.32737232736999944
+        },
+        {
+          "hamiltonian_id": 17,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 0,
+          "pick_success": true,
+          "pick_cost": 0.20847708866678286,
+          "pick_energy_physical": 0.23453792593594794,
+          "mean_energy_physical": 0.556159433258951,
+          "best_energy_physical": 0.23453792593594794
+        },
+        {
+          "hamiltonian_id": 18,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 1,
+          "pick_success": true,
+          "pick_cost": 0.4238177885912521,
+          "pick_energy_physical": 0.39819140423921473,
+          "mean_energy_physical": 0.6083468382382928,
+          "best_energy_physical": 0.39819140423921473
+        },
+        {
+          "hamiltonian_id": 19,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 6,
+          "pick_success": true,
+          "pick_cost": 0.3489730663237524,
+          "pick_energy_physical": 0.30744253208959715,
+          "mean_energy_physical": 0.5159602285206611,
+          "best_energy_physical": 0.30744253208959715
+        }
+      ]
+    },
+    "ecd": {
+      "ansatz": "ecd",
+      "ndepths": [
+        4
+      ],
+      "n_trials_per_hamiltonian": 10,
+      "seed_base": 4000,
+      "n_trials": 200,
+      "n_success": 186,
+      "success_pct": 93.0,
+      "success_metric": "most_likely_bitstring == ground_bitstring",
+      "mean_energy_physical": 0.8367038469122767,
+      "by_hamiltonian": [
+        {
+          "hamiltonian_id": 0,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 7,
+          "pick_success": true,
+          "pick_cost": 1.1926148116447444,
+          "pick_energy_physical": 0.7575691875562485,
+          "mean_energy_physical": 0.9928118837707893,
+          "best_energy_physical": 0.7575691875562485
+        },
+        {
+          "hamiltonian_id": 1,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 9,
+          "pick_success": true,
+          "pick_cost": 1.3411431648436676,
+          "pick_energy_physical": 0.7550398764412714,
+          "mean_energy_physical": 0.873877111441702,
+          "best_energy_physical": 0.7550398764412714
+        },
+        {
+          "hamiltonian_id": 2,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 1,
+          "pick_success": true,
+          "pick_cost": 0.9124518529897759,
+          "pick_energy_physical": 0.6212862938422885,
+          "mean_energy_physical": 0.7909021797824856,
+          "best_energy_physical": 0.6212862938422885
+        },
+        {
+          "hamiltonian_id": 3,
+          "n_success": 8,
+          "n": 10,
+          "success_rate": 0.8,
+          "pick_trial": 0,
+          "pick_success": true,
+          "pick_cost": 0.8578773731399852,
+          "pick_energy_physical": 0.6713913766311721,
+          "mean_energy_physical": 0.8506989002943832,
+          "best_energy_physical": 0.6713913766311721
+        },
+        {
+          "hamiltonian_id": 4,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 1,
+          "pick_success": true,
+          "pick_cost": 0.7961823661662158,
+          "pick_energy_physical": 0.6470048203298062,
+          "mean_energy_physical": 0.8874439359881482,
+          "best_energy_physical": 0.6470048203298062
+        },
+        {
+          "hamiltonian_id": 5,
+          "n_success": 7,
+          "n": 10,
+          "success_rate": 0.7,
+          "pick_trial": 9,
+          "pick_success": true,
+          "pick_cost": 1.294958240312245,
+          "pick_energy_physical": 0.7950179205907697,
+          "mean_energy_physical": 0.9143548151784211,
+          "best_energy_physical": 0.7950179205907697
+        },
+        {
+          "hamiltonian_id": 6,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 0,
+          "pick_success": true,
+          "pick_cost": 1.0610560265916578,
+          "pick_energy_physical": 0.8164427674355346,
+          "mean_energy_physical": 0.9556817121706184,
+          "best_energy_physical": 0.8052573855393113
+        },
+        {
+          "hamiltonian_id": 7,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 4,
+          "pick_success": true,
+          "pick_cost": 1.0474351565042104,
+          "pick_energy_physical": 0.7140335276066909,
+          "mean_energy_physical": 0.9461440851370728,
+          "best_energy_physical": 0.7140335276066909
+        },
+        {
+          "hamiltonian_id": 8,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 1,
+          "pick_success": true,
+          "pick_cost": 0.7654077725051377,
+          "pick_energy_physical": 0.5634028099403318,
+          "mean_energy_physical": 0.8182211240121392,
+          "best_energy_physical": 0.5634028099403318
+        },
+        {
+          "hamiltonian_id": 9,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 6,
+          "pick_success": true,
+          "pick_cost": 1.199175661179048,
+          "pick_energy_physical": 0.7664763365332596,
+          "mean_energy_physical": 0.8429926773589417,
+          "best_energy_physical": 0.7258451196297496
+        },
+        {
+          "hamiltonian_id": 10,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 1,
+          "pick_success": true,
+          "pick_cost": 0.7460162446704747,
+          "pick_energy_physical": 0.5311322259286166,
+          "mean_energy_physical": 0.7208187789379223,
+          "best_energy_physical": 0.5311322259286166
+        },
+        {
+          "hamiltonian_id": 11,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 4,
+          "pick_success": true,
+          "pick_cost": 0.9104975970777033,
+          "pick_energy_physical": 0.7075400838859084,
+          "mean_energy_physical": 0.825469606181412,
+          "best_energy_physical": 0.7075400838859084
+        },
+        {
+          "hamiltonian_id": 12,
+          "n_success": 8,
+          "n": 10,
+          "success_rate": 0.8,
+          "pick_trial": 4,
+          "pick_success": true,
+          "pick_cost": 1.321256429720015,
+          "pick_energy_physical": 0.768775204100089,
+          "mean_energy_physical": 0.9122658827718672,
+          "best_energy_physical": 0.768775204100089
+        },
+        {
+          "hamiltonian_id": 13,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 3,
+          "pick_success": true,
+          "pick_cost": 0.771405612029309,
+          "pick_energy_physical": 0.565256890299664,
+          "mean_energy_physical": 0.7062772617051234,
+          "best_energy_physical": 0.565256890299664
+        },
+        {
+          "hamiltonian_id": 14,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 3,
+          "pick_success": true,
+          "pick_cost": 1.2698616771572475,
+          "pick_energy_physical": 0.774390597936841,
+          "mean_energy_physical": 0.9366296210877767,
+          "best_energy_physical": 0.774390597936841
+        },
+        {
+          "hamiltonian_id": 15,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 2,
+          "pick_success": true,
+          "pick_cost": 0.9582710332872154,
+          "pick_energy_physical": 0.6807366696746027,
+          "mean_energy_physical": 0.824568834584768,
+          "best_energy_physical": 0.6807366696746027
+        },
+        {
+          "hamiltonian_id": 16,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 1,
+          "pick_success": true,
+          "pick_cost": 0.3580240106973322,
+          "pick_energy_physical": 0.325732965628057,
+          "mean_energy_physical": 0.6125006573526529,
+          "best_energy_physical": 0.325732965628057
+        },
+        {
+          "hamiltonian_id": 17,
+          "n_success": 10,
+          "n": 10,
+          "success_rate": 1.0,
+          "pick_trial": 3,
+          "pick_success": true,
+          "pick_cost": 0.6767844752104736,
+          "pick_energy_physical": 0.5793607175057723,
+          "mean_energy_physical": 0.8016663775331618,
+          "best_energy_physical": 0.5793607175057723
+        },
+        {
+          "hamiltonian_id": 18,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 4,
+          "pick_success": true,
+          "pick_cost": 0.6619960814484698,
+          "pick_energy_physical": 0.5113588275973173,
+          "mean_energy_physical": 0.7401498290295907,
+          "best_energy_physical": 0.5113588275973173
+        },
+        {
+          "hamiltonian_id": 19,
+          "n_success": 9,
+          "n": 10,
+          "success_rate": 0.9,
+          "pick_trial": 6,
+          "pick_success": true,
+          "pick_cost": 0.6734271252275393,
+          "pick_energy_physical": 0.5517638429098679,
+          "mean_energy_physical": 0.7806016639265556,
+          "best_energy_physical": 0.5517638429098679
+        }
+      ]
+    }
+  },
+  "gdr": {
+    "snap": {
+      "ansatz": "snap",
+      "ndepth": 3,
+      "missing": [],
+      "hamiltonians": [
+        {
+          "hamiltonian_id": 0,
+          "gibbs_trial": 2,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.3764726654613765,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1649204234525792,
+                "success_gs": true,
+                "p_gs_mit": 0.5433349609375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.029350975411808512,
+                "success_gs": true,
+                "p_gs_mit": 0.6693586878679297,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.3744818957798157,
+                "success_gs": true,
+                "p_gs_mit": 0.346923828125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.05698797186258239,
+                "success_gs": true,
+                "p_gs_mit": 0.6662092825615354,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.6568342783128256,
+                "success_gs": false,
+                "p_gs_mit": 0.1224365234375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.20650585534198115,
+                "success_gs": true,
+                "p_gs_mit": 0.5938448489229966,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 1,
+          "gibbs_trial": 9,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.3612885988958361,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1880797818426107,
+                "success_gs": true,
+                "p_gs_mit": 0.49462890625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.06983266939228375,
+                "success_gs": true,
+                "p_gs_mit": 0.6867432630682617,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5570118818282583,
+                "success_gs": true,
+                "p_gs_mit": 0.16259765625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.14727020184390943,
+                "success_gs": true,
+                "p_gs_mit": 0.6187377179466639,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7713475361918317,
+                "success_gs": false,
+                "p_gs_mit": 0.0235595703125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.7121939152155137,
+                "success_gs": false,
+                "p_gs_mit": 0.09912931695107045,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 2,
+          "gibbs_trial": 2,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.390574566149384,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.23962696016887972,
+                "success_gs": true,
+                "p_gs_mit": 0.474609375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.04980058039243056,
+                "success_gs": true,
+                "p_gs_mit": 0.6298919252213425,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.7033797922070952,
+                "success_gs": false,
+                "p_gs_mit": 0.1385498046875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.22310629900272014,
+                "success_gs": true,
+                "p_gs_mit": 0.5345814438103138,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.915157535705258,
+                "success_gs": false,
+                "p_gs_mit": 0.01123046875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.828155169271417,
+                "success_gs": false,
+                "p_gs_mit": 0.015435380228667498,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 3,
+          "gibbs_trial": 2,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.29053712927298686,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.2019395844143058,
+                "success_gs": true,
+                "p_gs_mit": 0.5721435546875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.03551029442054795,
+                "success_gs": true,
+                "p_gs_mit": 0.7643088821961913,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.6058928103159391,
+                "success_gs": false,
+                "p_gs_mit": 0.19140625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.06814439183532936,
+                "success_gs": true,
+                "p_gs_mit": 0.6935684556073871,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7693362410948381,
+                "success_gs": false,
+                "p_gs_mit": 0.0137939453125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.458083432078781,
+                "success_gs": true,
+                "p_gs_mit": 0.3751550322548966,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 4,
+          "gibbs_trial": 2,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.6329036940108909,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.17309541132422368,
+                "success_gs": true,
+                "p_gs_mit": 0.4012451171875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.08669717616527856,
+                "success_gs": true,
+                "p_gs_mit": 0.5544395656094311,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.4421348841078323,
+                "success_gs": true,
+                "p_gs_mit": 0.166259765625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.2415767254964456,
+                "success_gs": true,
+                "p_gs_mit": 0.4584817453485965,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.6482442947511674,
+                "success_gs": false,
+                "p_gs_mit": 0.0479736328125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.8312562359835992,
+                "success_gs": false,
+                "p_gs_mit": 0.0148970998658085,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 5,
+          "gibbs_trial": 1,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.3626994942871219,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.19283834414091777,
+                "success_gs": true,
+                "p_gs_mit": 0.5069580078125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.0545129513383229,
+                "success_gs": true,
+                "p_gs_mit": 0.676635828509488,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5268631018101743,
+                "success_gs": true,
+                "p_gs_mit": 0.2147216796875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.2506945844642621,
+                "success_gs": true,
+                "p_gs_mit": 0.5157424538984673,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7366243339083053,
+                "success_gs": true,
+                "p_gs_mit": 0.05419921875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.6435657377922082,
+                "success_gs": true,
+                "p_gs_mit": 0.13452720355408654,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 6,
+          "gibbs_trial": 2,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.19992289447200975,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.19882640594352835,
+                "success_gs": true,
+                "p_gs_mit": 0.63671875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.04352396424160131,
+                "success_gs": true,
+                "p_gs_mit": 0.8393747479642482,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5416336223996878,
+                "success_gs": true,
+                "p_gs_mit": 0.2890625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.14375143386303416,
+                "success_gs": true,
+                "p_gs_mit": 0.740913673890127,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.78114098480052,
+                "success_gs": false,
+                "p_gs_mit": 0.0799560546875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.5868633925285104,
+                "success_gs": true,
+                "p_gs_mit": 0.31666270478807124,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 7,
+          "gibbs_trial": 4,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.3816352595191183,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.18612801016371971,
+                "success_gs": true,
+                "p_gs_mit": 0.5072021484375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.05230139363490873,
+                "success_gs": true,
+                "p_gs_mit": 0.6503553233604937,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5239011893954802,
+                "success_gs": true,
+                "p_gs_mit": 0.1851806640625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.355310521835572,
+                "success_gs": true,
+                "p_gs_mit": 0.414386032150975,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7371820355373332,
+                "success_gs": false,
+                "p_gs_mit": 0.041259765625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.6992314728461552,
+                "success_gs": false,
+                "p_gs_mit": 0.07694418348331401,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 8,
+          "gibbs_trial": 4,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.26237996718390466,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1329316463529563,
+                "success_gs": true,
+                "p_gs_mit": 0.6365966796875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.03859201503843433,
+                "success_gs": true,
+                "p_gs_mit": 0.7414302251131688,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5758199602164924,
+                "success_gs": true,
+                "p_gs_mit": 0.2222900390625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.2004403951230535,
+                "success_gs": true,
+                "p_gs_mit": 0.6032200443825753,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.8479680289540179,
+                "success_gs": false,
+                "p_gs_mit": 0.0174560546875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.3894681130913251,
+                "success_gs": true,
+                "p_gs_mit": 0.38741360689392185,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 9,
+          "gibbs_trial": 3,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.29214452215634223,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.18975624434046995,
+                "success_gs": true,
+                "p_gs_mit": 0.6112060546875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.02908513576254447,
+                "success_gs": true,
+                "p_gs_mit": 0.757973966863601,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.46513631901825625,
+                "success_gs": true,
+                "p_gs_mit": 0.3546142578125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.25067285403562123,
+                "success_gs": true,
+                "p_gs_mit": 0.5746306338976128,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7134237389381811,
+                "success_gs": true,
+                "p_gs_mit": 0.150634765625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.7169268172340946,
+                "success_gs": false,
+                "p_gs_mit": 0.17072582004631268,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 10,
+          "gibbs_trial": 7,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.1472680043312586,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.20821263047575986,
+                "success_gs": true,
+                "p_gs_mit": 0.6763916015625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.02271848727706613,
+                "success_gs": true,
+                "p_gs_mit": 0.8640945474347321,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.6287129111343435,
+                "success_gs": true,
+                "p_gs_mit": 0.2529296875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.1250187163466407,
+                "success_gs": true,
+                "p_gs_mit": 0.7670680450388155,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.855438751259068,
+                "success_gs": false,
+                "p_gs_mit": 0.031005859375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.3418590963253021,
+                "success_gs": true,
+                "p_gs_mit": 0.596616985819929,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 11,
+          "gibbs_trial": 2,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.28089539204589575,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.15367996923959687,
+                "success_gs": true,
+                "p_gs_mit": 0.598388671875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.04554697013034385,
+                "success_gs": true,
+                "p_gs_mit": 0.7038131016903457,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5897427484078553,
+                "success_gs": true,
+                "p_gs_mit": 0.2174072265625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.28590917609029987,
+                "success_gs": true,
+                "p_gs_mit": 0.4920549238739281,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.8203473724027007,
+                "success_gs": false,
+                "p_gs_mit": 0.0313720703125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.7423412397837608,
+                "success_gs": false,
+                "p_gs_mit": 0.12236364770824701,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 12,
+          "gibbs_trial": 4,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.4181702026024151,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1818393570427564,
+                "success_gs": true,
+                "p_gs_mit": 0.4927978515625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.061975228746166434,
+                "success_gs": true,
+                "p_gs_mit": 0.593572802312787,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.4721580328483699,
+                "success_gs": true,
+                "p_gs_mit": 0.2574462890625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.27775636734340436,
+                "success_gs": true,
+                "p_gs_mit": 0.43138666858712377,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7013406609267407,
+                "success_gs": false,
+                "p_gs_mit": 0.07373046875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.794976174854681,
+                "success_gs": false,
+                "p_gs_mit": 0.05544712801959079,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 13,
+          "gibbs_trial": 1,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.230371349283187,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.12036534607112448,
+                "success_gs": true,
+                "p_gs_mit": 0.6845703125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.03599102705069757,
+                "success_gs": true,
+                "p_gs_mit": 0.7779344078588737,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5217197057282381,
+                "success_gs": true,
+                "p_gs_mit": 0.3197021484375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.15357673255483253,
+                "success_gs": true,
+                "p_gs_mit": 0.6930346373873487,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.8182966665898999,
+                "success_gs": false,
+                "p_gs_mit": 0.0482177734375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.4007837814600933,
+                "success_gs": true,
+                "p_gs_mit": 0.4722316129719525,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 14,
+          "gibbs_trial": 1,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.44427128072118816,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1996761494932855,
+                "success_gs": true,
+                "p_gs_mit": 0.5419921875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.05484631771346198,
+                "success_gs": true,
+                "p_gs_mit": 0.6946505287877636,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.4962917794391328,
+                "success_gs": true,
+                "p_gs_mit": 0.2613525390625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.162528807285789,
+                "success_gs": true,
+                "p_gs_mit": 0.6445117670216487,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7289241666876491,
+                "success_gs": true,
+                "p_gs_mit": 0.0806884765625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.8171113822525556,
+                "success_gs": false,
+                "p_gs_mit": 0.047294080613797876,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 15,
+          "gibbs_trial": 8,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.26210828017596827,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.15742670215105636,
+                "success_gs": true,
+                "p_gs_mit": 0.66064453125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.04031673860564603,
+                "success_gs": true,
+                "p_gs_mit": 0.7881667180660008,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.3879917776012496,
+                "success_gs": true,
+                "p_gs_mit": 0.4359130859375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.2542272926695604,
+                "success_gs": true,
+                "p_gs_mit": 0.6718772859956597,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.6203835128347577,
+                "success_gs": true,
+                "p_gs_mit": 0.2105712890625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.8437988228090755,
+                "success_gs": false,
+                "p_gs_mit": 0.10235035230011624,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 16,
+          "gibbs_trial": 5,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.3350035400898425,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.21406202595087295,
+                "success_gs": true,
+                "p_gs_mit": 0.50146484375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.04070642995782215,
+                "success_gs": true,
+                "p_gs_mit": 0.6869480991701364,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.6294191722488615,
+                "success_gs": true,
+                "p_gs_mit": 0.1689453125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.38105681623958,
+                "success_gs": true,
+                "p_gs_mit": 0.46196061496749574,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.8307614763927055,
+                "success_gs": false,
+                "p_gs_mit": 0.0299072265625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.9896836615161452,
+                "success_gs": false,
+                "p_gs_mit": 1.9424185614579234e-05,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 17,
+          "gibbs_trial": 0,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.23453792593594794,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.18368677217847856,
+                "success_gs": true,
+                "p_gs_mit": 0.65576171875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.02417675052735293,
+                "success_gs": true,
+                "p_gs_mit": 0.8191559533451953,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.54464992975616,
+                "success_gs": true,
+                "p_gs_mit": 0.2989501953125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.07196815979861325,
+                "success_gs": true,
+                "p_gs_mit": 0.7829385555390943,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.8237246176791424,
+                "success_gs": false,
+                "p_gs_mit": 0.04296875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.17852760515316507,
+                "success_gs": true,
+                "p_gs_mit": 0.726159725975822,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 18,
+          "gibbs_trial": 1,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.39819140423921473,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.20803882452640157,
+                "success_gs": true,
+                "p_gs_mit": 0.4859619140625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.052883603351846664,
+                "success_gs": true,
+                "p_gs_mit": 0.6686165469450311,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5690094102334651,
+                "success_gs": true,
+                "p_gs_mit": 0.1639404296875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.2234605216489208,
+                "success_gs": true,
+                "p_gs_mit": 0.505161844190263,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7446820857038645,
+                "success_gs": false,
+                "p_gs_mit": 0.025146484375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.8771397305019761,
+                "success_gs": false,
+                "p_gs_mit": 0.01873083505282789,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 19,
+          "gibbs_trial": 6,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.30744253208959715,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.22380690186123908,
+                "success_gs": true,
+                "p_gs_mit": 0.5159912109375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.057292502406723046,
+                "success_gs": true,
+                "p_gs_mit": 0.6893558583487648,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.6304826600165184,
+                "success_gs": true,
+                "p_gs_mit": 0.155517578125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.23371913773134814,
+                "success_gs": true,
+                "p_gs_mit": 0.5558097392902785,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.806343199103197,
+                "success_gs": false,
+                "p_gs_mit": 0.0262451171875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.7188004546327327,
+                "success_gs": false,
+                "p_gs_mit": 0.09876628842570137,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        }
+      ],
+      "summary": {
+        "0.003": {
+          "n": 20,
+          "select_beats_raw": 20,
+          "mean_raw_tvd": 0.18594687455673814,
+          "mean_select_tvd": 0.04628306057826439,
+          "raw_gs_mode": 20,
+          "select_gs_mode": 20,
+          "ideal_gs_mode": 20
+        },
+        "0.03": {
+          "n": 20,
+          "select_beats_raw": 20,
+          "mean_raw_tvd": 0.5393216792246613,
+          "mean_select_tvd": 0.20535885535357595,
+          "raw_gs_mode": 18,
+          "select_gs_mode": 20,
+          "ideal_gs_mode": 20
+        },
+        "0.1": {
+          "n": 20,
+          "select_beats_raw": 13,
+          "mean_raw_tvd": 0.7663750758887001,
+          "mean_select_tvd": 0.6388636045336537,
+          "raw_gs_mode": 4,
+          "select_gs_mode": 8,
+          "ideal_gs_mode": 20
+        }
+      }
+    },
+    "ecd": {
+      "ansatz": "ecd",
+      "ndepth": 4,
+      "missing": [],
+      "hamiltonians": [
+        {
+          "hamiltonian_id": 0,
+          "gibbs_trial": 7,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.7575691875562485,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1605983381681782,
+                "success_gs": true,
+                "p_gs_mit": 0.232666015625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.08293313038163155,
+                "success_gs": true,
+                "p_gs_mit": 0.292812048506229,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.3882284283556571,
+                "success_gs": true,
+                "p_gs_mit": 0.095947265625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.38187337152853695,
+                "success_gs": false,
+                "p_gs_mit": 0.11063051091565732,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.5666810064946575,
+                "success_gs": false,
+                "p_gs_mit": 0.0240478515625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.9609440324183701,
+                "success_gs": false,
+                "p_gs_mit": 2.7926719958481636e-12,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 1,
+          "gibbs_trial": 9,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.7550398764412714,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.15885891135532626,
+                "success_gs": true,
+                "p_gs_mit": 0.1959228515625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.08239976087626447,
+                "success_gs": true,
+                "p_gs_mit": 0.2545393530245439,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.42749830846332554,
+                "success_gs": true,
+                "p_gs_mit": 0.0860595703125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.24998957458006674,
+                "success_gs": true,
+                "p_gs_mit": 0.22357092786061564,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.6421630701181228,
+                "success_gs": false,
+                "p_gs_mit": 0.01953125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.6143798304309518,
+                "success_gs": false,
+                "p_gs_mit": 0.005083139083665055,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 2,
+          "gibbs_trial": 1,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.6212862938422885,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1971746406558118,
+                "success_gs": true,
+                "p_gs_mit": 0.2730712890625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.08896729203958416,
+                "success_gs": true,
+                "p_gs_mit": 0.3794527114350359,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5177731413179404,
+                "success_gs": true,
+                "p_gs_mit": 0.0772705078125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.35354558684817955,
+                "success_gs": true,
+                "p_gs_mit": 0.32507697726178475,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7767503322956,
+                "success_gs": false,
+                "p_gs_mit": 0.00634765625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.7196153528617488,
+                "success_gs": false,
+                "p_gs_mit": 0.014224670932375864,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 3,
+          "gibbs_trial": 0,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.6713913766311721,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.16523818064009205,
+                "success_gs": true,
+                "p_gs_mit": 0.30859375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.0926596287857042,
+                "success_gs": true,
+                "p_gs_mit": 0.410582554018736,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.3996489671601088,
+                "success_gs": true,
+                "p_gs_mit": 0.1539306640625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.3223576942603107,
+                "success_gs": true,
+                "p_gs_mit": 0.2530102640276206,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.6155598231675803,
+                "success_gs": false,
+                "p_gs_mit": 0.0543212890625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.8931717481696819,
+                "success_gs": false,
+                "p_gs_mit": 0.0006554117599057699,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 4,
+          "gibbs_trial": 1,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.6470048203298062,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.14643786043361498,
+                "success_gs": true,
+                "p_gs_mit": 0.3546142578125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.08563113084325125,
+                "success_gs": true,
+                "p_gs_mit": 0.46650251040842045,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.4264581615885966,
+                "success_gs": true,
+                "p_gs_mit": 0.1136474609375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.314719448739939,
+                "success_gs": true,
+                "p_gs_mit": 0.34297694127420675,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.6199512666560146,
+                "success_gs": false,
+                "p_gs_mit": 0.023681640625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.7973146586103222,
+                "success_gs": false,
+                "p_gs_mit": 0.004678309652476167,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 5,
+          "gibbs_trial": 9,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.7950179205907697,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.15427119193265681,
+                "success_gs": true,
+                "p_gs_mit": 0.1915283203125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.10841010624353158,
+                "success_gs": true,
+                "p_gs_mit": 0.24724434631821787,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.32851070001931926,
+                "success_gs": true,
+                "p_gs_mit": 0.0606689453125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.34791922702549705,
+                "success_gs": true,
+                "p_gs_mit": 0.1425897458012622,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.49104933640474324,
+                "success_gs": false,
+                "p_gs_mit": 0.0169677734375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.644285836663159,
+                "success_gs": false,
+                "p_gs_mit": 0.003463672555628631,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 6,
+          "gibbs_trial": 0,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.8164427674355346,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1288416123119164,
+                "success_gs": true,
+                "p_gs_mit": 0.276611328125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.06781076653720605,
+                "success_gs": true,
+                "p_gs_mit": 0.3407764402454518,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.31616543917302364,
+                "success_gs": true,
+                "p_gs_mit": 0.134033203125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.22521255159652304,
+                "success_gs": true,
+                "p_gs_mit": 0.3223501508993576,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.6071507969822638,
+                "success_gs": false,
+                "p_gs_mit": 0.03857421875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.6015272672111776,
+                "success_gs": false,
+                "p_gs_mit": 0.10193116758334367,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 7,
+          "gibbs_trial": 4,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.7140335276066909,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.17253350069941,
+                "success_gs": true,
+                "p_gs_mit": 0.260009765625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.11623087941777617,
+                "success_gs": true,
+                "p_gs_mit": 0.33429790151934224,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.39046530028543414,
+                "success_gs": true,
+                "p_gs_mit": 0.12353515625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.2547519505717767,
+                "success_gs": true,
+                "p_gs_mit": 0.30221494877864985,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.5859498592161071,
+                "success_gs": false,
+                "p_gs_mit": 0.03466796875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.6460631270742214,
+                "success_gs": false,
+                "p_gs_mit": 0.05157481872329846,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 8,
+          "gibbs_trial": 1,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.5634028099403318,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.13556470311046942,
+                "success_gs": true,
+                "p_gs_mit": 0.3680419921875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.10006216970777977,
+                "success_gs": true,
+                "p_gs_mit": 0.44735322358803503,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.4210923021727894,
+                "success_gs": true,
+                "p_gs_mit": 0.156982421875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.1983648977193833,
+                "success_gs": true,
+                "p_gs_mit": 0.4224792803065394,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7271892297702933,
+                "success_gs": false,
+                "p_gs_mit": 0.0155029296875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.4016146668154914,
+                "success_gs": true,
+                "p_gs_mit": 0.2666680824313874,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 9,
+          "gibbs_trial": 6,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.7664763365332596,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.11776862110809325,
+                "success_gs": true,
+                "p_gs_mit": 0.23974609375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.06390734547523982,
+                "success_gs": true,
+                "p_gs_mit": 0.2958945770583958,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.32472660344999776,
+                "success_gs": true,
+                "p_gs_mit": 0.1119384765625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.22113521125816532,
+                "success_gs": true,
+                "p_gs_mit": 0.2376521485108321,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.5279461655652086,
+                "success_gs": false,
+                "p_gs_mit": 0.0438232421875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.5745719632234467,
+                "success_gs": false,
+                "p_gs_mit": 0.02512856056335083,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 10,
+          "gibbs_trial": 1,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.5311322259286166,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1565190501893759,
+                "success_gs": true,
+                "p_gs_mit": 0.3614501953125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.07540674044766787,
+                "success_gs": true,
+                "p_gs_mit": 0.47548019992541296,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.4234967366740313,
+                "success_gs": true,
+                "p_gs_mit": 0.1568603515625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.21228960655963477,
+                "success_gs": true,
+                "p_gs_mit": 0.4646867883619836,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.666846384087371,
+                "success_gs": false,
+                "p_gs_mit": 0.0123291015625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.32505460162186856,
+                "success_gs": true,
+                "p_gs_mit": 0.40115916662035905,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 11,
+          "gibbs_trial": 4,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.7075400838859084,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1395840634250625,
+                "success_gs": true,
+                "p_gs_mit": 0.3004150390625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.07055355143647177,
+                "success_gs": true,
+                "p_gs_mit": 0.4035450993539935,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.45520077290615746,
+                "success_gs": true,
+                "p_gs_mit": 0.1102294921875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.306458799980148,
+                "success_gs": true,
+                "p_gs_mit": 0.3770325466701053,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.733738183815683,
+                "success_gs": false,
+                "p_gs_mit": 0.01904296875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.8048306346034664,
+                "success_gs": false,
+                "p_gs_mit": 0.005055689648343847,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 12,
+          "gibbs_trial": 4,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.768775204100089,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.13100251053168877,
+                "success_gs": true,
+                "p_gs_mit": 0.2037353515625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.06527176254636724,
+                "success_gs": true,
+                "p_gs_mit": 0.25719767935347937,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.33723236820938374,
+                "success_gs": true,
+                "p_gs_mit": 0.1156005859375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.1871718310658444,
+                "success_gs": true,
+                "p_gs_mit": 0.2469439230666215,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.5018079543531939,
+                "success_gs": false,
+                "p_gs_mit": 0.0487060546875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.608326419387328,
+                "success_gs": false,
+                "p_gs_mit": 0.08987933426974934,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 13,
+          "gibbs_trial": 3,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.565256890299664,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.12109359966625326,
+                "success_gs": true,
+                "p_gs_mit": 0.3883056640625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.053242961857740925,
+                "success_gs": true,
+                "p_gs_mit": 0.4592013191458605,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.45915690572035933,
+                "success_gs": true,
+                "p_gs_mit": 0.1905517578125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.10243837425900071,
+                "success_gs": true,
+                "p_gs_mit": 0.46645560063533104,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7943003659190429,
+                "success_gs": false,
+                "p_gs_mit": 0.0272216796875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.19840524460509848,
+                "success_gs": true,
+                "p_gs_mit": 0.46999402864842027,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 14,
+          "gibbs_trial": 3,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.774390597936841,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.14462662316333585,
+                "success_gs": true,
+                "p_gs_mit": 0.2183837890625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.08246220375333692,
+                "success_gs": true,
+                "p_gs_mit": 0.27003442340429784,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.38467871142249377,
+                "success_gs": true,
+                "p_gs_mit": 0.104248046875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.2575020740509315,
+                "success_gs": true,
+                "p_gs_mit": 0.24645418846335382,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.6083983481025017,
+                "success_gs": false,
+                "p_gs_mit": 0.022705078125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.410951557031614,
+                "success_gs": true,
+                "p_gs_mit": 0.14306233408170924,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 15,
+          "gibbs_trial": 2,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.6807366696746027,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.12612861055431268,
+                "success_gs": true,
+                "p_gs_mit": 0.2947998046875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.10174797214413092,
+                "success_gs": true,
+                "p_gs_mit": 0.39270108734319187,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.258683653604461,
+                "success_gs": true,
+                "p_gs_mit": 0.211669921875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.2317505812455226,
+                "success_gs": true,
+                "p_gs_mit": 0.4384557998449266,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.44392800254131576,
+                "success_gs": true,
+                "p_gs_mit": 0.10546875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.38119460721103804,
+                "success_gs": true,
+                "p_gs_mit": 0.3294230361005929,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 16,
+          "gibbs_trial": 1,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.325732965628057,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.2359426901383232,
+                "success_gs": true,
+                "p_gs_mit": 0.5067138671875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.11402327852064993,
+                "success_gs": true,
+                "p_gs_mit": 0.6195657319889688,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.640730265856973,
+                "success_gs": true,
+                "p_gs_mit": 0.1507568359375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.44781341472213215,
+                "success_gs": true,
+                "p_gs_mit": 0.3531643410760419,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.8252804386692933,
+                "success_gs": false,
+                "p_gs_mit": 0.01513671875,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.9508848486336856,
+                "success_gs": false,
+                "p_gs_mit": 7.173188267172114e-05,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 17,
+          "gibbs_trial": 3,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.5793607175057723,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.14441852603287936,
+                "success_gs": true,
+                "p_gs_mit": 0.4105224609375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.06048598415198425,
+                "success_gs": true,
+                "p_gs_mit": 0.48351075595891624,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.4432098198743019,
+                "success_gs": true,
+                "p_gs_mit": 0.197021484375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.19654928954005105,
+                "success_gs": true,
+                "p_gs_mit": 0.5288752793054462,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.789036009514337,
+                "success_gs": false,
+                "p_gs_mit": 0.0208740234375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.3881361633621425,
+                "success_gs": true,
+                "p_gs_mit": 0.40896645108454377,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 18,
+          "gibbs_trial": 4,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.5113588275973173,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.18376791078615393,
+                "success_gs": true,
+                "p_gs_mit": 0.38525390625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.07131642844642047,
+                "success_gs": true,
+                "p_gs_mit": 0.5053220612070591,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.5489106904131115,
+                "success_gs": true,
+                "p_gs_mit": 0.1556396484375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.31034028530050906,
+                "success_gs": true,
+                "p_gs_mit": 0.36504267089975756,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.7782534515034494,
+                "success_gs": false,
+                "p_gs_mit": 0.040283203125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.9365406329526986,
+                "success_gs": false,
+                "p_gs_mit": 0.001852028971284349,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": false
+            }
+          }
+        },
+        {
+          "hamiltonian_id": 19,
+          "gibbs_trial": 6,
+          "gibbs_pick": "success_then_cost",
+          "pick_success": true,
+          "pick_energy_physical": 0.5517638429098679,
+          "ideal_success_gs": true,
+          "by_kt": {
+            "0.003": {
+              "raw": {
+                "tvd": 0.1901813844578501,
+                "success_gs": true,
+                "p_gs_mit": 0.3673095703125,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.06898651586561319,
+                "success_gs": true,
+                "p_gs_mit": 0.4974692209715257,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.03": {
+              "raw": {
+                "tvd": 0.540159832977697,
+                "success_gs": false,
+                "p_gs_mit": 0.09521484375,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.19611620452423595,
+                "success_gs": true,
+                "p_gs_mit": 0.4697777293206367,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            },
+            "0.1": {
+              "raw": {
+                "tvd": 0.8057026510553766,
+                "success_gs": false,
+                "p_gs_mit": 0.00634765625,
+                "ideal_success_gs": true
+              },
+              "gdr_select": {
+                "tvd": 0.5749819070310644,
+                "success_gs": true,
+                "p_gs_mit": 0.13793362129568512,
+                "ideal_success_gs": true
+              },
+              "select_beats_raw": true
+            }
+          }
+        }
+      ],
+      "summary": {
+        "0.003": {
+          "n": 20,
+          "select_beats_raw": 20,
+          "mean_raw_tvd": 0.15552762646804025,
+          "mean_select_tvd": 0.08262548047391763,
+          "raw_gs_mode": 20,
+          "select_gs_mode": 20,
+          "ideal_gs_mode": 20
+        },
+        "0.03": {
+          "n": 20,
+          "select_beats_raw": 19,
+          "mean_raw_tvd": 0.4216013554822581,
+          "mean_select_tvd": 0.2659149987688194,
+          "raw_gs_mode": 19,
+          "select_gs_mode": 19,
+          "ideal_gs_mode": 20
+        },
+        "0.1": {
+          "n": 20,
+          "select_beats_raw": 10,
+          "mean_raw_tvd": 0.6553841338116078,
+          "mean_select_tvd": 0.6216397549959287,
+          "raw_gs_mode": 1,
+          "select_gs_mode": 7,
+          "ideal_gs_mode": 20
+        }
+      }
+    }
+  }
+}
