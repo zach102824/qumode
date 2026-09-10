@@ -1,0 +1,8 @@
+{
+  "ansatz": "snap",
+  "params": "random",
+  "family": "loss_thermal_dephasing",
+  "kappa_tau": 0.1,
+  "n_train": 40,
+  "twin_tag": "span_nr10_lo0.25_hi1.35_x0"
+}

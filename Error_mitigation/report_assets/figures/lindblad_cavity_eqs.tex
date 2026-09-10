@@ -1,0 +1,31 @@
+\documentclass[12pt]{article}
+\usepackage{fix-cm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[
+  paperwidth=11.6in,
+  paperheight=5.2in,
+  margin=0.22in,
+  headheight=0pt,
+  headsep=0pt,
+  footskip=0pt
+]{geometry}
+\pagestyle{empty}
+\setlength{\abovedisplayskip}{3pt}
+\setlength{\belowdisplayskip}{3pt}
+\setlength{\abovedisplayshortskip}{2pt}
+\setlength{\belowdisplayshortskip}{2pt}
+\begin{document}
+\fontsize{22}{28}\selectfont
+\begin{align*}
+c_\downarrow &= \sqrt{\kappa(n_{th}+1)}\,a
+      \qquad\text{photon loss, }n\to n-1 \\[0.45em]
+c_\uparrow &= \sqrt{\kappa n_{th}}\,a^\dagger
+      \qquad\text{thermal heating, }n\to n+1
+      \quad(n_{th}=0\text{ off}) \\[0.45em]
+c_\phi &= \sqrt{\kappa_\phi}\,\hat{n}
+      \qquad\text{number dephasing, no hops in }n \\[0.45em]
+\kappa\cdot\tau &= \kappa\tau
+      \qquad\text{for one application}
+\end{align*}
+\end{document}

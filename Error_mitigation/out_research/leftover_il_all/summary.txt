@@ -1,0 +1,43 @@
+Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)
+Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, zne_idle, readout_then_zne
+
+Headline at κτ = 0.003  (readout_only vs gdr_param vs gdr_select vs oracle_binomial)
+
+ecd  loss                      ideal                 raw.TVD=0.0383 dE=0.1227  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=0.0092 dE=0.0436  gdr_param.TVD=0.0096 dE=0.0449  gdr_select.TVD=   —    dE=   —   
+ecd  loss                      readout_realistic     raw.TVD=0.0788 dE=0.2615  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=0.0097 dE=0.0421  gdr_param.TVD=0.0103 dE=0.0462  gdr_select.TVD=   —    dE=   —   
+ecd  loss                      readout_strong        raw.TVD=0.1629 dE=0.5745  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=0.0119 dE=0.0600  gdr_param.TVD=0.0165 dE=0.0786  gdr_select.TVD=   —    dE=   —   
+
+Full table (all cases)
+
+ansatz params     family                       kt readout            method                  TVD       dE     dPgs
+------------------------------------------------------------------------------------------------------------------
+ecd    optimized  loss                      0.003 ideal              raw                  0.0383   0.1227   0.0000
+ecd    optimized  loss                      0.003 ideal              oracle_binomial      0.0092   0.0436   0.0000
+ecd    optimized  loss                      0.003 ideal              gdr_param            0.0096   0.0449   0.0000
+ecd    optimized  loss                      0.003 ideal              gdr_residual         0.0092   0.0436   0.0000
+ecd    optimized  loss                      0.003 ideal              gdr_interleave       0.0096   0.0449   0.0000
+ecd    optimized  loss                      0.003 readout_realistic  raw                  0.0788   0.2615   0.0000
+ecd    optimized  loss                      0.003 readout_realistic  oracle_binomial      0.0097   0.0421   0.0000
+ecd    optimized  loss                      0.003 readout_realistic  gdr_param            0.0103   0.0462   0.0000
+ecd    optimized  loss                      0.003 readout_realistic  gdr_residual         0.0097   0.0421   0.0000
+ecd    optimized  loss                      0.003 readout_realistic  gdr_interleave       0.0103   0.0461   0.0000
+ecd    optimized  loss                      0.003 readout_strong     raw                  0.1629   0.5745   0.0000
+ecd    optimized  loss                      0.003 readout_strong     oracle_binomial      0.0119   0.0600   0.0000
+ecd    optimized  loss                      0.003 readout_strong     gdr_param            0.0165   0.0786   0.0000
+ecd    optimized  loss                      0.003 readout_strong     gdr_residual         0.0119   0.0600   0.0000
+ecd    optimized  loss                      0.003 readout_strong     gdr_interleave       0.0165   0.0785   0.0000
+ecd    optimized  loss                      0.100 ideal              raw                  0.6961   2.4681   0.0000
+ecd    optimized  loss                      0.100 ideal              oracle_binomial      0.1975   1.0507   0.0000
+ecd    optimized  loss                      0.100 ideal              gdr_param            0.2298   1.2486   0.0000
+ecd    optimized  loss                      0.100 ideal              gdr_residual         0.1954   1.0292   0.0000
+ecd    optimized  loss                      0.100 ideal              gdr_interleave       0.2541   1.3134   0.0000
+ecd    optimized  loss                      0.100 readout_realistic  raw                  0.7090   2.5730   0.0000
+ecd    optimized  loss                      0.100 readout_realistic  oracle_binomial      0.2065   1.0996   0.0000
+ecd    optimized  loss                      0.100 readout_realistic  gdr_param            0.2340   1.2783   0.0000
+ecd    optimized  loss                      0.100 readout_realistic  gdr_residual         0.2040   1.0719   0.0000
+ecd    optimized  loss                      0.100 readout_realistic  gdr_interleave       0.2460   1.2958   0.0000
+ecd    optimized  loss                      0.100 readout_strong     raw                  0.7207   2.7631   0.0000
+ecd    optimized  loss                      0.100 readout_strong     oracle_binomial      0.2099   1.1159   0.0000
+ecd    optimized  loss                      0.100 readout_strong     gdr_param            0.2420   1.3022   0.0000
+ecd    optimized  loss                      0.100 readout_strong     gdr_residual         0.2072   1.0903   0.0000
+ecd    optimized  loss                      0.100 readout_strong     gdr_interleave       0.2717   1.3699   0.0000

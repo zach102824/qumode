@@ -1,0 +1,392 @@
+# Ablation summary
+
+tag=`micro_hard` shots=4096 n_train=20 twin=span ansatz=ecd params=both families=loss_thermal_dephasing,comprehensive kappa=0.003,0.1
+
+TVD unless noted. `base_*` is PR #6 (`Error_mitigation/out/`, shots=8192, n_train=40).
+Same-run `gdr_param` is the controlled baseline for method changes.
+
+| ansatz | params | family | κτ | readout | raw | gdr_param | best new | best name | base_raw | base_gdr | Δ vs same-run gdr |
+|---|---|---|---:|---|---:|---:|---:|---|---:|---:|---:|
+| ecd | random | loss_thermal_dephasing | 0.003 | ideal | 0.0644 | 0.0644 | 0.0604 | gdr_reg | 0.0488 | 0.0458 | -0.0040 |
+| ecd | random | loss_thermal_dephasing | 0.003 | readout_realistic | 0.0737 | 0.0701 | 0.0675 | gdr_select | 0.0610 | 0.0523 | -0.0025 |
+| ecd | random | loss_thermal_dephasing | 0.003 | readout_strong | 0.1092 | 0.0774 | 0.0768 | gdr_damped | 0.1005 | 0.0655 | -0.0006 |
+| ecd | random | loss_thermal_dephasing | 0.1 | ideal | 0.3306 | 0.2743 | 0.2716 | gdr_damped | 0.3319 | 0.4067 | -0.0026 |
+| ecd | random | loss_thermal_dephasing | 0.1 | readout_realistic | 0.3441 | 0.2904 | 0.2788 | gdr_select | 0.3286 | 0.3960 | -0.0117 |
+| ecd | random | loss_thermal_dephasing | 0.1 | readout_strong | 0.3423 | 0.3226 | 0.3007 | gdr_damped | 0.3361 | 0.4211 | -0.0219 |
+| ecd | random | comprehensive | 0.003 | ideal | 0.0860 | 0.0813 | 0.0768 | gdr_tfree | 0.0801 | 0.0713 | -0.0045 |
+| ecd | random | comprehensive | 0.003 | readout_realistic | 0.1181 | 0.1003 | 0.0960 | gdr_tfree | 0.1007 | 0.0847 | -0.0043 |
+| ecd | random | comprehensive | 0.003 | readout_strong | 0.1500 | 0.1189 | 0.1153 | gdr_tfree | 0.1339 | 0.0911 | -0.0036 |
+| ecd | random | comprehensive | 0.1 | ideal | 0.4024 | 0.3679 | 0.3278 | gdr_damped | 0.3990 | 0.5392 | -0.0402 |
+| ecd | random | comprehensive | 0.1 | readout_realistic | 0.4061 | 0.3690 | 0.3280 | gdr_damped | 0.4052 | 0.5224 | -0.0410 |
+| ecd | random | comprehensive | 0.1 | readout_strong | 0.3920 | 0.3917 | 0.3374 | gdr_damped | 0.4035 | 0.5287 | -0.0543 |
+| ecd | optimized | loss_thermal_dephasing | 0.003 | ideal | 0.0518 | 0.0210 | 0.0175 | gdr_residual | 0.0542 | 0.0193 | -0.0036 |
+| ecd | optimized | loss_thermal_dephasing | 0.003 | readout_realistic | 0.0862 | 0.0200 | 0.0150 | gdr_residual | 0.0873 | 0.0181 | -0.0049 |
+| ecd | optimized | loss_thermal_dephasing | 0.003 | readout_strong | 0.1610 | 0.0208 | 0.0140 | gdr_residual | 0.1709 | 0.0218 | -0.0069 |
+| ecd | optimized | loss_thermal_dephasing | 0.1 | ideal | 0.7830 | 0.3174 | 0.2590 | gdr_residual | 0.7671 | 0.2700 | -0.0584 |
+| ecd | optimized | loss_thermal_dephasing | 0.1 | readout_realistic | 0.7884 | 0.3091 | 0.2583 | gdr_residual | 0.7786 | 0.2825 | -0.0507 |
+| ecd | optimized | loss_thermal_dephasing | 0.1 | readout_strong | 0.7832 | 0.2928 | 0.2496 | gdr_residual | 0.7903 | 0.2978 | -0.0432 |
+| ecd | optimized | comprehensive | 0.003 | ideal | 0.1922 | 0.0628 | 0.0584 | gdr_mid | 0.1823 | 0.0534 | -0.0044 |
+| ecd | optimized | comprehensive | 0.003 | readout_realistic | 0.2075 | 0.0554 | 0.0499 | gdr_mid | 0.2158 | 0.0523 | -0.0055 |
+| ecd | optimized | comprehensive | 0.003 | readout_strong | 0.2757 | 0.0507 | 0.0434 | gdr_mid | 0.2722 | 0.0491 | -0.0074 |
+| ecd | optimized | comprehensive | 0.1 | ideal | 0.9041 | 0.3904 | 0.3889 | gdr_mid | 0.9082 | 0.3429 | -0.0015 |
+| ecd | optimized | comprehensive | 0.1 | readout_realistic | 0.9063 | 0.4100 | 0.4034 | gdr_mid | 0.9094 | 0.3519 | -0.0066 |
+| ecd | optimized | comprehensive | 0.1 | readout_strong | 0.9085 | 0.3879 | 0.3861 | gdr_mid | 0.9062 | 0.3508 | -0.0018 |
+
+## Per-method TVD
+
+```
+ansatz params    family                    kt readout            method                  TVD       dE
+-----------------------------------------------------------------------------------------------------
+ecd   random    loss_thermal_dephasing 0.003 ideal              raw                  0.0644   0.0179
+ecd   random    loss_thermal_dephasing 0.003 ideal              oracle_binomial      0.0663   0.0160
+ecd   random    loss_thermal_dephasing 0.003 ideal              gdr_param            0.0644   0.0374
+ecd   random    loss_thermal_dephasing 0.003 ideal              gdr_damped           0.0612   0.0153
+ecd   random    loss_thermal_dephasing 0.003 ideal              gdr_ridge            0.0640   0.0365
+ecd   random    loss_thermal_dephasing 0.003 ideal              gdr_holdout          0.0637   0.0235
+ecd   random    loss_thermal_dephasing 0.003 ideal              gdr_reg              0.0604   0.0028
+ecd   random    loss_thermal_dephasing 0.003 ideal              gdr_mid              0.0638   0.0366
+ecd   random    loss_thermal_dephasing 0.003 ideal              gdr_tfree            0.0641   0.0337
+ecd   random    loss_thermal_dephasing 0.003 ideal              gdr_residual         0.0675   0.0082
+ecd   random    loss_thermal_dephasing 0.003 ideal              zne_idle             0.2190   0.0361
+ecd   random    loss_thermal_dephasing 0.003 ideal              readout_then_zne     0.2190   0.0361
+ecd   random    loss_thermal_dephasing 0.003 ideal              zne_then_readout     0.2190   0.0361
+ecd   random    loss_thermal_dephasing 0.003 ideal              gdr_select           0.0663   0.0160
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  raw                  0.0737   0.0064
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  readout_only         0.0684   0.0013
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  oracle_binomial      0.0745   0.0212
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  gdr_param            0.0701   0.0229
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  gdr_damped           0.0680   0.0056
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  gdr_ridge            0.0699   0.0185
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  gdr_holdout          0.0699   0.0185
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  gdr_reg              0.0684   0.0013
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  gdr_mid              0.0699   0.0192
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  gdr_tfree            0.0705   0.0140
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  gdr_residual         0.0753   0.0235
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  zne_idle             0.2473   0.0658
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  readout_then_zne     0.2543   0.0821
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  zne_then_readout     0.2541   0.0636
+ecd   random    loss_thermal_dephasing 0.003 readout_realistic  gdr_select           0.0675   0.0099
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     raw                  0.1092   0.0110
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     readout_only         0.0778   0.0169
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     oracle_binomial      0.0787   0.0275
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     gdr_param            0.0774   0.0234
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     gdr_damped           0.0768   0.0202
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     gdr_ridge            0.0770   0.0211
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     gdr_holdout          0.0774   0.0234
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     gdr_reg              0.0768   0.0202
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     gdr_mid              0.0771   0.0296
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     gdr_tfree            0.0770   0.0220
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     gdr_residual         0.0834   0.0412
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     zne_idle             0.2427   0.2771
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     readout_then_zne     0.2529   0.3109
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     zne_then_readout     0.2491   0.3177
+ecd   random    loss_thermal_dephasing 0.003 readout_strong     gdr_select           0.0787   0.0275
+ecd   random    loss_thermal_dephasing 0.100 ideal              raw                  0.3306   0.2471
+ecd   random    loss_thermal_dephasing 0.100 ideal              oracle_binomial      0.5322   0.0030
+ecd   random    loss_thermal_dephasing 0.100 ideal              gdr_param            0.2743   0.0404
+ecd   random    loss_thermal_dephasing 0.100 ideal              gdr_damped           0.2716   0.1024
+ecd   random    loss_thermal_dephasing 0.100 ideal              gdr_ridge            0.2765   0.0297
+ecd   random    loss_thermal_dephasing 0.100 ideal              gdr_holdout          0.2743   0.0404
+ecd   random    loss_thermal_dephasing 0.100 ideal              gdr_reg              0.2716   0.1024
+ecd   random    loss_thermal_dephasing 0.100 ideal              gdr_mid              0.3037   0.0964
+ecd   random    loss_thermal_dephasing 0.100 ideal              gdr_tfree            0.2742   0.0600
+ecd   random    loss_thermal_dephasing 0.100 ideal              gdr_residual         0.5149   0.3716
+ecd   random    loss_thermal_dephasing 0.100 ideal              zne_idle             0.3340   0.0130
+ecd   random    loss_thermal_dephasing 0.100 ideal              readout_then_zne     0.3340   0.0130
+ecd   random    loss_thermal_dephasing 0.100 ideal              zne_then_readout     0.3340   0.0130
+ecd   random    loss_thermal_dephasing 0.100 ideal              gdr_select           0.2716   0.1024
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  raw                  0.3441   0.2581
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  readout_only         0.3436   0.2727
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  oracle_binomial      0.5339   0.0637
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  gdr_param            0.2904   0.2489
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  gdr_damped           0.2801   0.2572
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  gdr_ridge            0.2871   0.2283
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  gdr_holdout          0.2871   0.2283
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  gdr_reg              0.2813   0.2438
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  gdr_mid              0.3041   0.0595
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  gdr_tfree            0.2871   0.2917
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  gdr_residual         0.4925   0.0045
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  zne_idle             0.3463   0.6191
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  readout_then_zne     0.3542   0.6550
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  zne_then_readout     0.3529   0.6469
+ecd   random    loss_thermal_dephasing 0.100 readout_realistic  gdr_select           0.2788   0.2560
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     raw                  0.3423   0.1228
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     readout_only         0.3424   0.1363
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     oracle_binomial      0.5750   0.3180
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     gdr_param            0.3226   0.1473
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     gdr_damped           0.3007   0.0481
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     gdr_ridge            0.3245   0.1536
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     gdr_holdout          0.3248   0.1768
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     gdr_reg              0.3019   0.0672
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     gdr_mid              0.3415   0.2498
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     gdr_tfree            0.3129   0.0990
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     gdr_residual         0.5089   0.5595
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     zne_idle             0.3468   0.4256
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     readout_then_zne     0.3867   0.5286
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     zne_then_readout     0.3837   0.5147
+ecd   random    loss_thermal_dephasing 0.100 readout_strong     gdr_select           0.3007   0.0481
+ecd   random    comprehensive          0.003 ideal              raw                  0.0860   0.0952
+ecd   random    comprehensive          0.003 ideal              oracle_binomial      0.1050   0.1890
+ecd   random    comprehensive          0.003 ideal              gdr_param            0.0813   0.0013
+ecd   random    comprehensive          0.003 ideal              gdr_damped           0.0813   0.0013
+ecd   random    comprehensive          0.003 ideal              gdr_ridge            0.0783   0.0163
+ecd   random    comprehensive          0.003 ideal              gdr_holdout          0.0813   0.0013
+ecd   random    comprehensive          0.003 ideal              gdr_reg              0.0813   0.0013
+ecd   random    comprehensive          0.003 ideal              gdr_mid              0.0823   0.0259
+ecd   random    comprehensive          0.003 ideal              gdr_tfree            0.0768   0.0249
+ecd   random    comprehensive          0.003 ideal              gdr_residual         0.1110   0.1524
+ecd   random    comprehensive          0.003 ideal              zne_idle             0.2386   0.0066
+ecd   random    comprehensive          0.003 ideal              readout_then_zne     0.2386   0.0066
+ecd   random    comprehensive          0.003 ideal              zne_then_readout     0.2386   0.0066
+ecd   random    comprehensive          0.003 ideal              gdr_select           0.0813   0.0013
+ecd   random    comprehensive          0.003 readout_realistic  raw                  0.1181   0.1539
+ecd   random    comprehensive          0.003 readout_realistic  readout_only         0.1051   0.1667
+ecd   random    comprehensive          0.003 readout_realistic  oracle_binomial      0.1225   0.2719
+ecd   random    comprehensive          0.003 readout_realistic  gdr_param            0.1003   0.1195
+ecd   random    comprehensive          0.003 readout_realistic  gdr_damped           0.0983   0.1219
+ecd   random    comprehensive          0.003 readout_realistic  gdr_ridge            0.0965   0.1335
+ecd   random    comprehensive          0.003 readout_realistic  gdr_holdout          0.1003   0.1195
+ecd   random    comprehensive          0.003 readout_realistic  gdr_reg              0.0983   0.1219
+ecd   random    comprehensive          0.003 readout_realistic  gdr_mid              0.0981   0.1545
+ecd   random    comprehensive          0.003 readout_realistic  gdr_tfree            0.0960   0.1313
+ecd   random    comprehensive          0.003 readout_realistic  gdr_residual         0.1277   0.2466
+ecd   random    comprehensive          0.003 readout_realistic  zne_idle             0.2267   0.2093
+ecd   random    comprehensive          0.003 readout_realistic  readout_then_zne     0.2322   0.1984
+ecd   random    comprehensive          0.003 readout_realistic  zne_then_readout     0.2307   0.2098
+ecd   random    comprehensive          0.003 readout_realistic  gdr_select           0.0983   0.1219
+ecd   random    comprehensive          0.003 readout_strong     raw                  0.1500   0.0115
+ecd   random    comprehensive          0.003 readout_strong     readout_only         0.1150   0.0082
+ecd   random    comprehensive          0.003 readout_strong     oracle_binomial      0.1400   0.1137
+ecd   random    comprehensive          0.003 readout_strong     gdr_param            0.1189   0.1219
+ecd   random    comprehensive          0.003 readout_strong     gdr_damped           0.1189   0.1219
+ecd   random    comprehensive          0.003 readout_strong     gdr_ridge            0.1155   0.1078
+ecd   random    comprehensive          0.003 readout_strong     gdr_holdout          0.1189   0.1219
+ecd   random    comprehensive          0.003 readout_strong     gdr_reg              0.1189   0.1219
+ecd   random    comprehensive          0.003 readout_strong     gdr_mid              0.1263   0.1074
+ecd   random    comprehensive          0.003 readout_strong     gdr_tfree            0.1153   0.1043
+ecd   random    comprehensive          0.003 readout_strong     gdr_residual         0.1469   0.0833
+ecd   random    comprehensive          0.003 readout_strong     zne_idle             0.2530   0.4069
+ecd   random    comprehensive          0.003 readout_strong     readout_then_zne     0.2838   0.5050
+ecd   random    comprehensive          0.003 readout_strong     zne_then_readout     0.2795   0.4504
+ecd   random    comprehensive          0.003 readout_strong     gdr_select           0.1155   0.1078
+ecd   random    comprehensive          0.100 ideal              raw                  0.4024   0.1376
+ecd   random    comprehensive          0.100 ideal              oracle_binomial      0.7349   0.5453
+ecd   random    comprehensive          0.100 ideal              gdr_param            0.3679   0.2361
+ecd   random    comprehensive          0.100 ideal              gdr_damped           0.3278   0.1240
+ecd   random    comprehensive          0.100 ideal              gdr_ridge            0.3689   0.2534
+ecd   random    comprehensive          0.100 ideal              gdr_holdout          0.3758   0.3517
+ecd   random    comprehensive          0.100 ideal              gdr_reg              0.3524   0.2783
+ecd   random    comprehensive          0.100 ideal              gdr_mid              0.3951   0.5193
+ecd   random    comprehensive          0.100 ideal              gdr_tfree            0.3484   0.1265
+ecd   random    comprehensive          0.100 ideal              gdr_residual         0.6102   0.0135
+ecd   random    comprehensive          0.100 ideal              zne_idle             0.4157   0.3349
+ecd   random    comprehensive          0.100 ideal              readout_then_zne     0.4157   0.3349
+ecd   random    comprehensive          0.100 ideal              zne_then_readout     0.4157   0.3349
+ecd   random    comprehensive          0.100 ideal              gdr_select           0.3951   0.5193
+ecd   random    comprehensive          0.100 readout_realistic  raw                  0.4061   0.0425
+ecd   random    comprehensive          0.100 readout_realistic  readout_only         0.4082   0.0514
+ecd   random    comprehensive          0.100 readout_realistic  oracle_binomial      0.7335   0.5011
+ecd   random    comprehensive          0.100 readout_realistic  gdr_param            0.3690   0.2976
+ecd   random    comprehensive          0.100 readout_realistic  gdr_damped           0.3280   0.1929
+ecd   random    comprehensive          0.100 readout_realistic  gdr_ridge            0.3688   0.3094
+ecd   random    comprehensive          0.100 readout_realistic  gdr_holdout          0.3725   0.3756
+ecd   random    comprehensive          0.100 readout_realistic  gdr_reg              0.3501   0.3115
+ecd   random    comprehensive          0.100 readout_realistic  gdr_mid              0.3958   0.5294
+ecd   random    comprehensive          0.100 readout_realistic  gdr_tfree            0.3713   0.2337
+ecd   random    comprehensive          0.100 readout_realistic  gdr_residual         0.5805   0.1140
+ecd   random    comprehensive          0.100 readout_realistic  zne_idle             0.4378   0.3853
+ecd   random    comprehensive          0.100 readout_realistic  readout_then_zne     0.4415   0.3988
+ecd   random    comprehensive          0.100 readout_realistic  zne_then_readout     0.4417   0.3905
+ecd   random    comprehensive          0.100 readout_realistic  gdr_select           0.3725   0.3756
+ecd   random    comprehensive          0.100 readout_strong     raw                  0.3920   0.1675
+ecd   random    comprehensive          0.100 readout_strong     readout_only         0.3948   0.1977
+ecd   random    comprehensive          0.100 readout_strong     oracle_binomial      0.7452   0.6580
+ecd   random    comprehensive          0.100 readout_strong     gdr_param            0.3917   0.0634
+ecd   random    comprehensive          0.100 readout_strong     gdr_damped           0.3374   0.0280
+ecd   random    comprehensive          0.100 readout_strong     gdr_ridge            0.3934   0.0849
+ecd   random    comprehensive          0.100 readout_strong     gdr_holdout          0.3961   0.1156
+ecd   random    comprehensive          0.100 readout_strong     gdr_reg              0.3446   0.0216
+ecd   random    comprehensive          0.100 readout_strong     gdr_mid              0.4245   0.3162
+ecd   random    comprehensive          0.100 readout_strong     gdr_tfree            0.3748   0.0162
+ecd   random    comprehensive          0.100 readout_strong     gdr_residual         0.6112   0.0382
+ecd   random    comprehensive          0.100 readout_strong     zne_idle             0.3912   0.5253
+ecd   random    comprehensive          0.100 readout_strong     readout_then_zne     0.4016   0.5684
+ecd   random    comprehensive          0.100 readout_strong     zne_then_readout     0.4084   0.5618
+ecd   random    comprehensive          0.100 readout_strong     gdr_select           0.4245   0.3162
+ecd   optimized loss_thermal_dephasing 0.003 ideal              raw                  0.0518   0.1803
+ecd   optimized loss_thermal_dephasing 0.003 ideal              oracle_binomial      0.0175   0.0877
+ecd   optimized loss_thermal_dephasing 0.003 ideal              gdr_param            0.0210   0.0969
+ecd   optimized loss_thermal_dephasing 0.003 ideal              gdr_damped           0.0210   0.0969
+ecd   optimized loss_thermal_dephasing 0.003 ideal              gdr_ridge            0.0213   0.0977
+ecd   optimized loss_thermal_dephasing 0.003 ideal              gdr_holdout          0.0210   0.0969
+ecd   optimized loss_thermal_dephasing 0.003 ideal              gdr_reg              0.0210   0.0969
+ecd   optimized loss_thermal_dephasing 0.003 ideal              gdr_mid              0.0213   0.0978
+ecd   optimized loss_thermal_dephasing 0.003 ideal              gdr_tfree            0.0214   0.0980
+ecd   optimized loss_thermal_dephasing 0.003 ideal              gdr_residual         0.0175   0.0877
+ecd   optimized loss_thermal_dephasing 0.003 ideal              zne_idle             0.0186   0.0979
+ecd   optimized loss_thermal_dephasing 0.003 ideal              readout_then_zne     0.0186   0.0979
+ecd   optimized loss_thermal_dephasing 0.003 ideal              zne_then_readout     0.0186   0.0979
+ecd   optimized loss_thermal_dephasing 0.003 ideal              gdr_select           0.0333   0.1303
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  raw                  0.0862   0.2990
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  readout_only         0.0490   0.1720
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  oracle_binomial      0.0153   0.0811
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  gdr_param            0.0200   0.0939
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  gdr_damped           0.0200   0.0939
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  gdr_ridge            0.0200   0.0939
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  gdr_holdout          0.0198   0.0933
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  gdr_reg              0.0198   0.0933
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  gdr_mid              0.0200   0.0939
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  gdr_tfree            0.0197   0.0927
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  gdr_residual         0.0150   0.0805
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  zne_idle             0.0831   0.3254
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  readout_then_zne     0.0371   0.1768
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  zne_then_readout     0.0454   0.2015
+ecd   optimized loss_thermal_dephasing 0.003 readout_realistic  gdr_select           0.0198   0.0933
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     raw                  0.1610   0.5623
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     readout_only         0.0441   0.1582
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     oracle_binomial      0.0140   0.0786
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     gdr_param            0.0208   0.0978
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     gdr_damped           0.0290   0.1189
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     gdr_ridge            0.0220   0.1005
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     gdr_holdout          0.0217   0.0999
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     gdr_reg              0.0295   0.1203
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     gdr_mid              0.0220   0.1008
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     gdr_tfree            0.0223   0.1019
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     gdr_residual         0.0140   0.0786
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     zne_idle             0.1483   0.5713
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     readout_then_zne     0.0579   0.2385
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     zne_then_readout     0.0556   0.2330
+ecd   optimized loss_thermal_dephasing 0.003 readout_strong     gdr_select           0.0278   0.1159
+ecd   optimized loss_thermal_dephasing 0.100 ideal              raw                  0.7830   3.0724
+ecd   optimized loss_thermal_dephasing 0.100 ideal              oracle_binomial      0.2715   1.4739
+ecd   optimized loss_thermal_dephasing 0.100 ideal              gdr_param            0.3174   1.7537
+ecd   optimized loss_thermal_dephasing 0.100 ideal              gdr_damped           0.4570   2.1493
+ecd   optimized loss_thermal_dephasing 0.100 ideal              gdr_ridge            0.3219   1.7577
+ecd   optimized loss_thermal_dephasing 0.100 ideal              gdr_holdout          0.3174   1.7537
+ecd   optimized loss_thermal_dephasing 0.100 ideal              gdr_reg              0.4570   2.1493
+ecd   optimized loss_thermal_dephasing 0.100 ideal              gdr_mid              0.3198   1.7859
+ecd   optimized loss_thermal_dephasing 0.100 ideal              gdr_tfree            0.3984   1.9254
+ecd   optimized loss_thermal_dephasing 0.100 ideal              gdr_residual         0.2590   1.4182
+ecd   optimized loss_thermal_dephasing 0.100 ideal              zne_idle             0.5680   2.2247
+ecd   optimized loss_thermal_dephasing 0.100 ideal              readout_then_zne     0.5680   2.2247
+ecd   optimized loss_thermal_dephasing 0.100 ideal              zne_then_readout     0.5680   2.2247
+ecd   optimized loss_thermal_dephasing 0.100 ideal              gdr_select           0.4570   2.1493
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  raw                  0.7884   3.1008
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  readout_only         0.7849   3.0495
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  oracle_binomial      0.2672   1.4552
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  gdr_param            0.3091   1.6822
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  gdr_damped           0.4280   2.0240
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  gdr_ridge            0.3213   1.7143
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  gdr_holdout          0.3129   1.6924
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  gdr_reg              0.4309   2.0317
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  gdr_mid              0.3122   1.7327
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  gdr_tfree            0.4229   1.9854
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  gdr_residual         0.2583   1.4121
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  zne_idle             0.5583   2.0705
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  readout_then_zne     0.5504   2.0175
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  zne_then_readout     0.5474   1.9976
+ecd   optimized loss_thermal_dephasing 0.100 readout_realistic  gdr_select           0.4756   2.1608
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     raw                  0.7832   3.1652
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     readout_only         0.7694   2.9675
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     oracle_binomial      0.2597   1.3985
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     gdr_param            0.2928   1.5967
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     gdr_damped           0.4357   2.0080
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     gdr_ridge            0.3009   1.6064
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     gdr_holdout          0.2963   1.5979
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     gdr_reg              0.4382   2.0088
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     gdr_mid              0.2987   1.6231
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     gdr_tfree            0.3805   1.7788
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     gdr_residual         0.2496   1.3542
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     zne_idle             0.5953   2.1833
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     readout_then_zne     0.5673   1.9431
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     zne_then_readout     0.5613   1.8989
+ecd   optimized loss_thermal_dephasing 0.100 readout_strong     gdr_select           0.4596   2.0765
+ecd   optimized comprehensive          0.003 ideal              raw                  0.1922   0.8218
+ecd   optimized comprehensive          0.003 ideal              oracle_binomial      0.1157   0.6381
+ecd   optimized comprehensive          0.003 ideal              gdr_param            0.0628   0.3330
+ecd   optimized comprehensive          0.003 ideal              gdr_damped           0.0628   0.3330
+ecd   optimized comprehensive          0.003 ideal              gdr_ridge            0.0626   0.3322
+ecd   optimized comprehensive          0.003 ideal              gdr_holdout          0.0628   0.3329
+ecd   optimized comprehensive          0.003 ideal              gdr_reg              0.0628   0.3329
+ecd   optimized comprehensive          0.003 ideal              gdr_mid              0.0584   0.3163
+ecd   optimized comprehensive          0.003 ideal              gdr_tfree            0.0753   0.3709
+ecd   optimized comprehensive          0.003 ideal              gdr_residual         0.1157   0.6381
+ecd   optimized comprehensive          0.003 ideal              zne_idle             0.1098   0.4554
+ecd   optimized comprehensive          0.003 ideal              readout_then_zne     0.1098   0.4554
+ecd   optimized comprehensive          0.003 ideal              zne_then_readout     0.1098   0.4554
+ecd   optimized comprehensive          0.003 ideal              gdr_select           0.0584   0.3163
+ecd   optimized comprehensive          0.003 readout_realistic  raw                  0.2075   0.8525
+ecd   optimized comprehensive          0.003 readout_realistic  readout_only         0.1777   0.7469
+ecd   optimized comprehensive          0.003 readout_realistic  oracle_binomial      0.1015   0.5559
+ecd   optimized comprehensive          0.003 readout_realistic  gdr_param            0.0554   0.2877
+ecd   optimized comprehensive          0.003 readout_realistic  gdr_damped           0.0554   0.2877
+ecd   optimized comprehensive          0.003 readout_realistic  gdr_ridge            0.0555   0.2878
+ecd   optimized comprehensive          0.003 readout_realistic  gdr_holdout          0.0554   0.2877
+ecd   optimized comprehensive          0.003 readout_realistic  gdr_reg              0.0554   0.2877
+ecd   optimized comprehensive          0.003 readout_realistic  gdr_mid              0.0499   0.2657
+ecd   optimized comprehensive          0.003 readout_realistic  gdr_tfree            0.0656   0.3213
+ecd   optimized comprehensive          0.003 readout_realistic  gdr_residual         0.1015   0.5560
+ecd   optimized comprehensive          0.003 readout_realistic  zne_idle             0.0973   0.3291
+ecd   optimized comprehensive          0.003 readout_realistic  readout_then_zne     0.0693   0.2292
+ecd   optimized comprehensive          0.003 readout_realistic  zne_then_readout     0.0663   0.2171
+ecd   optimized comprehensive          0.003 readout_realistic  gdr_select           0.0499   0.2657
+ecd   optimized comprehensive          0.003 readout_strong     raw                  0.2757   1.0938
+ecd   optimized comprehensive          0.003 readout_strong     readout_only         0.1776   0.7425
+ecd   optimized comprehensive          0.003 readout_strong     oracle_binomial      0.1043   0.5560
+ecd   optimized comprehensive          0.003 readout_strong     gdr_param            0.0507   0.2445
+ecd   optimized comprehensive          0.003 readout_strong     gdr_damped           0.0507   0.2445
+ecd   optimized comprehensive          0.003 readout_strong     gdr_ridge            0.0504   0.2437
+ecd   optimized comprehensive          0.003 readout_strong     gdr_holdout          0.0504   0.2437
+ecd   optimized comprehensive          0.003 readout_strong     gdr_reg              0.0504   0.2437
+ecd   optimized comprehensive          0.003 readout_strong     gdr_mid              0.0434   0.2153
+ecd   optimized comprehensive          0.003 readout_strong     gdr_tfree            0.0565   0.2723
+ecd   optimized comprehensive          0.003 readout_strong     gdr_residual         0.1041   0.5556
+ecd   optimized comprehensive          0.003 readout_strong     zne_idle             0.1467   0.6216
+ecd   optimized comprehensive          0.003 readout_strong     readout_then_zne     0.0508   0.2752
+ecd   optimized comprehensive          0.003 readout_strong     zne_then_readout     0.0501   0.2814
+ecd   optimized comprehensive          0.003 readout_strong     gdr_select           0.0434   0.2153
+ecd   optimized comprehensive          0.100 ideal              raw                  0.9041   3.7183
+ecd   optimized comprehensive          0.100 ideal              oracle_binomial      0.4266   2.2389
+ecd   optimized comprehensive          0.100 ideal              gdr_param            0.3904   2.2017
+ecd   optimized comprehensive          0.100 ideal              gdr_damped           0.5701   2.7325
+ecd   optimized comprehensive          0.100 ideal              gdr_ridge            0.3904   2.2108
+ecd   optimized comprehensive          0.100 ideal              gdr_holdout          0.3904   2.2017
+ecd   optimized comprehensive          0.100 ideal              gdr_reg              0.5701   2.7325
+ecd   optimized comprehensive          0.100 ideal              gdr_mid              0.3889   2.1741
+ecd   optimized comprehensive          0.100 ideal              gdr_tfree            0.5200   2.6475
+ecd   optimized comprehensive          0.100 ideal              gdr_residual         0.4264   2.2430
+ecd   optimized comprehensive          0.100 ideal              zne_idle             0.8136   3.1144
+ecd   optimized comprehensive          0.100 ideal              readout_then_zne     0.8136   3.1144
+ecd   optimized comprehensive          0.100 ideal              zne_then_readout     0.8136   3.1144
+ecd   optimized comprehensive          0.100 ideal              gdr_select           0.5701   2.7325
+ecd   optimized comprehensive          0.100 readout_realistic  raw                  0.9063   3.8093
+ecd   optimized comprehensive          0.100 readout_realistic  readout_only         0.9064   3.7800
+ecd   optimized comprehensive          0.100 readout_realistic  oracle_binomial      0.4383   2.2967
+ecd   optimized comprehensive          0.100 readout_realistic  gdr_param            0.4100   2.2739
+ecd   optimized comprehensive          0.100 readout_realistic  gdr_damped           0.5837   2.8010
+ecd   optimized comprehensive          0.100 readout_realistic  gdr_ridge            0.4110   2.2838
+ecd   optimized comprehensive          0.100 readout_realistic  gdr_holdout          0.4104   2.2775
+ecd   optimized comprehensive          0.100 readout_realistic  gdr_reg              0.5592   2.7283
+ecd   optimized comprehensive          0.100 readout_realistic  gdr_mid              0.4034   2.2099
+ecd   optimized comprehensive          0.100 readout_realistic  gdr_tfree            0.5332   2.6829
+ecd   optimized comprehensive          0.100 readout_realistic  gdr_residual         0.4356   2.2867
+ecd   optimized comprehensive          0.100 readout_realistic  zne_idle             0.8028   3.0518
+ecd   optimized comprehensive          0.100 readout_realistic  readout_then_zne     0.8020   3.0008
+ecd   optimized comprehensive          0.100 readout_realistic  zne_then_readout     0.8017   3.0133
+ecd   optimized comprehensive          0.100 readout_realistic  gdr_select           0.5837   2.8010
+ecd   optimized comprehensive          0.100 readout_strong     raw                  0.9085   3.8723
+ecd   optimized comprehensive          0.100 readout_strong     readout_only         0.9103   3.7717
+ecd   optimized comprehensive          0.100 readout_strong     oracle_binomial      0.4215   2.2121
+ecd   optimized comprehensive          0.100 readout_strong     gdr_param            0.3879   2.2643
+ecd   optimized comprehensive          0.100 readout_strong     gdr_damped           0.5445   2.7165
+ecd   optimized comprehensive          0.100 readout_strong     gdr_ridge            0.3895   2.2791
+ecd   optimized comprehensive          0.100 readout_strong     gdr_holdout          0.3879   2.2643
+ecd   optimized comprehensive          0.100 readout_strong     gdr_reg              0.5445   2.7165
+ecd   optimized comprehensive          0.100 readout_strong     gdr_mid              0.3861   2.2011
+ecd   optimized comprehensive          0.100 readout_strong     gdr_tfree            0.5468   2.7662
+ecd   optimized comprehensive          0.100 readout_strong     gdr_residual         0.4215   2.2124
+ecd   optimized comprehensive          0.100 readout_strong     zne_idle             0.8089   3.2322
+ecd   optimized comprehensive          0.100 readout_strong     readout_then_zne     0.8163   3.1369
+ecd   optimized comprehensive          0.100 readout_strong     zne_then_readout     0.8124   3.1035
+ecd   optimized comprehensive          0.100 readout_strong     gdr_select           0.5445   2.7165
+```

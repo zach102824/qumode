@@ -1,0 +1,62 @@
+Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)
+Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, zne_idle, readout_then_zne
+
+Headline at κτ = 0.003  (readout_only vs gdr_param vs gdr_select vs oracle_binomial)
+
+ecd  loss                      ideal                 raw.TVD=0.0383 dE=0.1227  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.0093 dE=0.0441  gdr_select.TVD=   —    dE=   —   
+ecd  loss                      readout_realistic     raw.TVD=0.0788 dE=0.2615  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.0104 dE=0.0462  gdr_select.TVD=   —    dE=   —   
+ecd  comprehensive             ideal                 raw.TVD=0.1842 dE=0.7821  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.0489 dE=0.2496  gdr_select.TVD=   —    dE=   —   
+ecd  comprehensive             readout_realistic     raw.TVD=0.2074 dE=0.8398  readout_only.TVD=   —    dE=   —     oracle_binomial.TVD=   —    dE=   —     gdr_param.TVD=0.0499 dE=0.2365  gdr_select.TVD=   —    dE=   —   
+
+Full table (all cases)
+
+ansatz params     family                       kt readout            method                  TVD       dE     dPgs
+------------------------------------------------------------------------------------------------------------------
+ecd    random     loss                      0.003 ideal              raw                  0.0434   0.0785   0.0005
+ecd    random     loss                      0.003 ideal              gdr_param            0.0444   0.0892   0.0005
+ecd    random     loss                      0.003 readout_realistic  raw                  0.0590   0.0360   0.0002
+ecd    random     loss                      0.003 readout_realistic  gdr_param            0.0468   0.0397   0.0001
+ecd    random     loss                      0.030 ideal              raw                  0.1423   0.0060   0.0013
+ecd    random     loss                      0.030 ideal              gdr_param            0.1102   0.0571   0.0019
+ecd    random     loss                      0.030 readout_realistic  raw                  0.1539   0.0233   0.0008
+ecd    random     loss                      0.030 readout_realistic  gdr_param            0.1133   0.1447   0.0006
+ecd    random     loss                      0.100 ideal              raw                  0.2983   0.0834   0.0008
+ecd    random     loss                      0.100 ideal              gdr_param            0.2491   0.0334   0.0022
+ecd    random     loss                      0.100 readout_realistic  raw                  0.3078   0.0560   0.0010
+ecd    random     loss                      0.100 readout_realistic  gdr_param            0.2409   0.0760   0.0033
+ecd    random     comprehensive             0.003 ideal              raw                  0.0816   0.0698   0.0008
+ecd    random     comprehensive             0.003 ideal              gdr_param            0.0839   0.0716   0.0007
+ecd    random     comprehensive             0.003 readout_realistic  raw                  0.1016   0.0501   0.0005
+ecd    random     comprehensive             0.003 readout_realistic  gdr_param            0.1002   0.0554   0.0000
+ecd    random     comprehensive             0.030 ideal              raw                  0.2417   0.1276   0.0014
+ecd    random     comprehensive             0.030 ideal              gdr_param            0.1912   0.0408   0.0029
+ecd    random     comprehensive             0.030 readout_realistic  raw                  0.2237   0.0031   0.0014
+ecd    random     comprehensive             0.030 readout_realistic  gdr_param            0.2078   0.2085   0.0031
+ecd    random     comprehensive             0.100 ideal              raw                  0.4031   0.1404   0.0010
+ecd    random     comprehensive             0.100 ideal              gdr_param            0.4246   0.1003   0.0077
+ecd    random     comprehensive             0.100 readout_realistic  raw                  0.3980   0.1416   0.0003
+ecd    random     comprehensive             0.100 readout_realistic  gdr_param            0.3788   0.1709   0.0023
+ecd    optimized  loss                      0.003 ideal              raw                  0.0383   0.1227   0.0000
+ecd    optimized  loss                      0.003 ideal              gdr_param            0.0093   0.0441   0.0000
+ecd    optimized  loss                      0.003 readout_realistic  raw                  0.0788   0.2615   0.0000
+ecd    optimized  loss                      0.003 readout_realistic  gdr_param            0.0104   0.0462   0.0000
+ecd    optimized  loss                      0.030 ideal              raw                  0.3145   1.0306   0.0000
+ecd    optimized  loss                      0.030 ideal              gdr_param            0.0698   0.3593   0.0000
+ecd    optimized  loss                      0.030 readout_realistic  raw                  0.3286   1.1126   0.0000
+ecd    optimized  loss                      0.030 readout_realistic  gdr_param            0.0676   0.3550   0.0000
+ecd    optimized  loss                      0.100 ideal              raw                  0.6961   2.4681   0.0000
+ecd    optimized  loss                      0.100 ideal              gdr_param            0.1997   1.1033   0.0000
+ecd    optimized  loss                      0.100 readout_realistic  raw                  0.7090   2.5730   0.0000
+ecd    optimized  loss                      0.100 readout_realistic  gdr_param            0.2081   1.1397   0.0000
+ecd    optimized  comprehensive             0.003 ideal              raw                  0.1842   0.7821   0.0000
+ecd    optimized  comprehensive             0.003 ideal              gdr_param            0.0489   0.2496   0.0000
+ecd    optimized  comprehensive             0.003 readout_realistic  raw                  0.2074   0.8398   0.0000
+ecd    optimized  comprehensive             0.003 readout_realistic  gdr_param            0.0499   0.2365   0.0000
+ecd    optimized  comprehensive             0.030 ideal              raw                  0.5653   2.1211   0.0000
+ecd    optimized  comprehensive             0.030 ideal              gdr_param            0.1289   0.7376   0.0000
+ecd    optimized  comprehensive             0.030 readout_realistic  raw                  0.5879   2.2317   0.0000
+ecd    optimized  comprehensive             0.030 readout_realistic  gdr_param            0.1289   0.7709   0.0000
+ecd    optimized  comprehensive             0.100 ideal              raw                  0.9086   3.7039   0.0000
+ecd    optimized  comprehensive             0.100 ideal              gdr_param            0.3258   1.7684   0.0000
+ecd    optimized  comprehensive             0.100 readout_realistic  raw                  0.9116   3.7765   0.0000
+ecd    optimized  comprehensive             0.100 readout_realistic  gdr_param            0.3338   1.7863   0.0000

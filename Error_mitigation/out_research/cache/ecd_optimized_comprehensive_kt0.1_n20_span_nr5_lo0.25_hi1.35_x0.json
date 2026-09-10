@@ -1,0 +1,8 @@
+{
+  "ansatz": "ecd",
+  "params": "optimized",
+  "family": "comprehensive",
+  "kappa_tau": 0.1,
+  "n_train": 20,
+  "twin_tag": "span_nr5_lo0.25_hi1.35_x0"
+}

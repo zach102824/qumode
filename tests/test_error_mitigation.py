@@ -18,13 +18,38 @@ if str(SRC) not in sys.path:
 from Error_mitigation.metrics import total_variation
 from Error_mitigation.mitigation import (
     binomial_loss_kernel,
+    choose_damp_alpha,
+    damp_histogram,
+    fit_gdr_interleave,
     fock_kernel,
+    holdout_indices,
     observe_histogram,
+    select_by_holdout,
+    select_kt_method,
+    select_research_method,
+    choose_mix_alpha,
+    classify_opt_quality,
+    anneal_identity_weight,
+    anneal_prior_theta,
+    fisher_twin_weights,
+    fit_gdr_afterburn,
+    fit_gdr_anneal,
+    fit_gdr_band,
+    fit_gdr_eta,
+    fit_gdr_split,
+    mild_residual_allowed,
     oracle_kernels,
+    readout_then_zne,
     richardson_lucy,
     run_readout_only,
     thermal_loss_kernel,
+    zne_histogram,
+    zne_then_readout,
+    top_energy_bin_indices,
+    average_unfolds,
+    fit_gdr_joint,
 )
+from Error_mitigation.twins import designed_twin_plan, designed_twin_plan_grid, eta_fisher_score
 from Error_mitigation.noise_models import (
     circuit_noise,
     is_trivial_readout,
@@ -140,3 +165,563 @@ def test_truncated_poisson_vacuum():
     p = truncated_poisson(0.0, 8)
     assert p[0] == pytest.approx(1.0)
     assert p.sum() == pytest.approx(1.0)
+
+
+def test_holdout_indices_stratified():
+    train, hold = holdout_indices(20, 0.25)
+    assert train.size + hold.size == 20
+    assert hold.size == 5
+    assert np.intersect1d(train, hold).size == 0
+    # not just the last 25% (those would be all t_free>0 twins)
+    assert hold.max() < 19 or hold.min() == 0
+
+
+def test_damp_histogram_endpoints():
+    a = np.zeros((2, 4, 4))
+    a[0, 0, 0] = 1.0
+    b = np.zeros_like(a)
+    b[1, 1, 1] = 1.0
+    assert damp_histogram(a, b, 0.0)[0, 0, 0] == pytest.approx(1.0)
+    assert damp_histogram(a, b, 1.0)[1, 1, 1] == pytest.approx(1.0)
+    mix = damp_histogram(a, b, 0.5)
+    assert mix[0, 0, 0] == pytest.approx(0.5)
+    assert mix.sum() == pytest.approx(1.0)
+
+
+def test_choose_damp_alpha_safe_gap_keeps_unfold_when_it_clearly_wins():
+    p = np.zeros((2, 4, 4))
+    p[0, 0, 0] = 1.0
+    q = np.zeros_like(p)
+    q[0, 0, 0] = 1.0
+    eye2, eye4 = np.eye(2), np.eye(4)
+    # identity kernels: unfold = q = p, safe = wrong
+    safe = np.zeros_like(p)
+    safe[1, 1, 1] = 1.0
+    a, info = choose_damp_alpha([p], [q], eye2, eye4, eye4, [safe], alphas=np.linspace(0, 1, 5), slack=0.2, safe_gap=0.01)
+    assert a == pytest.approx(0.0)
+    assert info["safe_gated"] is True
+
+
+def test_choose_damp_alpha_slack_picks_safer_mix():
+    p = np.zeros((2, 4, 4))
+    p[0, 0, 0] = 1.0
+    q = np.zeros_like(p)
+    q[0, 0, 0] = 0.55
+    q[1, 1, 1] = 0.45
+    eye2, eye4 = np.eye(2), np.eye(4)
+    a0, _ = choose_damp_alpha([p], [q], eye2, eye4, eye4, [p], alphas=np.linspace(0, 1, 5), slack=0.0)
+    a_s, info = choose_damp_alpha([p], [q], eye2, eye4, eye4, [p], alphas=np.linspace(0, 1, 5), slack=0.2)
+    assert a_s >= a0
+    assert info["slack"] == pytest.approx(0.2)
+
+
+def test_choose_damp_alpha_prefers_safe_when_unfold_is_wrong():
+    p = np.zeros((2, 4, 4))
+    p[0, 1, 1] = 1.0
+    q = np.zeros_like(p)
+    q[1, 2, 2] = 1.0
+    eye2, eye4 = np.eye(2), np.eye(4)
+    alpha, info = choose_damp_alpha([p], [q], eye2, eye4, eye4, [p], alphas=np.linspace(0, 1, 5))
+    assert alpha == pytest.approx(1.0)
+    assert info["hold_tvd"] == pytest.approx(0.0)
+
+
+def test_readout_then_zne_beats_raw_zne_under_readout():
+    spec = readout_spec("readout_strong", n_shots=0, seed=0)
+    rng = np.random.default_rng(1)
+    p0 = rng.random((2, 8, 8))
+    p0 = p0 / p0.sum()
+    eta = 0.9
+    b = binomial_loss_kernel(eta, 8)
+    b2 = binomial_loss_kernel(eta**2, 8)
+    b3 = binomial_loss_kernel(eta**3, 8)
+
+    def apply_b(kernel):
+        out = np.zeros_like(p0)
+        for q in range(2):
+            out[q] = kernel @ p0[q] @ kernel.T
+        return out
+
+    phys = {1: apply_b(b), 2: apply_b(b2), 3: apply_b(b3)}
+    blurred = {s: observe_histogram(h, spec, (2, 8, 8), seed=10 + s) for s, h in phys.items()}
+    raw_zne = zne_histogram(blurred, degree=2)
+    hyb = readout_then_zne(blurred, spec, (2, 8, 8), degree=2)
+    other = zne_then_readout(blurred, spec, (2, 8, 8), degree=2)
+    assert total_variation(hyb, p0) < total_variation(raw_zne, p0)
+    assert total_variation(other, p0) <= total_variation(raw_zne, p0) + 1e-12
+
+
+def test_select_by_holdout_keeps_first_on_tie():
+    name, score, ranked = select_by_holdout([("a", 0.2), ("b", 0.1), ("c", 0.1)])
+    assert name == "b"
+    assert score == pytest.approx(0.1)
+    assert len(ranked) == 3
+
+
+def test_designed_twin_plan_spans_magnitude():
+    t_free, scales = designed_twin_plan(12, ndepth=5, n_rank2=3, mag_lo=0.25, mag_hi=1.35)
+    assert len(t_free) == 12
+    assert t_free.count(0) == 9
+    assert t_free.count(2) == 3
+    assert min(scales) == pytest.approx(0.25)
+    assert max(scales) == pytest.approx(1.35)
+
+
+def test_select_research_method_picks_residual_on_small_hops():
+    name, extra = select_research_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.035)],
+        residual_hops=0.02,
+        residual_tfree=0.03,
+        gdr_tfree=0.05,
+        oracle_tfree=0.04,
+    )
+    assert name == "gdr_residual"
+    assert extra["reason"] == "tfree_residual"
+
+
+def test_select_research_method_uses_optimized_recipe():
+    name, extra = select_research_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.01)],
+        residual_hops=0.2,
+        residual_tfree=0.08,
+        gdr_tfree=0.04,
+        circuit_kind="optimized",
+    )
+    assert name == "gdr_param"
+    assert extra["reason"] == "optimized_gdr"
+
+
+def test_select_research_method_rejects_large_residual_hops():
+    name, extra = select_research_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.035)],
+        residual_hops=0.15,
+        residual_tfree=0.01,
+        gdr_tfree=0.05,
+        oracle_tfree=0.04,
+    )
+    assert name == "gdr_damped"
+    assert extra["reason"] == "holdout"
+
+
+def test_choose_mix_alpha_picks_better_end():
+    p = np.zeros((2, 2, 2))
+    p[0, 0, 0] = 1.0
+    a = np.zeros_like(p)
+    a[1, 1, 1] = 1.0
+    alpha, info = choose_mix_alpha([p], [a], [p], alphas=np.linspace(0, 1, 5))
+    assert alpha == pytest.approx(1.0)
+    assert info["hold_tvd"] == pytest.approx(0.0)
+
+
+def test_interleave_kernels_column_stochastic():
+    cfg = circuit_noise("loss", 0.03)
+    spec = readout_spec("ideal", n_shots=200)
+    rng = np.random.default_rng(1)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    q = 0.85 * p + 0.15 * rng.random((2, 8, 8))
+    q = q / q.sum()
+    (cq, c1, c2), info = fit_gdr_interleave([p], [q], cfg, spec, ndepth=5, dims=(2, 8, 8), maxiter=15)
+    assert is_column_stochastic(cq)
+    assert is_column_stochastic(c1)
+    assert is_column_stochastic(c2)
+    assert info["kind"] == "gdr_interleave"
+    assert 0.15 <= info["eta_early"] <= 1.0
+    assert 0.15 <= info["eta_late"] <= 1.0
+
+
+def test_afterburn_kernels_column_stochastic():
+    cfg = circuit_noise("loss", 0.03)
+    spec = readout_spec("ideal", n_shots=200)
+    rng = np.random.default_rng(0)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    q = 0.9 * p + 0.1 * rng.random((2, 8, 8))
+    q = q / q.sum()
+    (cq, c1, c2), info = fit_gdr_afterburn([p], [q], cfg, spec, ndepth=5, dims=(2, 8, 8), maxiter=20)
+    assert is_column_stochastic(cq)
+    assert is_column_stochastic(c1)
+    assert is_column_stochastic(c2)
+    assert info["kind"] == "gdr_afterburn"
+    assert 0.5 <= info["eta_extra"] <= 1.0
+
+
+def test_split_and_band_kernels_column_stochastic():
+    rng = np.random.default_rng(2)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    q = 0.9 * p + 0.1 * rng.random((2, 8, 8))
+    q = q / q.sum()
+    cq0, c10, c20 = np.eye(2), np.eye(8), np.eye(8)
+    (cq, c1, c2), info = fit_gdr_split([p], [q], cq0, c10, c20, 200, (2, 8, 8), maxiter=15)
+    assert is_column_stochastic(cq)
+    assert is_column_stochastic(c1)
+    assert is_column_stochastic(c2)
+    assert info["kind"] == "gdr_split"
+    assert info["hops"] >= 0.0
+    (cq, c1, c2), info = fit_gdr_band([p], [q], cq0, c10, c20, 200, (2, 8, 8), maxiter=15)
+    assert is_column_stochastic(cq)
+    assert is_column_stochastic(c1)
+    assert is_column_stochastic(c2)
+    assert info["kind"] == "gdr_band"
+
+
+def test_classify_opt_quality_default_thresholds():
+    h000 = classify_opt_quality(-6.2298, -7.1107, gap=0.7781)
+    assert h000["deficit"] == pytest.approx(0.8809, abs=1e-3)
+    assert h000["thresh"] == pytest.approx(0.5)
+    assert h000["recipe"] == "random"
+    h001 = classify_opt_quality(-3.9218, -6.0317, gap=1.1825)
+    assert h001["recipe"] == "random"
+    tight = classify_opt_quality(-6.2298, -7.1107, gap=0.7781, abs_tol=1.0)
+    assert tight["recipe"] == "optimized"
+    good = classify_opt_quality(-7.10, -7.1107, gap=0.7781)
+    assert good["recipe"] == "optimized"
+
+
+def test_adaptive_recipe_headlines_on_disk():
+    recipe = (ROOT / "Error_mitigation" / "out_research" / "adaptive_recipe.md").read_text()
+    paper = (ROOT / "Error_mitigation" / "out_research" / "PAPER_SUMMARY.md").read_text()
+    notebook = (ROOT / "Error_mitigation" / "out_research" / "NOTEBOOK.md").read_text()
+    plot = (ROOT / "Error_mitigation" / "plot_hard_cells.py").read_text()
+    for text in (recipe, paper):
+        assert "beats PR #6 `gdr_param`" in text or "**86 / 108**" in text
+        assert "**86 / 108**" in text
+        assert "**108 / 108**" in text
+        assert "**0 / 108**" in text
+        assert "**0.203**" in text
+        assert "**0.342**" in text
+        assert "**0.0369**" in text
+        assert "**0.208 ± 0.012**" in text
+        assert "**0.314 ± 0.013**" in text
+        assert "**0.346 ± 0.008**" in text
+        assert "**0.036 ± 0.004**" in text
+    assert "near-" in paper.lower() or "H001" in paper
+    for token in ("0.203", "0.342", "0.343", "0.0369", "0.012", "0.013", "0.008", "0.004"):
+        assert token in plot
+    assert "**0.203**" in notebook
+    fig = ROOT / "Error_mitigation" / "out_research" / "figures" / "hard_cells_adaptive.png"
+    assert fig.is_file() and fig.stat().st_size > 1000
+
+
+def test_research_smoke_preset_stays_in_out_research():
+    from Error_mitigation.run_ablation import (
+        DEFAULT_OUT,
+        RESEARCH_SMOKE,
+        apply_research_smoke,
+        parse_args,
+    )
+
+    args = parse_args(["--preset", "research_smoke"])
+    assert args.preset == "research_smoke"
+    args = apply_research_smoke(args)
+    assert args.tag == "research_smoke"
+    assert args.ansatz == "ecd"
+    assert args.params == "optimized"
+    assert args.twin_design == "adaptive"
+    assert int(args.n_train) == 40
+    assert int(args.n_rank2) == 10
+    assert args.families == RESEARCH_SMOKE["families"]
+    assert DEFAULT_OUT.name == "out_research"
+    assert Path(args.outdir).resolve() == DEFAULT_OUT.resolve()
+
+
+def test_slice_twin_indices_even_subset():
+    from Error_mitigation.run_ablation import slice_twin_indices
+
+    full = slice_twin_indices(40, 40)
+    assert list(full) == list(range(40))
+    keep20 = slice_twin_indices(40, 20)
+    assert keep20.size == 20
+    assert keep20[0] == 0
+    assert keep20[-1] == 39
+    keep10 = slice_twin_indices(40, 10)
+    assert keep10.size == 10
+    assert keep10[0] == 0
+    assert keep10[-1] == 39
+
+
+def test_anneal_prior_pulls_eta_to_one_at_mild_kt():
+    cfg = circuit_noise("loss", 0.003)
+    spec = readout_spec("ideal", n_shots=100)
+    assert anneal_identity_weight(0.003) == pytest.approx(1.0)
+    assert anneal_identity_weight(0.1) < 0.2
+    theta_mild = anneal_prior_theta(cfg, spec, 5, 0.003)
+    theta_high = anneal_prior_theta(cfg, spec, 5, 0.1)
+    assert theta_mild[0] == pytest.approx(1.0)
+    assert theta_mild[1] == pytest.approx(1.0)
+    assert theta_high[0] < theta_mild[0]
+
+
+def test_fit_gdr_anneal_and_eta_kinds():
+    rng = np.random.default_rng(0)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    q = p.copy()
+    cfg = circuit_noise("loss", 0.003)
+    spec = readout_spec("ideal", n_shots=200)
+    theta, info = fit_gdr_anneal([p], [q], cfg, spec, 5, (2, 8, 8), 0.003, maxiter=15)
+    assert info["kind"] == "gdr_anneal"
+    assert theta.shape == (11,)
+    theta_e, info_e = fit_gdr_eta([p], [q], cfg, spec, 5, (2, 8, 8), maxiter=15)
+    assert info_e["kind"] == "gdr_eta"
+    assert info_e["fitted"]["p_down"] == pytest.approx(0.0)
+
+
+def test_fisher_twin_weights_positive_and_normalized():
+    rng = np.random.default_rng(1)
+    ps = []
+    for _ in range(4):
+        a = rng.random((2, 8, 8))
+        ps.append(a / a.sum())
+    w = fisher_twin_weights(ps)
+    assert w.shape == (4,)
+    assert np.all(w > 0)
+    assert w.sum() == pytest.approx(4.0)
+
+
+def test_select_kt_never_residual_on_comprehensive_high():
+    name, extra = select_kt_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_residual", 0.01), ("gdr_damped", 0.03)],
+        kappa_tau=0.1,
+        family="comprehensive",
+        circuit_kind="optimized",
+        residual_hops=0.01,
+        residual_tfree=0.01,
+        gdr_tfree=0.05,
+    )
+    assert name == "gdr_param"
+    assert extra["reason"] == "optimized_gdr"
+    name_r, extra_r = select_kt_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.03)],
+        kappa_tau=0.1,
+        family="comprehensive",
+        circuit_kind="random",
+        residual_hops=0.01,
+        residual_tfree=0.01,
+        gdr_tfree=0.05,
+    )
+    assert name_r != "gdr_residual"
+    assert extra_r["reason"] == "kt_holdout"
+
+
+def test_mild_residual_gate():
+    assert mild_residual_allowed(circuit_kind="optimized", family="loss", kappa_tau=0.003)
+    assert not mild_residual_allowed(
+        circuit_kind="optimized", family="comprehensive", kappa_tau=0.003
+    )
+    assert not mild_residual_allowed(circuit_kind="optimized", family="loss", kappa_tau=0.1)
+    assert not mild_residual_allowed(circuit_kind="random", family="loss", kappa_tau=0.003)
+    name, extra = select_kt_method(
+        [("safe", 0.08), ("gdr_param", 0.04), ("gdr_damped", 0.03)],
+        kappa_tau=0.003,
+        family="loss",
+        circuit_kind="optimized",
+        residual_hops=0.02,
+        residual_tfree=0.02,
+        gdr_tfree=0.05,
+    )
+    assert name == "gdr_residual"
+    assert extra["reason"] == "mild_residual"
+
+
+def test_designed_twin_plan_grid_chebyshev():
+    t_free, scales = designed_twin_plan_grid(
+        12, ndepth=5, n_rank2=3, mag_lo=0.25, mag_hi=1.35, spacing="chebyshev"
+    )
+    assert len(t_free) == 12
+    assert len(scales) == 12
+    assert min(scales) == pytest.approx(0.25)
+    assert max(scales) == pytest.approx(1.35)
+    log_plan = designed_twin_plan(12, ndepth=5, n_rank2=3, mag_lo=0.25, mag_hi=1.35)[1]
+    assert scales != log_plan
+
+
+def test_round2_dropped_and_ban_list_on_disk():
+    dropped = ROOT / "Error_mitigation" / "out_research" / "round2" / "DROPPED.md"
+    text = dropped.read_text()
+    for token in (
+        "gdr_full",
+        "gdr_interleave",
+        "gdr_split",
+        "gdr_band",
+        "gdr_afterburn",
+        "gdr_blend",
+        "Energy-weighted",
+        "params=auto",
+        "Span twins",
+        "gdr_residual",
+    ):
+        assert token in text
+    from Error_mitigation.run_ablation import CHEAP_METHODS, ROUND2_METHODS
+
+    banned = {
+        "gdr_full",
+        "gdr_interleave",
+        "gdr_split",
+        "gdr_band",
+        "gdr_afterburn",
+        "gdr_blend",
+        "gdr_energy",
+    }
+    assert banned.isdisjoint(ROUND2_METHODS)
+    assert banned.isdisjoint(CHEAP_METHODS)
+
+
+def test_round2_best_is_negative():
+    best = ROOT / "Error_mitigation" / "out_research" / "round2" / "BEST.md"
+    text = best.read_text()
+    assert "No beat of adaptive; recipe unchanged" in text
+    assert "0.3419" in text
+    assert "0.1012" in text
+    nb = ROOT / "Error_mitigation" / "out_research" / "round2" / "NOTEBOOK.md"
+    assert "Official defaults unchanged" in nb.read_text() or "Official defaults unchanged." in nb.read_text()
+    conclusion = ROOT / "Error_mitigation" / "out_research" / "round2" / "CONCLUSION.md"
+    ctext = conclusion.read_text()
+    assert "Adaptive is unbeaten" in ctext
+    assert "not a default" in ctext.lower() or "not the official default" in ctext
+    assert "0.343 is model error" in ctext
+    assert "Cross-H fails" in ctext
+    from Error_mitigation.run_round2 import HARD_CELLS
+
+    assert len(HARD_CELLS) == 8
+    for cell in HARD_CELLS:
+        path = Path(cell["cache"])
+        assert path.is_file(), path
+        assert path.suffix == ".npz"
+
+
+def test_top_energy_bins_and_joint_kind():
+    e = np.zeros((2, 8, 8))
+    e[0, 0, 0] = -9.0
+    e[1, 7, 7] = 3.0
+    idx = top_energy_bin_indices(e, m=2)
+    assert idx.size == 2
+    flat = e.reshape(-1)
+    assert set(np.abs(flat[idx])) == {9.0, 3.0}
+    rng = np.random.default_rng(0)
+    p = rng.random((2, 8, 8))
+    p = p / p.sum()
+    cfg = circuit_noise("loss", 0.003)
+    spec = readout_spec("ideal", n_shots=200)
+    _, info = fit_gdr_joint([p], [p], cfg, spec, 5, (2, 8, 8), e, maxiter=10, top_m=4)
+    assert info["kind"] == "gdr_joint"
+    assert "lam" in info
+
+
+def test_average_unfolds_renormalizes():
+    from Error_mitigation.mitigation import initial_theta, params_to_kernels
+
+    cfg = circuit_noise("loss", 0.03)
+    spec = readout_spec("ideal", n_shots=100)
+    th = initial_theta(cfg, spec, 5)
+    q = np.ones((2, 8, 8), dtype=float)
+    q = q / q.sum()
+    hist, members = average_unfolds(q, [th, th], (2, 8, 8))
+    assert hist.shape == (2, 8, 8)
+    assert hist.sum() == pytest.approx(1.0)
+    assert len(members) == 2
+
+
+def test_eta_fisher_score_vacuum_zero():
+    p = np.zeros((2, 8, 8))
+    p[0, 0, 0] = 1.0
+    assert eta_fisher_score(p) == pytest.approx(0.0)
+    p2 = np.zeros((2, 8, 8))
+    p2[0, 3, 3] = 1.0
+    assert eta_fisher_score(p2) > 0.0
+
+
+def test_snap_opt_comprehensive_caches_exist():
+    from Error_mitigation.run_round2 import SNAP_CELLS
+
+    assert len(SNAP_CELLS) == 3
+    for cell in SNAP_CELLS:
+        assert Path(cell["cache"]).is_file()
+        assert cell["readout"] == "readout_realistic"
+
+
+def test_stage_b_methods_exclude_ban_list():
+    from Error_mitigation.run_ablation import STAGE_B_METHODS
+
+    banned = {
+        "gdr_full",
+        "gdr_interleave",
+        "gdr_split",
+        "gdr_band",
+        "gdr_afterburn",
+        "gdr_blend",
+        "gdr_energy",
+    }
+    assert banned.isdisjoint(STAGE_B_METHODS)
+    assert "gdr_ensemble" in STAGE_B_METHODS
+    assert "gdr_joint" in STAGE_B_METHODS
+
+
+def test_family_eta_is_opposite_of_anneal():
+    from Error_mitigation.mitigation import anneal_ridge_weights, family_eta_ridge_weights
+
+    mild = family_eta_ridge_weights(0.003)[0]
+    harsh = family_eta_ridge_weights(0.1)[0]
+    assert mild < harsh
+    assert anneal_ridge_weights(0.003)[0] > anneal_ridge_weights(0.1)[0]
+
+
+def test_family_eta_gated_to_comprehensive_readout():
+    from Error_mitigation.mitigation import family_eta_allowed
+
+    rr = readout_spec("readout_realistic", n_shots=100)
+    ideal = readout_spec("ideal", n_shots=100)
+    assert family_eta_allowed(family="comprehensive", spec=rr) is True
+    assert family_eta_allowed(family="comprehensive", spec=ideal) is False
+    assert family_eta_allowed(family="loss", spec=rr) is False
+
+
+def test_shot_damp_floor_zero_at_official_shots():
+    from Error_mitigation.mitigation import shot_damp_floor
+
+    assert shot_damp_floor(2048) > 0.0
+    assert shot_damp_floor(8192) == 0.0
+    assert shot_damp_floor(32768) == 0.0
+
+
+def test_rl_soft_clip_and_early_stop():
+    from Error_mitigation.mitigation import choose_rl_niter, richardson_lucy
+
+    rng = np.random.default_rng(0)
+    q = rng.random((2, 4, 4))
+    q = q / q.sum()
+    eye2, eye4 = np.eye(2), np.eye(4)
+    p_hard = richardson_lucy(q, eye2, eye4, eye4, n_iter=5, soft_clip=False)
+    p_soft = richardson_lucy(q, eye2, eye4, eye4, n_iter=5, soft_clip=True)
+    assert p_hard.shape == q.shape
+    assert p_soft.sum() == pytest.approx(1.0)
+    assert np.all(p_soft >= 0.0)
+    n_iter, info = choose_rl_niter(
+        [q], [q], eye2, eye4, eye4, 50, soft_clip=True, niters=(4, 8)
+    )
+    assert n_iter in (4, 8)
+    assert "hold_nll" in info
+
+
+def test_stage_c_methods_exclude_ban_list():
+    from Error_mitigation.run_ablation import STAGE_C_METHODS
+
+    banned = {
+        "gdr_full",
+        "gdr_interleave",
+        "gdr_split",
+        "gdr_band",
+        "gdr_afterburn",
+        "gdr_blend",
+        "gdr_energy",
+    }
+    assert banned.isdisjoint(STAGE_C_METHODS)
+    assert "gdr_family_eta" in STAGE_C_METHODS
+    assert "gdr_rl" in STAGE_C_METHODS
+    from Error_mitigation.run_round2 import FAMILY_EXTRA, SHOT_CELLS, XFER_CELLS
+
+    assert len(SHOT_CELLS) == 4
+    assert len(XFER_CELLS) == 3
+    for cell in list(SHOT_CELLS) + list(XFER_CELLS) + list(FAMILY_EXTRA):
+        assert Path(cell["cache"]).is_file(), cell["cache"]

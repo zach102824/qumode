@@ -319,6 +319,159 @@ def statevector_histogram(sim, xvec: np.ndarray) -> np.ndarray:
     return probabilities_from_ket(np.asarray(psi.full()).reshape(-1), sim.dims)
 
 
+def designed_twin_plan(
+    n_train: int,
+    ndepth: int,
+    *,
+    n_rank2: int | None = None,
+    mag_lo: float = 0.25,
+    mag_hi: float = 1.35,
+    extra_t_free: int = 0,
+) -> tuple[list[int], list[float]]:
+    """Log-spaced |α| scales plus optional extra non-Gaussian twins.
+
+    Wider |α|² span than the default U(0.5, 1) mix improves Fisher information
+    for (η, p_nn): loss hops scale with n, readout p_nn does not.
+    """
+    n_train = int(n_train)
+    if n_rank2 is None:
+        n_rank2 = max(0, n_train // 4)
+    n_rank2 = int(n_rank2)
+    extra = int(max(0, extra_t_free))
+    n_gauss = max(0, n_train - n_rank2 - extra)
+    t_free2 = min(2, int(ndepth) * 2)
+    t_free4 = min(4, int(ndepth) * 2)
+    t_list = [0] * n_gauss + [t_free2] * n_rank2 + [t_free4] * extra
+    n_tot = len(t_list)
+    if n_tot == 0:
+        return [], []
+    lo = max(float(mag_lo), 1e-3)
+    hi = max(float(mag_hi), lo)
+    if n_tot == 1:
+        scales = [float(np.sqrt(lo * hi))]
+    else:
+        scales = [float(s) for s in np.geomspace(lo, hi, num=n_tot)]
+    return t_list, scales
+
+
+def designed_twin_plan_grid(
+    n_train: int,
+    ndepth: int,
+    *,
+    n_rank2: int | None = None,
+    mag_lo: float = 0.25,
+    mag_hi: float = 1.35,
+    extra_t_free: int = 0,
+    spacing: str = "chebyshev",
+) -> tuple[list[int], list[float]]:
+    """Amplitude grid in |α|² for random-circuit twins (not span-on-optimized).
+
+    Chebyshev nodes on [|α_lo|², |α_hi|²] put Fisher mass at the ends and
+    the interior, unlike log-spaced |α| (``designed_twin_plan``). Linear
+    spacing is the other cheap grid. Do not use this plan as the optimized
+    default — span-on-optimized is a known loser.
+    """
+    t_list, _ = designed_twin_plan(
+        n_train,
+        ndepth,
+        n_rank2=n_rank2,
+        mag_lo=mag_lo,
+        mag_hi=mag_hi,
+        extra_t_free=extra_t_free,
+    )
+    n_tot = len(t_list)
+    if n_tot == 0:
+        return [], []
+    lo = max(float(mag_lo), 1e-3)
+    hi = max(float(mag_hi), lo)
+    n2_lo, n2_hi = lo * lo, hi * hi
+    kind = str(spacing).lower()
+    if n_tot == 1:
+        n2 = np.array([0.5 * (n2_lo + n2_hi)])
+    elif kind == "linear":
+        n2 = np.linspace(n2_lo, n2_hi, num=n_tot)
+    else:
+        k = np.arange(n_tot, dtype=float)
+        xs = np.cos(np.pi * (k + 0.5) / n_tot)
+        n2 = np.sort(0.5 * (n2_hi + n2_lo) + 0.5 * (n2_hi - n2_lo) * xs)
+    scales = [float(np.sqrt(max(v, 1e-12))) for v in n2]
+    scales[0] = lo
+    scales[-1] = hi
+    return t_list, scales
+
+
+def eta_fisher_score(p_hist: np.ndarray) -> float:
+    """Predicted binomial-η Fisher scale: Σ n(n−1)p(n) on both modes."""
+    arr = np.clip(np.asarray(p_hist, dtype=float), 0.0, None)
+    total = float(arr.sum())
+    if total <= 0.0:
+        return 0.0
+    arr = arr / total
+    pn = arr.sum(axis=(0, 2))
+    pm = arr.sum(axis=(0, 1))
+    n = np.arange(pn.size, dtype=float)
+    m = np.arange(pm.size, dtype=float)
+    return float(np.dot(pn, n * (n - 1.0)) + np.dot(pm, m * (m - 1.0)))
+
+
+def propose_active_gaussian_twins(
+    sim,
+    x_target: np.ndarray,
+    existing_p: list[np.ndarray],
+    rng: np.random.Generator,
+    *,
+    n_extra: int = 10,
+    n_pool: int = 80,
+    mag_lo: float = 0.20,
+    mag_hi: float = 1.50,
+) -> list[dict]:
+    """Noiseless pool → pick n_extra Gaussian twins maximizing η-Fisher × diversity.
+
+    Diversity is min TVD to already-chosen / existing ideal histograms so the
+    extra twins are not copies of the span roster. Callers must still simulate
+    the noisy histograms (the expensive step).
+    """
+    from .metrics import total_variation
+
+    ansatz = str(sim.ansatz).lower()
+    ndepth = int(sim.ndepth)
+    n_extra = int(n_extra)
+    n_pool = int(max(n_pool, n_extra))
+    scales = np.geomspace(max(float(mag_lo), 1e-3), max(float(mag_hi), float(mag_lo)), num=n_pool)
+    pool = []
+    for s in scales:
+        mag = (float(s), float(s))
+        if ansatz == "ecd":
+            x = make_ecd_twin(x_target, ndepth, rng, t_free=0, mag_scale_range=mag)
+        else:
+            x = make_snap_twin(
+                x_target, ndepth, rng, t_free=0, nfocks=sim.nfocks, mag_scale_range=mag
+            )
+        p = statevector_histogram(sim, x)
+        pool.append({"x": np.asarray(x, dtype=float), "p_ideal": p, "fisher": eta_fisher_score(p)})
+    chosen: list[dict] = []
+    ref = [np.asarray(p, dtype=float) for p in existing_p]
+    for _ in range(n_extra):
+        best_i = None
+        best_score = -1.0
+        for i, cand in enumerate(pool):
+            if any(np.allclose(cand["x"], c["x"]) for c in chosen):
+                continue
+            dmin = min((total_variation(cand["p_ideal"], q) for q in ref), default=1.0)
+            score = float(cand["fisher"]) * float(max(dmin, 1e-6))
+            if score > best_score:
+                best_score = score
+                best_i = i
+        if best_i is None:
+            break
+        pick = pool[best_i]
+        pick = {**pick, "score": best_score, "t_free": 0}
+        chosen.append(pick)
+        ref.append(pick["p_ideal"])
+        pool.pop(best_i)
+    return chosen
+
+
 def build_twins(
     sim,
     x_target: np.ndarray,
@@ -328,6 +481,8 @@ def build_twins(
     n_rank2: int | None = None,
     mag_scale_range: tuple[float, float] = (0.5, 1.0),
     product_tol: float = PRODUCT_TVD_TOL,
+    mag_scales: list[float] | None = None,
+    t_free_list: list[int] | None = None,
 ) -> list[Twin]:
     """Build ``n_train`` twins of ``x_target`` on a noiseless ``sim``.
 
@@ -336,22 +491,34 @@ def build_twins(
     asserted against ``sim.statevector`` at TVD ``product_tol``. A Poisson
     formula is stored as a diagnostic; it need not match at 1e-6 once
     truncated D(α) departs from an ideal coherent state.
+
+    Optional ``t_free_list`` / ``mag_scales`` override the default mix so an
+    ablation can widen the |α| span or raise the non-Gaussian fraction.
     """
     ansatz = str(sim.ansatz).lower()
     ndepth = int(sim.ndepth)
     dims = tuple(int(d) for d in sim.dims)
-    n_train = int(n_train)
-    if n_rank2 is None:
-        n_rank2 = max(0, n_train // 4)
-    n_gauss = n_train - int(n_rank2)
-    t_list = [0] * n_gauss + [min(2, ndepth * 2)] * int(n_rank2)
+    if t_free_list is not None:
+        t_list = [int(t) for t in t_free_list]
+        n_train = len(t_list)
+    else:
+        n_train = int(n_train)
+        if n_rank2 is None:
+            n_rank2 = max(0, n_train // 4)
+        n_gauss = n_train - int(n_rank2)
+        t_list = [0] * n_gauss + [min(2, ndepth * 2)] * int(n_rank2)
     twins: list[Twin] = []
-    for t_free in t_list:
+    for i, t_free in enumerate(t_list):
+        if mag_scales is not None:
+            s = float(mag_scales[i % len(mag_scales)])
+            mag_range = (s, s)
+        else:
+            mag_range = mag_scale_range
         if ansatz == "ecd":
-            x = make_ecd_twin(x_target, ndepth, rng, t_free=t_free, mag_scale_range=mag_scale_range)
+            x = make_ecd_twin(x_target, ndepth, rng, t_free=t_free, mag_scale_range=mag_range)
         else:
             x = make_snap_twin(
-                x_target, ndepth, rng, t_free=t_free, nfocks=sim.nfocks, mag_scale_range=mag_scale_range
+                x_target, ndepth, rng, t_free=t_free, nfocks=sim.nfocks, mag_scale_range=mag_range
             )
         p_sv = statevector_histogram(sim, x)
         p_analytic = None
