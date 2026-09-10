@@ -14,3 +14,7 @@
 2026-09-10T10:38:12Z START ecd H18 nd=4 smoke shots=4000 n_train=12 remain=40308s
 2026-09-10T10:38:56Z DONE ecd H18 smoke remain=40264s
 2026-09-10T10:38:56Z START ecd H18 nd=4 s8192 shots=8192 n_train=40 remain=40264s
+2026-09-10T10:41:45Z DONE ecd H18 s8192 remain=40095s
+2026-09-10T10:41:45Z START snap H1 nd=3 s8192 shots=8192 n_train=40 remain=40095s
+2026-09-10T10:43:52Z DONE snap H1 s8192 remain=39968s
+2026-09-10T10:43:52Z START snap H2 nd=3 s8192 shots=8192 n_train=40 remain=39968s
