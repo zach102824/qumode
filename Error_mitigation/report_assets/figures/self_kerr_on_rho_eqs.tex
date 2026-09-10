@@ -1,0 +1,38 @@
+\documentclass[12pt]{article}
+\usepackage{fix-cm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[
+  paperwidth=11.8in,
+  paperheight=6.4in,
+  margin=0.18in,
+  headheight=0pt,
+  headsep=0pt,
+  footskip=0pt
+]{geometry}
+\pagestyle{empty}
+\setlength{\abovedisplayskip}{2pt}
+\setlength{\belowdisplayskip}{2pt}
+\begin{document}
+\fontsize{20}{26}\selectfont
+\begin{align*}
+H &= K\,\hat n(\hat n-1)/2,
+  \qquad
+  U=e^{-i H\tau},
+  \qquad
+  K=2\pi\times 500\,\mathrm{Hz} \\[0.45em]
+U|n\rangle
+  &= e^{-i\phi_n}|n\rangle,
+  \qquad
+  \phi_n = K\tau\, n(n-1)/2 \\[0.45em]
+\langle n|U\rho U^\dagger|n\rangle
+  &= \langle n|\rho|n\rangle
+  \qquad\text{populations do not hop} \\[0.45em]
+\langle n|U\rho U^\dagger|m\rangle
+  &= e^{-i(\phi_n-\phi_m)}\langle n|\rho|m\rangle
+  \qquad\text{coherences pick up a phase} \\[0.55em]
+\mathcal{E}_{\mathrm{comp}}
+  &= \mathcal{E}_2\circ\mathcal{E}_1\circ\mathcal{E}_q
+     \circ\mathcal{U}_2\circ\mathcal{U}_1
+\end{align*}
+\end{document}

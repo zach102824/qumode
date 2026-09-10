@@ -1,0 +1,27 @@
+\documentclass[12pt]{article}
+\usepackage{fix-cm}
+\usepackage{amsmath}
+\usepackage[
+  paperwidth=11.6in,
+  paperheight=4.6in,
+  margin=0.28in,
+  headheight=0pt,
+  headsep=0pt,
+  footskip=0pt
+]{geometry}
+\pagestyle{empty}
+\setlength{\abovedisplayskip}{4pt}
+\setlength{\belowdisplayskip}{4pt}
+\setlength{\abovedisplayshortskip}{2pt}
+\setlength{\belowdisplayshortskip}{2pt}
+\begin{document}
+\fontsize{22}{28}\selectfont
+\begin{align*}
+\gamma &= 1 - \exp(-\kappa\tau) \\[0.45em]
+K_j &= \sqrt{\gamma^j / j!}\; \exp(-\kappa\tau\,\hat{n}/2)\; a^j
+      \quad (j=1,\ldots,L-1) \\[0.45em]
+K_0 &= \sqrt{I - \sum_{j\ge 1} K_j^\dagger K_j} \\[0.45em]
+\rho &\leftarrow \sum_j K_j \rho K_j^\dagger
+      \quad \text{on that cavity.}
+\end{align*}
+\end{document}

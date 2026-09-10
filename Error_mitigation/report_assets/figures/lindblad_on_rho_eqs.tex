@@ -1,0 +1,42 @@
+\documentclass[12pt]{article}
+\usepackage{fix-cm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[
+  paperwidth=11.8in,
+  paperheight=6.4in,
+  margin=0.18in,
+  headheight=0pt,
+  headsep=0pt,
+  footskip=0pt
+]{geometry}
+\pagestyle{empty}
+\setlength{\abovedisplayskip}{2pt}
+\setlength{\belowdisplayskip}{2pt}
+\begin{document}
+\fontsize{20}{26}\selectfont
+\begin{align*}
+\frac{d\rho}{dt}
+  &= \sum_k \Bigl(
+       c_k\rho c_k^\dagger
+       -\tfrac12\{c_k^\dagger c_k,\rho\}
+     \Bigr)
+  \qquad (H=0\text{ during the idle}) \\[0.55em]
+\rho(\tau)
+  &= e^{\mathcal{L}\tau}[\rho]
+  \;=\;
+  \sum_j K_j\rho K_j^\dagger \\[0.65em]
+c_\downarrow\rho c_\downarrow^\dagger
+  &\propto a\rho a^\dagger
+  \qquad\text{moves }|n\rangle\langle n|
+  \;\to\;
+  |n-1\rangle\langle n-1| \\[0.35em]
+c_\uparrow\rho c_\uparrow^\dagger
+  &\propto a^\dagger\rho a
+  \qquad\text{moves }|n\rangle\langle n|
+  \;\to\;
+  |n+1\rangle\langle n+1| \\[0.35em]
+-\tfrac12\{c^\dagger c,\rho\}
+  &\qquad\text{the price of those jumps: keeps }\mathrm{Tr}\,\rho=1
+\end{align*}
+\end{document}

@@ -25,6 +25,8 @@ DEFAULT_LAMBDA = 2.0
 DEFAULT_NFOCKS = (8, 8)
 MIXED_P_SPIN_NPZ_GLOB = "mixed_p_spin_p2-4_[0-9][0-9][0-9].npz"
 DEFAULT_MIXED_P_SPIN_DIR = Path("Hamiltonians") / "mixed_p_spin"
+FOUR_SAT_NPZ_GLOB = "four_sat_[0-9][0-9][0-9].npz"
+DEFAULT_FOUR_SAT_DIR = Path("Hamiltonians") / "four_sat"
 
 TARGET_QNM = (0, 6, 0)
 TARGET_BITSTRING = "0110000"
@@ -635,6 +637,105 @@ def load_mixed_p_spin_instances(
                 "hamiltonian_id": hid,
                 "family": "mixed_p_spin",
                 "kind": "mixed_p_spin",
+                "max_pauli_weight": int(max_pauli_weight(terms)),
+                "ground_bitstring": gs_bits,
+                "energy_tensor": np.asarray(tensor, dtype=float),
+                **spec,
+            }
+        )
+    instances.sort(key=lambda rec: int(rec["hamiltonian_id"]))
+    return instances
+
+
+def z_terms_from_four_sat_npz(path: Path | str) -> tuple[list[tuple[tuple[int, ...], float]], dict]:
+    """Load Z-string terms, identity shift, and SAT metadata from one 4-SAT NPZ file."""
+    path = Path(path)
+    data = np.load(path)
+    required = ("sites", "orders", "coefficients", "num_spins")
+    missing = [key for key in required if key not in data.files]
+    if missing:
+        raise ValueError(f"{path.name} is missing arrays: {missing}")
+    num_spins = int(np.asarray(data["num_spins"]).reshape(-1)[0])
+    terms = z_terms_from_mixed_p_spin_arrays(data["sites"], data["orders"], data["coefficients"])
+    orders = np.asarray(data["orders"], dtype=np.int64).reshape(-1)
+    identity = float(np.asarray(data["identity"]).reshape(-1)[0]) if "identity" in data.files else 0.0
+    meta = {
+        "file": path.name,
+        "path": str(path),
+        "num_spins": num_spins,
+        "n_terms": len(terms),
+        "identity": identity,
+        "min_body_order": int(np.min(orders)),
+        "max_body_order": int(np.max(orders)),
+        "terms_by_order": {
+            str(int(order)): int(np.count_nonzero(orders == order))
+            for order in sorted(set(int(v) for v in orders))
+        },
+    }
+    if "num_clauses" in data.files:
+        meta["num_clauses"] = int(np.asarray(data["num_clauses"]).reshape(-1)[0])
+    if "clause_width" in data.files:
+        meta["clause_width"] = int(np.asarray(data["clause_width"]).reshape(-1)[0])
+    if "clauses" in data.files:
+        meta["clauses"] = np.asarray(data["clauses"], dtype=np.int64).tolist()
+    if "polarities" in data.files:
+        meta["polarities"] = np.asarray(data["polarities"], dtype=np.int64).tolist()
+    return terms, meta
+
+
+def energy_tensor_from_four_sat_npz(
+    path: Path | str,
+    nfocks: Sequence[int] = DEFAULT_NFOCKS,
+    partition: tuple[int, int, int] = (1, 3, 3),
+) -> tuple[np.ndarray, list[tuple[tuple[int, ...], float]], dict]:
+    """Map one 4-SAT NPZ onto the hybrid (2, L1, L2) energy tensor."""
+    terms, meta = z_terms_from_four_sat_npz(path)
+    if int(meta["num_spins"]) != N_QUBITS:
+        raise ValueError(
+            f"{meta['file']} has num_spins={meta['num_spins']}, "
+            f"but the hybrid encoding expects {N_QUBITS}."
+        )
+    l1, l2 = int(nfocks[0]), int(nfocks[1])
+    n_nbits = int(round(math.log2(l1)))
+    m_nbits = int(round(math.log2(l2)))
+    if (1 << n_nbits) != l1 or (1 << m_nbits) != l2:
+        raise ValueError(f"Fock cutoffs {nfocks} must be powers of two for binary decoding.")
+    if partition != (1, n_nbits, m_nbits):
+        raise ValueError(
+            f"partition {partition} does not match nfocks={nfocks} "
+            f"(expected {(1, n_nbits, m_nbits)})."
+        )
+    tensor = energy_tensor_from_z_terms(terms, nfocks, partition, float(meta["identity"]))
+    return tensor, terms, meta
+
+
+def load_four_sat_instances(
+    ham_dir: Path | str = DEFAULT_FOUR_SAT_DIR,
+    *,
+    nfocks: Sequence[int] = DEFAULT_NFOCKS,
+    glob: str = FOUR_SAT_NPZ_GLOB,
+    partition: tuple[int, int, int] = (1, 3, 3),
+    max_hamiltonians: int | None = None,
+) -> list[dict]:
+    """Load saved 4-SAT NPZ files as hybrid energy-tensor instances."""
+    ham_dir = Path(ham_dir)
+    paths = sorted(ham_dir.glob(glob))
+    if not paths:
+        raise FileNotFoundError(f"no 4-SAT files matching {glob} in {ham_dir}")
+    if max_hamiltonians is not None:
+        paths = paths[: max(int(max_hamiltonians), 0)]
+    instances: list[dict] = []
+    for path in paths:
+        tensor, terms, meta = energy_tensor_from_four_sat_npz(path, nfocks, partition)
+        spec = energy_spectrum_stats(tensor)
+        hid = int(path.stem.rsplit("_", 1)[-1])
+        gs_bits = bitstring_from_bits(bits_from_qnm(*spec["ground_qnm"], partition))
+        instances.append(
+            {
+                **meta,
+                "hamiltonian_id": hid,
+                "family": "four_sat",
+                "kind": "four_sat",
                 "max_pauli_weight": int(max_pauli_weight(terms)),
                 "ground_bitstring": gs_bits,
                 "energy_tensor": np.asarray(tensor, dtype=float),
