@@ -197,3 +197,26 @@ def test_mitigation_runner_loads_four_sat_and_gibbs_json(tmp_path):
     trial = load_gibbs_trial(path, 0, "ecd", 2)
     assert trial["energy_physical"] == 0.2
     assert trial["x"][0] == 0.2
+
+
+def test_snap_twins_accept_non_vacuum_gibbs_prep():
+    """Analytic vacuum tracker is skipped; GDR still uses statevector histograms."""
+    from Error_mitigation.twins import build_twins
+    from qumode_vqe.circuit import prep_params_to_ket
+    from qumode_vqe.params import random_snap_parameters
+    from qumode_vqe.vqe import HybridSimulator
+
+    inst = load_four_sat_instances(HAM_DIR, max_hamiltonians=1)[0]
+    prep = np.array([0.4, 0.2, -0.1, 0.15, 0.05], dtype=float)
+    sim = HybridSimulator(
+        ndepth=1,
+        ansatz="snap",
+        energy_tensor=inst["energy_tensor"],
+        initial_state=prep_params_to_ket(prep, DEFAULT_NFOCKS),
+    )
+    rng = np.random.default_rng(3)
+    x = random_snap_parameters(1, DEFAULT_NFOCKS, rng)
+    twins = build_twins(sim, x, rng, n_train=2, n_rank2=0)
+    assert len(twins) == 2
+    assert all(tw.p_ideal is not None for tw in twins)
+    assert all(float(tw.p_ideal.sum()) == pytest.approx(1.0, abs=1e-8) for tw in twins)

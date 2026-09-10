@@ -26,7 +26,7 @@ import numpy as np
 import qutip as qt
 from scipy.special import gammaln
 
-from qumode_vqe.circuit import snap_operator
+from qumode_vqe.circuit import snap_operator, vacuum
 from qumode_vqe.measurement import probabilities_from_ket
 from qumode_vqe.params import (
     pack,
@@ -45,6 +45,16 @@ PRODUCT_TVD_TOL = 1e-6
 # assertion: truncated D(α)|0⟩ is not an ideal coherent state at large |α|.
 ALPHA_MARGIN = 2
 POISSON_TVD_TOL = 1e-6  # kept as an alias for tests that import it
+VACUUM_NORM_TOL = 1e-10
+
+
+def initial_state_is_vacuum(sim) -> bool:
+    """True when the simulator starts at hybrid |0⟩⊗|0⟩⊗|0⟩ (official GDR path)."""
+    ket = getattr(sim, "initial_state", None)
+    if ket is None:
+        return True
+    nfocks = tuple(int(v) for v in sim.nfocks)
+    return float((ket - vacuum(nfocks)).norm()) < VACUUM_NORM_TOL
 
 
 
@@ -533,7 +543,7 @@ def build_twins(
                 qubit = qubit_p
             poisson_tvd = total_variation(p_poisson, p_sv)
             product_tvd = total_variation(p_analytic, p_sv)
-            if product_tvd > product_tol:
+            if product_tvd > product_tol and initial_state_is_vacuum(sim):
                 raise AssertionError(
                     f"{ansatz} Gaussian twin product-state TVD={product_tvd:.3e} exceeds {product_tol:.1e}. "
                     "The twin is not a classically easy product Gaussian state."
