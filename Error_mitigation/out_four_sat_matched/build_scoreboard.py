@@ -76,17 +76,21 @@ def _cell(records: list[dict], *, params: str, kt: float, method: str) -> dict |
     }
 
 
-def gdr_table(ansatz: str, ndepth: int) -> dict:
+def gdr_table(ansatz: str, ndepth: int, *, prefix: str = "") -> dict:
     rows = []
     missing = []
     for hid in range(20):
-        path = OUTDIR / f"{ansatz}_h{hid:03d}_s8192" / "results.json"
+        path = OUTDIR / f"{ansatz}_{prefix}h{hid:03d}_s8192" / "results.json"
         if not path.is_file():
             missing.append(hid)
             continue
         blob = _load(path)
         recs = blob.get("records") or []
-        meta_path = OUTDIR / f"{ansatz}_h{hid:03d}_s8192" / f"optimized_params_{ansatz}_h{hid:03d}_nd{ndepth}.json"
+        meta_path = (
+            OUTDIR
+            / f"{ansatz}_{prefix}h{hid:03d}_s8192"
+            / f"optimized_params_{ansatz}_h{hid:03d}_nd{ndepth}.json"
+        )
         pick = _load(meta_path) if meta_path.is_file() else {}
         row = {
             "hamiltonian_id": hid,
@@ -142,8 +146,12 @@ def gdr_table(ansatz: str, ndepth: int) -> dict:
 
 
 def main() -> int:
-    snap_json = ROOT / "results" / "gibbs_four_sat_snap_matched_n10.json"
-    ecd_json = ROOT / "results" / "gibbs_four_sat_ecd_matched_n10.json"
+    suites = (
+        ("snap_L3", ROOT / "results" / "gibbs_four_sat_snap_matched_n10.json", "snap", 3, ""),
+        ("ecd_L4", ROOT / "results" / "gibbs_four_sat_ecd_matched_n10.json", "ecd", 4, ""),
+        ("snap_L2", ROOT / "results" / "gibbs_four_sat_snap_matched_n10_L2.json", "snap", 2, "l2_"),
+        ("ecd_L3", ROOT / "results" / "gibbs_four_sat_ecd_matched_n10_L3.json", "ecd", 3, "l3_"),
+    )
     out = {
         "success_metric": "most_likely_bitstring == ground_bitstring (JSON success flag)",
         "energy_bar_used": False,
@@ -156,12 +164,17 @@ def main() -> int:
         "noiseless": {},
         "gdr": {},
     }
-    if snap_json.is_file():
-        out["noiseless"]["snap"] = noiseless_table(_load(snap_json))
-    if ecd_json.is_file():
-        out["noiseless"]["ecd"] = noiseless_table(_load(ecd_json))
-    out["gdr"]["snap"] = gdr_table("snap", 3)
-    out["gdr"]["ecd"] = gdr_table("ecd", 4)
+    for key, path, ansatz, ndepth, prefix in suites:
+        if path.is_file():
+            out["noiseless"][key] = noiseless_table(_load(path))
+        out["gdr"][key] = gdr_table(ansatz, ndepth, prefix=prefix)
+    # Back-compat aliases for the original L3/L4 pair.
+    if "snap_L3" in out["noiseless"]:
+        out["noiseless"]["snap"] = out["noiseless"]["snap_L3"]
+    if "ecd_L4" in out["noiseless"]:
+        out["noiseless"]["ecd"] = out["noiseless"]["ecd_L4"]
+    out["gdr"]["snap"] = out["gdr"]["snap_L3"]
+    out["gdr"]["ecd"] = out["gdr"]["ecd_L4"]
     path = OUTDIR / "scoreboard.json"
     path.write_text(json.dumps(out, indent=2) + "\n")
     print(f"wrote {path}")

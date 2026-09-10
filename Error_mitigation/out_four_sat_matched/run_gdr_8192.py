@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""Run matched 4-SAT GDR @8192 for SNAP L3 and ECD L4 on all 20 H (2-wide)."""
+"""Run matched 4-SAT GDR @8192 (2-wide).
+
+Default queue is SNAP L3 + ECD L4 into the original ``{ansatz}_hXXX_s8192``
+dirs. Pass ``--suite l2l3`` for SNAP L2 + ECD L3 into ``{ansatz}_l{d}_hXXX_*``.
+"""
 
 from __future__ import annotations
 
+import argparse
 import subprocess
 import sys
 import time
@@ -16,7 +21,10 @@ LOG = OUT / "COMMANDS.log"
 GDRLOG = OUT / "gdr_run.log"
 MAX_WORKERS = 2
 
-JOBS = [("snap", hid, 3) for hid in range(20)] + [("ecd", hid, 4) for hid in range(20)]
+SUITES = {
+    "l3l4": (("snap", 3, "gibbs_four_sat_snap_matched_n10.json", ""), ("ecd", 4, "gibbs_four_sat_ecd_matched_n10.json", "")),
+    "l2l3": (("snap", 2, "gibbs_four_sat_snap_matched_n10_L2.json", "l2_"), ("ecd", 3, "gibbs_four_sat_ecd_matched_n10_L3.json", "l3_")),
+}
 
 
 def log(msg: str) -> None:
@@ -27,14 +35,14 @@ def log(msg: str) -> None:
             fh.write(line + "\n")
 
 
-def run_one(ansatz: str, hid: int, ndepth: int) -> tuple[str, int, int, float]:
-    tag = f"{ansatz}_h{hid:03d}_s8192"
+def run_one(ansatz: str, hid: int, ndepth: int, gibbs_name: str, prefix: str) -> tuple[str, int, int, float]:
+    tag = f"{ansatz}_{prefix}h{hid:03d}_s8192"
     outdir = OUT / tag
     results = outdir / "results.json"
     if results.is_file():
         log(f"SKIP existing {outdir.relative_to(ROOT)}")
         return ansatz, hid, 0, 0.0
-    gibbs = ROOT / "results" / f"gibbs_four_sat_{ansatz}_matched_n10.json"
+    gibbs = ROOT / "results" / gibbs_name
     cmd = [
         sys.executable,
         "-u",
@@ -89,16 +97,21 @@ def run_one(ansatz: str, hid: int, ndepth: int) -> tuple[str, int, int, float]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--suite", choices=tuple(SUITES), default="l3l4")
+    args = parser.parse_args()
+    spec = SUITES[args.suite]
+    jobs = [(ansatz, hid, nd, gibbs, prefix) for ansatz, nd, gibbs, prefix in spec for hid in range(20)]
     Path("/tmp/mpl").mkdir(parents=True, exist_ok=True)
-    log(f"GDR 8192 queue {len(JOBS)} jobs workers={MAX_WORKERS}")
+    log(f"GDR 8192 suite={args.suite} queue {len(jobs)} jobs workers={MAX_WORKERS}")
     rc = 0
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
-        futs = [pool.submit(run_one, a, h, d) for a, h, d in JOBS]
+        futs = [pool.submit(run_one, a, h, d, g, p) for a, h, d, g, p in jobs]
         for fut in as_completed(futs):
             _ansatz, _hid, code, _elapsed = fut.result()
             if code != 0:
                 rc = code
-    log(f"GDR 8192 queue finished rc={rc}")
+    log(f"GDR 8192 suite={args.suite} finished rc={rc}")
     return rc
 
 
