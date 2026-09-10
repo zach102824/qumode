@@ -1,0 +1,10 @@
+2026-09-10T10:03:04Z start ECD scout H000 depths 1-8
+2026-09-10T10:03:43Z start SNAP scout H000 depths 1-4
+2026-09-10T10:04:01Z ECD scout H000 n_trials=8 depths 1-8
+2026-09-10T10:06:22Z SNAP scout H000 n_trials=5 depths 1-4
+2026-09-10T10:07:16Z ECD alt-H scout ids 1-19 depths 4 5 6 n_trials=1
+2026-09-10T10:09:38Z ECD H000 L6 outer=400 n_trials=3 (light budget tweak)
+2026-09-10T10:10:28Z FLEET ECD all 20 H L4 n_trials=8 outer=200
+2026-09-10T10:15:41Z FLEET SNAP all 20 H L3 n_trials=8 outer=200
+2026-09-10T10:20:24Z ECD extra trials on near-miss H 2,4,8,10,13,18,19 L4 n=8 seed=5000
+2026-09-10T10:22:50Z START snap H0 nd=3 smoke shots=4000 n_train=12 remain=41230s
