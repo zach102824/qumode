@@ -5,18 +5,18 @@ Fair SNAP vs ECD comparison on `four_sat_000` … `four_sat_019`.
 
 `most_likely_bitstring == ground_bitstring`.
 
-Same trial budget, same depths, same seeds:
+Same trial budget, same seeds, two matched depth pairs:
 
-| | SNAP | ECD |
-|---|---|---|
-| depth | **L3** | **L4** |
-| Hamiltonians | 20 | 20 |
-| trials / H | **10** | **10** |
-| overall trials | 200 | 200 |
-| `seed_base` | 4000 | 4000 |
-| SPSA | 200 joint | 200 joint |
-| prep start | vacuum | vacuum |
-| η | `sampled_tail` | `sampled_tail` |
+| | SNAP L3 | ECD L4 | SNAP L2 | ECD L3 |
+|---|---|---|---|---|
+| depth | **L3** | **L4** | **L2** | **L3** |
+| Hamiltonians | 20 | 20 | 20 | 20 |
+| trials / H | **10** | **10** | **10** | **10** |
+| overall trials | 200 | 200 | 200 | 200 |
+| `seed_base` | 4000 | 4000 | 4000 | 4000 |
+| SPSA | 200 joint | 200 joint | 200 joint | 200 joint |
+| prep start | vacuum | vacuum | vacuum | vacuum |
+| η | `sampled_tail` | `sampled_tail` | `sampled_tail` | `sampled_tail` |
 
 No ECD extra near-miss / seed-5000 runs. Official GDR defaults are
 unchanged. `params=auto` is not shipped. `Error_mitigation/out/` and
@@ -24,11 +24,22 @@ unchanged. `params=auto` is not shipped. `Error_mitigation/out/` and
 
 GDR circuit params: `--gibbs-pick success_then_cost` loads, for each H,
 the **lowest Gibbs cost among successful trials** (every H had ≥1
-success). That is the fleet pick used for reporting mode-finding, not
-lowest ⟨H⟩. Pick metadata is in each
+success on both pairs). That is the fleet pick used for reporting
+mode-finding, not lowest ⟨H⟩. Pick metadata is in each
 `optimized_params_*_hXXX_nd*.json` (`gibbs_trial`, `success`, `cost`).
 
-## 1. Noiseless success %
+Headline noiseless success (bitstring equality, not energy):
+
+| pair | SNAP | ECD |
+|---|---|---|
+| L3 vs L4 | **193/200 (96.5%)** | **186/200 (93.0%)** |
+| L2 vs L3 | **177/200 (88.5%)** | **162/200 (81.0%)** |
+
+---
+
+## SNAP L3 vs ECD L4
+
+### 1. Noiseless success %
 
 | ansatz | depth | success | success % | mean ⟨H⟩ (footnote only) |
 |--------|------:|--------:|----------:|-------------------------:|
@@ -42,7 +53,7 @@ On this matched 20×10 budget ECD is within a few points of SNAP on
 Every Hamiltonian has at least one success for both ansatzes
 (SNAP min 7/10 on H012; ECD min 7/10 on H005).
 
-### Per-H success (optional)
+#### Per-H success (optional)
 
 | H | SNAP | ECD | SNAP pick ⟨H⟩ | ECD pick ⟨H⟩ |
 |--:|-----:|----:|--------------:|-------------:|
@@ -71,18 +82,18 @@ JSON: `results/gibbs_four_sat_snap_matched_n10.json`,
 `results/gibbs_four_sat_ecd_matched_n10.json`
 (`success_metric`, `n_success`, `by_hamiltonian`).
 
-## 2. Adaptive GDR (all 20 H, both ansatzes)
+### 2. Adaptive GDR (all 20 H, both ansatzes)
 
 Noise: `comprehensive` + `readout_realistic`, κτ ∈ {0.003, 0.03, 0.1}.
 Headline method `gdr_select` under `--twin-design adaptive` (PR #8:
 span twins on random, U(0.5,1) on optimized). Scoreboard shots **8192**,
 `n_train=40`. Smoke first on H000 (4000 shots / 12 twins).
 
-**Ideal optimized circuit has GS mode on 20/20 H for both SNAP and ECD**
-(`success_gs_ideal` from the noiseless histogram of the picked
+**Ideal optimized circuit has GS mode on 20/20 H for both SNAP L3 and
+ECD L4** (`success_gs_ideal` from the noiseless histogram of the picked
 (prep, x)). Mode-finding on the ideal state is not the GDR bottleneck.
 
-### SNAP optimized — raw → `gdr_select` TVD
+#### SNAP L3 optimized — raw → `gdr_select` TVD
 
 Wins vs raw: **20/20** at κτ=0.003, **20/20** at 0.03, **13/20** at 0.1.
 Mean TVD: 0.186→0.046, 0.539→0.205, 0.766→0.639.
@@ -113,10 +124,10 @@ GS mode after mitigation (most-likely bin == ground):
 | 018 | 0.208 → 0.053 | 0.569 → 0.223 | 0.745 → 0.877 † |
 | 019 | 0.224 → 0.057 | 0.630 → 0.234 | 0.806 → 0.719 |
 
-† = select does **not** beat raw. SNAP opt κτ=0.1 losses: H004, H009,
+† = select does **not** beat raw. SNAP L3 opt κτ=0.1 losses: H004, H009,
 H012, H014, H015, H016, H018.
 
-### ECD optimized — raw → `gdr_select` TVD
+#### ECD L4 optimized — raw → `gdr_select` TVD
 
 Wins vs raw: **20/20** at 0.003, **19/20** at 0.03, **10/20** at 0.1.
 Mean TVD: 0.156→0.083, 0.422→0.266, 0.655→0.622.
@@ -155,32 +166,180 @@ run.
 κτ=0.03 loss: H005 only. κτ=0.1 losses: H000, H003, H004, H005, H007,
 H009, H011, H012, H016, H018.
 
-Machine-readable scoreboard: `Error_mitigation/out_four_sat_matched/scoreboard.json`.
+#### Random circuits (same adaptive recipe)
 
-### Random circuits (same adaptive recipe)
-
-SNAP random select vs raw wins: **18/20**, **16/20**, **12/20** at
-0.003 / 0.03 / 0.1. ECD random: **18/20**, **20/20**, **18/20**.
+SNAP L3 random select vs raw wins: **18/20**, **16/20**, **12/20** at
+0.003 / 0.03 / 0.1. ECD L4 random: **18/20**, **20/20**, **18/20**.
 Random circuits do not have GS mode (0/20), as expected.
 
-## 3. Energy bar was not used
+---
 
-- Noiseless headline is **193/200 vs 186/200** bitstring successes, not
+## SNAP L2 vs ECD L3
+
+Same protocol as L3/L4: 20 H × 10 trials, `seed_base=4000`, 200 joint
+SPSA, vacuum, `sampled_tail` η, exact matched budget, no ECD extra
+near-miss runs. GDR is adaptive + `success_then_cost` on **all 20 H**,
+comprehensive + readout_realistic, κτ ∈ {0.003, 0.03, 0.1}, 8192 shots.
+
+JSON: `results/gibbs_four_sat_snap_matched_n10_L2.json`,
+`results/gibbs_four_sat_ecd_matched_n10_L3.json`.
+GDR dirs: `snap_l2_hXXX_s8192/`, `ecd_l3_hXXX_s8192/` (prefixed so they
+do not overwrite the L3/L4 `snap_hXXX_s8192/` / `ecd_hXXX_s8192/`
+fleet).
+
+### 1. Noiseless success %
+
+| ansatz | depth | success | success % | mean ⟨H⟩ (footnote only) |
+|--------|------:|--------:|----------:|-------------------------:|
+| SNAP | L2 | **177/200** | **88.5%** | 0.679 |
+| ECD | L3 | **162/200** | **81.0%** | 0.873 |
+
+Shallower circuits lose ~8 points of mode-finding vs the L3/L4 pair
+(SNAP 96.5% → 88.5%, ECD 93.0% → 81.0%). The SNAP–ECD gap widens
+slightly (7.5 points vs 3.5). Every Hamiltonian still has ≥1 success
+(SNAP L2 min 7/10 on H015; ECD L3 min 6/10 on H001 and H004), so the
+`success_then_cost` GDR pick is well-defined on all 20.
+
+#### Per-H success (optional)
+
+| H | SNAP L2 | ECD L3 | SNAP pick ⟨H⟩ | ECD pick ⟨H⟩ |
+|--:|--------:|-------:|--------------:|-------------:|
+| 000 | 8/10 | 9/10 | 0.399 | 0.954 |
+| 001 | 10/10 | 6/10 | 0.438 | 0.618 |
+| 002 | 9/10 | 7/10 | 0.305 | 0.576 |
+| 003 | 9/10 | 8/10 | 0.267 | 0.854 |
+| 004 | 9/10 | 6/10 | 0.324 | 0.665 |
+| 005 | 10/10 | 9/10 | 0.481 | 0.834 |
+| 006 | 10/10 | 8/10 | 0.521 | 0.857 |
+| 007 | 10/10 | 9/10 | 0.586 | 0.861 |
+| 008 | 9/10 | 8/10 | 0.501 | 0.707 |
+| 009 | 9/10 | 9/10 | 0.551 | 0.782 |
+| 010 | 9/10 | 7/10 | 0.361 | 0.754 |
+| 011 | 9/10 | 10/10 | 0.274 | 0.615 |
+| 012 | 9/10 | 10/10 | 0.561 | 0.765 |
+| 013 | 8/10 | 8/10 | 0.270 | 0.581 |
+| 014 | 9/10 | 8/10 | 0.574 | 0.887 |
+| 015 | 7/10 | 8/10 | 0.602 | 0.562 |
+| 016 | 9/10 | 8/10 | 0.241 | 0.605 |
+| 017 | 8/10 | 7/10 | 0.280 | 0.703 |
+| 018 | 8/10 | 10/10 | 0.365 | 0.370 |
+| 019 | 8/10 | 7/10 | 0.404 | 0.543 |
+
+### 2. Adaptive GDR (all 20 H, both ansatzes)
+
+Same noise / twin / shot settings as L3/L4. Smoke first on H000
+(`snap_l2_h000_smoke`, `ecd_l3_h000_smoke`; 4000 shots / 12 twins).
+
+**Ideal optimized circuit has GS mode on 20/20 H for both SNAP L2 and
+ECD L3.** Mode-finding on the ideal picked state is again not the GDR
+bottleneck.
+
+#### SNAP L2 optimized — raw → `gdr_select` TVD
+
+Wins vs raw: **20/20** at κτ=0.003, **20/20** at 0.03, **17/20** at 0.1.
+Mean TVD: 0.149→0.029, 0.442→0.132, 0.694→0.456.
+
+GS mode after mitigation:
+**20/20**, **20/20**, **15/20** select vs raw **20/20**, **20/20**, **3/20**.
+
+| H | pick ⟨H⟩ | κτ=0.003 | κτ=0.03 | κτ=0.1 |
+|--:|---------:|----------|---------|--------|
+| 000 | 0.399 | 0.146 → 0.036 | 0.360 → 0.120 | 0.623 → 0.419 |
+| 001 | 0.438 | 0.172 → 0.039 | 0.526 → 0.198 | 0.758 → 0.534 |
+| 002 | 0.305 | 0.202 → 0.025 | 0.568 → 0.177 | 0.775 → 0.938 † |
+| 003 | 0.267 | 0.170 → 0.017 | 0.522 → 0.050 | 0.813 → 0.328 |
+| 004 | 0.324 | 0.198 → 0.026 | 0.583 → 0.138 | 0.828 → 0.711 |
+| 005 | 0.481 | 0.148 → 0.026 | 0.399 → 0.100 | 0.610 → 0.269 |
+| 006 | 0.521 | 0.142 → 0.031 | 0.423 → 0.160 | 0.730 → 0.435 |
+| 007 | 0.586 | 0.153 → 0.039 | 0.428 → 0.195 | 0.653 → 0.526 |
+| 008 | 0.501 | 0.086 → 0.032 | 0.384 → 0.162 | 0.735 → 0.546 |
+| 009 | 0.551 | 0.106 → 0.024 | 0.211 → 0.065 | 0.395 → 0.149 |
+| 010 | 0.361 | 0.149 → 0.033 | 0.407 → 0.100 | 0.668 → 0.175 |
+| 011 | 0.274 | 0.143 → 0.024 | 0.559 → 0.049 | 0.785 → 0.595 |
+| 012 | 0.561 | 0.134 → 0.032 | 0.312 → 0.121 | 0.558 → 0.345 |
+| 013 | 0.270 | 0.106 → 0.022 | 0.490 → 0.042 | 0.721 → 0.164 |
+| 014 | 0.574 | 0.136 → 0.033 | 0.351 → 0.070 | 0.593 → 0.190 |
+| 015 | 0.602 | 0.114 → 0.024 | 0.287 → 0.126 | 0.543 → 0.307 |
+| 016 | 0.241 | 0.190 → 0.026 | 0.611 → 0.377 | 0.811 → 0.945 † |
+| 017 | 0.280 | 0.153 → 0.021 | 0.436 → 0.047 | 0.761 → 0.097 |
+| 018 | 0.365 | 0.173 → 0.032 | 0.480 → 0.175 | 0.747 → 0.482 |
+| 019 | 0.404 | 0.150 → 0.041 | 0.499 → 0.168 | 0.774 → 0.962 † |
+
+† = select does **not** beat raw. SNAP L2 opt κτ=0.1 losses: H002, H016,
+H019.
+
+#### ECD L3 optimized — raw → `gdr_select` TVD
+
+Wins vs raw: **20/20** at 0.003, **19/20** at 0.03, **13/20** at 0.1.
+Mean TVD: 0.135→0.063, 0.375→0.182, 0.592→0.531.
+
+GS mode after mitigation: **20/20**, **18/20**, **8/20** select vs raw
+**20/20**, **18/20**, **2/20**.
+
+Ideal GS mode remains 20/20 even on high-⟨H⟩ ECD L3 picks (e.g. H000
+⟨H⟩=0.954). GDR at κτ=0.1 is mixed; again **not** gated by a near-E0
+cut.
+
+| H | pick ⟨H⟩ | κτ=0.003 | κτ=0.03 | κτ=0.1 |
+|--:|---------:|----------|---------|--------|
+| 000 | 0.954 | 0.123 → 0.057 | 0.283 → 0.172 | 0.438 → 0.415 |
+| 001 | 0.618 | 0.166 → 0.065 | 0.496 → 0.141 | 0.680 → 0.754 † |
+| 002 | 0.576 | 0.180 → 0.081 | 0.483 → 0.211 | 0.729 → 0.601 |
+| 003 | 0.854 | 0.144 → 0.058 | 0.440 → 0.090 | 0.704 → 0.729 † |
+| 004 | 0.665 | 0.187 → 0.056 | 0.485 → 0.106 | 0.700 → 0.612 |
+| 005 | 0.834 | 0.170 → 0.086 | 0.473 → 0.286 | 0.618 → 0.690 † |
+| 006 | 0.857 | 0.139 → 0.069 | 0.299 → 0.228 | 0.547 → 0.360 |
+| 007 | 0.861 | 0.137 → 0.079 | 0.308 → 0.210 | 0.442 → 0.422 |
+| 008 | 0.707 | 0.123 → 0.062 | 0.401 → 0.227 | 0.656 → 0.585 |
+| 009 | 0.782 | 0.091 → 0.069 | 0.248 → 0.191 | 0.480 → 0.410 |
+| 010 | 0.754 | 0.109 → 0.046 | 0.274 → 0.079 | 0.496 → 0.335 |
+| 011 | 0.615 | 0.090 → 0.043 | 0.390 → 0.116 | 0.642 → 0.801 † |
+| 012 | 0.765 | 0.108 → 0.052 | 0.290 → 0.186 | 0.495 → 0.453 |
+| 013 | 0.581 | 0.107 → 0.063 | 0.334 → 0.106 | 0.589 → 0.199 |
+| 014 | 0.887 | 0.112 → 0.074 | 0.271 → 0.156 | 0.462 → 0.319 |
+| 015 | 0.562 | 0.128 → 0.059 | 0.238 → 0.131 | 0.428 → 0.255 |
+| 016 | 0.605 | 0.144 → 0.049 | 0.472 → 0.137 | 0.732 → 0.831 † |
+| 017 | 0.703 | 0.108 → 0.062 | 0.348 → 0.136 | 0.606 → 0.225 |
+| 018 | 0.370 | 0.182 → 0.069 | 0.519 → 0.584 † | 0.691 → 0.925 † |
+| 019 | 0.543 | 0.149 → 0.056 | 0.453 → 0.150 | 0.699 → 0.706 † |
+
+κτ=0.03 loss: H018 only. κτ=0.1 losses: H001, H003, H005, H011, H016,
+H018, H019.
+
+#### Random circuits (same adaptive recipe)
+
+SNAP L2 random select vs raw wins: **20/20**, **20/20**, **15/20** at
+0.003 / 0.03 / 0.1. ECD L3 random: **19/20**, **20/20**, **20/20**.
+Random circuits do not have GS mode (0/20), as expected.
+
+Machine-readable scoreboard (both pairs):
+`Error_mitigation/out_four_sat_matched/scoreboard.json`
+(keys `snap_L3`, `ecd_L4`, `snap_L2`, `ecd_L3`; `snap`/`ecd` aliases
+remain the L3/L4 pair).
+
+---
+
+## Energy bar was not used
+
+- Noiseless headlines are **193/200 vs 186/200** (L3/L4) and
+  **177/200 vs 162/200** (L2/L3) bitstring successes, not
   `⟨H⟩ − E0 ≤ 0.5`.
-- GDR ran on **all 20 H** for both ansatzes, including ECD H000
-  (pick ⟨H⟩=0.758) which the previous near-E0 filter skipped.
+- GDR ran on **all 20 H** for both pairs, including high-⟨H⟩ ECD picks
+  (L4 H000 ⟨H⟩=0.758; L3 H000 ⟨H⟩=0.954) which a near-E0 filter would
+  skip.
 - ⟨H⟩ is logged only as a footnote / pick diagnostic.
 
-## 4. Exact commands
+## Exact commands
 
 ```bash
 export PYTHONPATH=src
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 ```
 
-### Noiseless matched fleet
+### Noiseless matched fleets
 
 ```bash
+# SNAP L3 / ECD L4
 python3 scripts/Gibbs_and_adaptive_optim_SNAP.py --four-sat \
   --n-trials 10 --ndepths 3 --seed-base 4000 --workers 4 \
   --output results/gibbs_four_sat_snap_matched_n10.json
@@ -188,13 +347,23 @@ python3 scripts/Gibbs_and_adaptive_optim_SNAP.py --four-sat \
 python3 scripts/Gibbs_and_adaptive_optim_ECD.py --four-sat \
   --n-trials 10 --ndepths 4 --seed-base 4000 --workers 4 \
   --output results/gibbs_four_sat_ecd_matched_n10.json
+
+# SNAP L2 / ECD L3
+python3 scripts/Gibbs_and_adaptive_optim_SNAP.py --four-sat \
+  --n-trials 10 --ndepths 2 --seed-base 4000 --workers 4 \
+  --output results/gibbs_four_sat_snap_matched_n10_L2.json
+
+python3 scripts/Gibbs_and_adaptive_optim_ECD.py --four-sat \
+  --n-trials 10 --ndepths 3 --seed-base 4000 --workers 4 \
+  --output results/gibbs_four_sat_ecd_matched_n10_L3.json
 ```
 
 ### Noisy adaptive GDR
 
-Smoke (H000), then 8192 on all 20. Driver:
-`Error_mitigation/out_four_sat_matched/run_gdr.sh` (sequential) or
-`run_gdr_8192.py` (2-wide). Log: `COMMANDS.log`, `gdr_run.log`.
+Smoke (H000), then 8192 on all 20. Drivers:
+`Error_mitigation/out_four_sat_matched/run_gdr.sh` (L3/L4 sequential) or
+`run_gdr_8192.py` (2-wide; `--suite l3l4` default, `--suite l2l3` for
+the shallower pair). Log: `COMMANDS.log`, `gdr_run.log`.
 
 ```bash
 python3 -u Error_mitigation/run_mitigation_experiment.py \
@@ -206,17 +375,23 @@ python3 -u Error_mitigation/run_mitigation_experiment.py \
   --shots 8192 --n-train 40 --params both \
   --outdir Error_mitigation/out_four_sat_matched/snap_hNNN_s8192
 
-# ECD: --ansatz ecd --ndepth 4 \
+# ECD L4: --ansatz ecd --ndepth 4 \
 #   --gibbs-json results/gibbs_four_sat_ecd_matched_n10.json
-# Smoke: --preset smoke --shots 4000 --n-train 12 --outdir .../${ansatz}_h000_smoke
+# SNAP L2: --ansatz snap --ndepth 2 \
+#   --gibbs-json results/gibbs_four_sat_snap_matched_n10_L2.json \
+#   --outdir .../snap_l2_hNNN_s8192
+# ECD L3: --ansatz ecd --ndepth 3 \
+#   --gibbs-json results/gibbs_four_sat_ecd_matched_n10_L3.json \
+#   --outdir .../ecd_l3_hNNN_s8192
+# Smoke: --preset smoke --shots 4000 --n-train 12 --outdir .../${tag}_h000_smoke
+
+python3 -u Error_mitigation/out_four_sat_matched/run_gdr_8192.py --suite l3l4
+python3 -u Error_mitigation/out_four_sat_matched/run_gdr_8192.py --suite l2l3
+python3 Error_mitigation/out_four_sat_matched/build_scoreboard.py
 ```
 
 `--gibbs-pick` default remains `energy` (lowest ⟨H⟩). This run used
 `success_then_cost` only. Default GDR twin design is still `adaptive`.
-
-```bash
-python3 Error_mitigation/out_four_sat_matched/build_scoreboard.py
-```
 
 ## Thin hooks
 
