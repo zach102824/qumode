@@ -9,7 +9,8 @@ Does **not** use a known ground-state label during optimization. Each trial:
 
 ``--mixed-p-spin`` sweeps ECD depth 1–5 (8–40 ansatz parameters, 4–20
 primitive gates) on the saved mixed p-spin NPZ instances, using 200 joint
-SPSA steps by default.
+SPSA steps by default. ``--four-sat`` is the same suite on the saved 4-SAT
+NPZs (default ECD depths 1–8), writing ``results/gibbs_four_sat_ecd.json``.
 
 Gibbs η is always ``sampled_tail`` (histogram quantiles, no known E_min).
 Selection and reporting use only the Gibbs cost and the decoded histogram.
@@ -41,6 +42,7 @@ from qumode_vqe.hamiltonian import (
     knapsack_benchmark_instance,
     knapsack_packing_stats,
     knapsack_sweep_instance,
+    load_four_sat_instances,
     load_mixed_p_spin_instances,
     max_pauli_weight,
     qubo_energy,
@@ -87,6 +89,11 @@ MIXED_P_SPIN_NPZ_GLOB = "mixed_p_spin_p2-4_[0-9][0-9][0-9].npz"
 MIXED_P_SPIN_STEPS = 200
 MIXED_P_SPIN_ECD_DEPTHS = (1, 2, 3, 4, 5)
 MIXED_P_SPIN_SNAP_DEPTHS = (1, 2)
+FOUR_SAT_JSON = "gibbs_four_sat_ecd.json"
+FOUR_SAT_DIR = Path("Hamiltonians") / "four_sat"
+FOUR_SAT_NPZ_GLOB = "four_sat_[0-9][0-9][0-9].npz"
+FOUR_SAT_ECD_DEPTHS = (1, 2, 3, 4, 5, 6, 7, 8)
+FOUR_SAT_SNAP_DEPTHS = (1, 2, 3, 4)
 HAMILTONIANS_JSON = "hamiltonians.json"
 HAMILTONIANS_NPZ = "hamiltonians.npz"
 ENERGY_JSON = "energy_spsa_baseline.json"
@@ -1488,7 +1495,69 @@ def _ham_meta_for_json(inst: dict) -> dict:
     return {k: v for k, v in inst.items() if k != "energy_tensor"}
 
 
-def run_mixed_p_spin_suite(
+def _family_npz_spec(family: str) -> dict:
+    name = str(family).lower()
+    if name == "mixed_p_spin":
+        return {
+            "family": "mixed_p_spin",
+            "label": "Mixed p-spin",
+            "loader": load_mixed_p_spin_instances,
+            "glob": MIXED_P_SPIN_NPZ_GLOB,
+            "default_dir": MIXED_P_SPIN_DIR,
+            "json": {
+                "ecd": MIXED_P_SPIN_JSON,
+                "snap": "gibbs_mixed_p_spin_snap.json",
+            },
+        }
+    if name == "four_sat":
+        return {
+            "family": "four_sat",
+            "label": "4-SAT",
+            "loader": load_four_sat_instances,
+            "glob": FOUR_SAT_NPZ_GLOB,
+            "default_dir": FOUR_SAT_DIR,
+            "json": {
+                "ecd": FOUR_SAT_JSON,
+                "snap": "gibbs_four_sat_snap.json",
+            },
+        }
+    raise ValueError(f"unknown Hamiltonian family {family!r}")
+
+
+def _load_family_instances(
+    family: str,
+    ham_dir: Path,
+    nfocks: tuple[int, int],
+    *,
+    max_hamiltonians: int | None = None,
+    hamiltonian_ids: tuple[int, ...] | list[int] | None = None,
+) -> list[dict]:
+    spec = _family_npz_spec(family)
+    loader = spec["loader"]
+    if hamiltonian_ids:
+        wanted = {int(i) for i in hamiltonian_ids}
+        instances = [
+            inst
+            for inst in loader(ham_dir, nfocks=nfocks, glob=spec["glob"])
+            if int(inst["hamiltonian_id"]) in wanted
+        ]
+        found = {int(inst["hamiltonian_id"]) for inst in instances}
+        missing = sorted(wanted - found)
+        if missing:
+            raise FileNotFoundError(
+                f"{spec['label']} hamiltonian_id(s) {missing} not found in {ham_dir}"
+            )
+        instances.sort(key=lambda rec: int(rec["hamiltonian_id"]))
+        return instances
+    instances = loader(
+        ham_dir, nfocks=nfocks, glob=spec["glob"], max_hamiltonians=max_hamiltonians
+    )
+    if not instances:
+        raise FileNotFoundError(f"no {spec['label']} instances in {ham_dir}")
+    return instances
+
+
+def run_saved_hamiltonian_suite(
     *,
     ham_dir: Path,
     n_trials: int,
@@ -1507,21 +1576,27 @@ def run_mixed_p_spin_suite(
     ansatz: str = "ecd",
     output: Path | None = None,
     max_hamiltonians: int | None = None,
+    family: str = "mixed_p_spin",
+    hamiltonian_ids: tuple[int, ...] | list[int] | None = None,
 ) -> dict:
-    """Layer sweep of joint prep+ansatz Gibbs SPSA on saved mixed p-spin NPZs."""
+    """Layer sweep of joint prep+ansatz Gibbs SPSA on saved NPZ Hamiltonians."""
+    spec = _family_npz_spec(family)
+    family = spec["family"]
     ansatz = str(ansatz).lower()
     depths = tuple(int(d) for d in ndepths)
     if not depths or any(d < 1 for d in depths):
         raise ValueError(f"ndepths must be positive integers, got {ndepths}")
-    instances = load_mixed_p_spin_instances(
-        ham_dir, nfocks=nfocks, glob=MIXED_P_SPIN_NPZ_GLOB, max_hamiltonians=max_hamiltonians
+    instances = _load_family_instances(
+        family,
+        ham_dir,
+        nfocks,
+        max_hamiltonians=max_hamiltonians,
+        hamiltonian_ids=hamiltonian_ids,
     )
-    if not instances:
-        raise FileNotFoundError(f"no mixed p-spin instances in {ham_dir}")
     n_t = max(int(n_trials), 1)
     ham_meta = [_ham_meta_for_json(inst) for inst in instances]
     inventories = [ansatz_inventory(ansatz, d, nfocks, n_prep_params=N_PREP_PARAMS) for d in depths]
-    print("=== Mixed p-spin instances (landscape, before VQE) ===", flush=True)
+    print(f"=== {spec['label']} instances (landscape, before VQE) ===", flush=True)
     print(f"{'H':>3}  {'file':<28}  {'Emin':>8}  {'spread':>8}  {'gap':>6}", flush=True)
     for meta in ham_meta:
         print(
@@ -1562,8 +1637,8 @@ def run_mixed_p_spin_suite(
                     **spsa_fields,
                     "trial": t,
                     "hamiltonian_id": hid,
-                    "family": "mixed_p_spin",
-                    "kind": "mixed_p_spin",
+                    "family": family,
+                    "kind": family,
                     "file": inst["file"],
                     "ansatz": ansatz,
                     "ndepth": int(depth),
@@ -1575,7 +1650,7 @@ def run_mixed_p_spin_suite(
                 jobs.append(job)
 
     print(
-        f"=== Mixed p-spin {ansatz} Gibbs SPSA, {len(instances)} H × {n_t} trial(s) × "
+        f"=== {spec['label']} {ansatz} Gibbs SPSA, {len(instances)} H × {n_t} trial(s) × "
         f"{len(depths)} depth(s), {_budget_label(outer_iter, spsa_iter)}, "
         f"workers={workers} ===",
         flush=True,
@@ -1597,11 +1672,13 @@ def run_mixed_p_spin_suite(
     payload = {
         "method": method,
         "ansatz": ansatz,
+        "family": family,
         "objective": "gibbs",
         "eta_policy": "sampled_tail",
         "initial_state": "vacuum",
         "n_hamiltonians": len(instances),
         "n_trials_per_hamiltonian": n_t,
+        "hamiltonian_ids": [int(inst["hamiltonian_id"]) for inst in instances],
         "ndepths": [int(d) for d in depths],
         "inventories": inventories,
         "by_ndepth": depth_summary,
@@ -1633,7 +1710,7 @@ def run_mixed_p_spin_suite(
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     if output is None:
-        path = outdir / (MIXED_P_SPIN_JSON if ansatz == "ecd" else f"gibbs_mixed_p_spin_{ansatz}.json")
+        path = outdir / spec["json"].get(ansatz, f"gibbs_{family}_{ansatz}.json")
     else:
         path = Path(output)
         if not path.is_absolute():
@@ -1664,6 +1741,12 @@ def run_mixed_p_spin_suite(
     return payload
 
 
+def run_mixed_p_spin_suite(**kwargs) -> dict:
+    """Layer sweep of joint prep+ansatz Gibbs SPSA on saved mixed p-spin NPZs."""
+    kwargs.setdefault("family", "mixed_p_spin")
+    return run_saved_hamiltonian_suite(**kwargs)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--n-trials", type=int, default=N_TRIALS)
@@ -1671,7 +1754,7 @@ def main(argv: list[str] | None = None) -> int:
         "--outer-iter",
         type=int,
         default=None,
-        help="Joint SPSA steps on (prep, ansatz). Default 70, or 200 with --mixed-p-spin.",
+        help="Joint SPSA steps on (prep, ansatz). Default 70, or 200 with --mixed-p-spin / --four-sat.",
     )
     parser.add_argument(
         "--spsa-iter",
@@ -1688,25 +1771,38 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         nargs="+",
         default=None,
-        help="Ansatz layer counts for --mixed-p-spin (default: 1 2 3 4 5).",
+        help="Ansatz layer counts for --mixed-p-spin (default 1 2 3 4 5) or --four-sat (default 1..8).",
     )
-    parser.add_argument(
+    family = parser.add_mutually_exclusive_group()
+    family.add_argument(
         "--mixed-p-spin",
         action="store_true",
         help="Sweep ECD depth on saved mixed p-spin NPZ Hamiltonians (200 joint SPSA steps).",
     )
-    parser.add_argument("--ham-dir", type=Path, default=MIXED_P_SPIN_DIR)
+    family.add_argument(
+        "--four-sat",
+        action="store_true",
+        help="Sweep ECD depth on saved 4-SAT NPZ Hamiltonians (200 joint SPSA steps).",
+    )
+    parser.add_argument("--ham-dir", type=Path, default=None)
     parser.add_argument(
         "--max-hamiltonians",
         type=int,
         default=None,
-        help="Optional cap on how many mixed p-spin NPZ files to load.",
+        help="Optional cap on how many NPZ files to load (ignored if --hamiltonian-ids is set).",
+    )
+    parser.add_argument(
+        "--hamiltonian-ids",
+        type=int,
+        nargs="+",
+        default=None,
+        help="Optional explicit Hamiltonian ids for --mixed-p-spin / --four-sat.",
     )
     parser.add_argument(
         "--output",
         type=Path,
         default=None,
-        help="JSON path for --mixed-p-spin (default: <outdir>/gibbs_mixed_p_spin_ecd.json).",
+        help="JSON path for --mixed-p-spin / --four-sat (default: <outdir>/gibbs_<family>_ecd.json).",
     )
     parser.add_argument(
         "--n-hamiltonians",
@@ -1769,7 +1865,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     outer_iter = int(args.outer_iter) if args.outer_iter is not None else (
-        MIXED_P_SPIN_STEPS if args.mixed_p_spin else OUTER_ITERATIONS
+        MIXED_P_SPIN_STEPS if (args.mixed_p_spin or args.four_sat) else OUTER_ITERATIONS
     )
 
     spsa_kw = dict(
@@ -1786,17 +1882,21 @@ def main(argv: list[str] | None = None) -> int:
         spsa_alpha=SPSA_ALPHA,
         spsa_gamma=SPSA_GAMMA,
     )
-    if args.mixed_p_spin:
+    if args.mixed_p_spin or args.four_sat:
+        family_name = "four_sat" if args.four_sat else "mixed_p_spin"
+        spec = _family_npz_spec(family_name)
+        ham_dir = args.ham_dir or spec["default_dir"]
+        default_depths = FOUR_SAT_ECD_DEPTHS if args.four_sat else MIXED_P_SPIN_ECD_DEPTHS
         n_trials = args.n_trials if args.n_trials != N_TRIALS else 1
-        run_mixed_p_spin_suite(
-            ham_dir=args.ham_dir,
+        run_saved_hamiltonian_suite(
+            ham_dir=ham_dir,
             n_trials=n_trials,
             outer_iter=outer_iter,
             spsa_iter=args.spsa_iter,
             workers=args.workers,
             seed_base=args.seed_base,
             outdir=args.outdir,
-            ndepths=tuple(args.ndepths) if args.ndepths else MIXED_P_SPIN_ECD_DEPTHS,
+            ndepths=tuple(args.ndepths) if args.ndepths else default_depths,
             nfocks=NFOCKS,
             spsa_a=SPSA_A,
             spsa_c=SPSA_C,
@@ -1806,6 +1906,8 @@ def main(argv: list[str] | None = None) -> int:
             ansatz="ecd",
             output=args.output,
             max_hamiltonians=args.max_hamiltonians,
+            family=family_name,
+            hamiltonian_ids=args.hamiltonian_ids,
         )
         return 0
     if args.energy_baseline:

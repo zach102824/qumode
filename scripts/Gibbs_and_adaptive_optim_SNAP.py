@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Noiseless Gibbs VQE: joint SPSA on preparation and SNAP+displacement.
 
-Same mixed p-spin Hamiltonians, seeds, vacuum initial state,
+Same mixed p-spin or 4-SAT Hamiltonians, seeds, vacuum initial state,
 sampled-tail Gibbs cost, and SPSA gains as ``Gibbs_and_adaptive_optim_ECD.py``.
 Each SNAP+displacement layer is
 
@@ -10,6 +10,7 @@ Each SNAP+displacement layer is
 with the Fock-0 SNAP phase gauge-fixed to zero (7 trainable phases per
 mode at L=8). That is 18 ansatz parameters and 4 primitive gates per layer,
 so depths 1–2 stay at 18 and 36 ansatz parameters (under the ~40 cap).
+``--four-sat`` extends the default SNAP sweep to depths 1–4.
 
 Default budget is 200 joint SPSA steps; prep is never frozen.
 """
@@ -32,11 +33,13 @@ _SPEC.loader.exec_module(ecd)
 OUTDIR = ecd.OUTDIR
 HAM_DIR = ecd.MIXED_P_SPIN_DIR
 OUTPUT_JSON = "gibbs_mixed_p_spin_snap.json"
+FOUR_SAT_OUTPUT_JSON = "gibbs_four_sat_snap.json"
 N_TRIALS_DEFAULT = 1
 WORKERS = ecd.WORKERS
 SEED_BASE = ecd.SEED_BASE
 MIXED_P_SPIN_STEPS = ecd.MIXED_P_SPIN_STEPS
 MIXED_P_SPIN_SNAP_DEPTHS = ecd.MIXED_P_SPIN_SNAP_DEPTHS
+FOUR_SAT_SNAP_DEPTHS = ecd.FOUR_SAT_SNAP_DEPTHS
 NFOCKS = ecd.NFOCKS
 SPSA_A = ecd.SPSA_A
 SPSA_C = ecd.SPSA_C
@@ -64,25 +67,37 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workers", type=int, default=WORKERS)
     parser.add_argument("--seed-base", type=int, default=SEED_BASE)
     parser.add_argument("--outdir", type=Path, default=OUTDIR)
-    parser.add_argument("--ham-dir", type=Path, default=HAM_DIR)
+    parser.add_argument("--ham-dir", type=Path, default=None)
     parser.add_argument(
         "--ndepths",
         type=int,
         nargs="+",
         default=None,
-        help="SNAP+D layer counts (default: 1 2, i.e. 18 and 36 ansatz parameters).",
+        help="SNAP+D layer counts (default: 1 2 mixed p-spin, or 1 2 3 4 with --four-sat).",
     )
     parser.add_argument(
         "--max-hamiltonians",
         type=int,
         default=None,
-        help="Optional cap on how many mixed p-spin NPZ files to load.",
+        help="Optional cap on how many NPZ files to load (ignored if --hamiltonian-ids is set).",
+    )
+    parser.add_argument(
+        "--hamiltonian-ids",
+        type=int,
+        nargs="+",
+        default=None,
+        help="Optional explicit Hamiltonian ids.",
     )
     parser.add_argument(
         "--output",
         type=Path,
         default=None,
-        help="JSON path (default: <outdir>/gibbs_mixed_p_spin_snap.json).",
+        help="JSON path (default: <outdir>/gibbs_mixed_p_spin_snap.json, or gibbs_four_sat_snap.json).",
+    )
+    parser.add_argument(
+        "--four-sat",
+        action="store_true",
+        help="Sweep SNAP+D depth on saved 4-SAT NPZ Hamiltonians.",
     )
     parser.add_argument("--spsa-a", type=float, default=SPSA_A)
     parser.add_argument("--spsa-c", type=float, default=SPSA_C)
@@ -90,15 +105,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--spsa-alpha", type=float, default=SPSA_ALPHA)
     parser.add_argument("--spsa-gamma", type=float, default=SPSA_GAMMA)
     args = parser.parse_args(argv)
-    ecd.run_mixed_p_spin_suite(
-        ham_dir=args.ham_dir,
+    family_name = "four_sat" if args.four_sat else "mixed_p_spin"
+    spec = ecd._family_npz_spec(family_name)
+    ham_dir = args.ham_dir or spec["default_dir"]
+    default_depths = FOUR_SAT_SNAP_DEPTHS if args.four_sat else MIXED_P_SPIN_SNAP_DEPTHS
+    default_output = Path(FOUR_SAT_OUTPUT_JSON if args.four_sat else OUTPUT_JSON)
+    ecd.run_saved_hamiltonian_suite(
+        ham_dir=ham_dir,
         n_trials=args.n_trials,
         outer_iter=args.outer_iter,
         spsa_iter=args.spsa_iter,
         workers=args.workers,
         seed_base=args.seed_base,
         outdir=args.outdir,
-        ndepths=tuple(args.ndepths) if args.ndepths else MIXED_P_SPIN_SNAP_DEPTHS,
+        ndepths=tuple(args.ndepths) if args.ndepths else default_depths,
         nfocks=NFOCKS,
         spsa_a=args.spsa_a,
         spsa_c=args.spsa_c,
@@ -106,8 +126,10 @@ def main(argv: list[str] | None = None) -> int:
         spsa_alpha=args.spsa_alpha,
         spsa_gamma=args.spsa_gamma,
         ansatz="snap",
-        output=args.output or Path(OUTPUT_JSON),
+        output=args.output or default_output,
         max_hamiltonians=args.max_hamiltonians,
+        family=family_name,
+        hamiltonian_ids=args.hamiltonian_ids,
     )
     return 0
 

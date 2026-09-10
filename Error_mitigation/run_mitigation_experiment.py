@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run Gaussian Data Regression mitigation on one mixed p-spin instance.
+"""Run Gaussian Data Regression mitigation on one mixed p-spin or 4-SAT instance.
 
 Circuit noise (loss / thermal-dephasing / comprehensive) is applied inside
 the hybrid simulator. Readout confusion is applied only to the final
@@ -10,6 +10,7 @@ Usage
 -----
     python Error_mitigation/run_mitigation_experiment.py --preset smoke
     python Error_mitigation/run_mitigation_experiment.py --preset full --ansatz both
+    python Error_mitigation/run_mitigation_experiment.py --family four_sat --instance 0
 """
 
 from __future__ import annotations
@@ -35,10 +36,13 @@ for _path in (ROOT, SRC):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
+from qumode_vqe.circuit import prep_params_to_ket
 from qumode_vqe.hamiltonian import (
     DEFAULT_NFOCKS,
     DEFAULT_MIXED_P_SPIN_DIR,
+    DEFAULT_FOUR_SAT_DIR,
     diagonal_hybrid_hamiltonian,
+    load_four_sat_instances,
     load_mixed_p_spin_instances,
 )
 from qumode_vqe.measurement import energy_from_histogram, joint_probabilities, probabilities_from_ket
@@ -88,6 +92,7 @@ from Error_mitigation.twins import build_twins, designed_twin_plan
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUTDIR = HERE / "out"
 HAM_DIR = ROOT / DEFAULT_MIXED_P_SPIN_DIR
+FOUR_SAT_HAM_DIR = ROOT / DEFAULT_FOUR_SAT_DIR
 SEED_BASE = 2026
 NFOCKS = DEFAULT_NFOCKS
 DIMS = (2, int(NFOCKS[0]), int(NFOCKS[1]))
@@ -188,6 +193,7 @@ def make_sim(
     ground_qnm: tuple[int, int, int],
     *,
     noise: NoiseConfig | None = None,
+    initial_state=None,
 ) -> HybridSimulator:
     tensor = np.asarray(energy_tensor, dtype=float)
     return HybridSimulator(
@@ -200,6 +206,7 @@ def make_sim(
         target_qnm=tuple(int(v) for v in ground_qnm),
         ansatz=str(ansatz),
         cost_kind="energy",
+        initial_state=initial_state,
     )
 
 
@@ -210,6 +217,29 @@ def physical_probs(sim: HybridSimulator, xvec: np.ndarray) -> np.ndarray:
         return probabilities_from_ket(np.asarray(psi.full()).reshape(-1), sim.dims)
     rho = sim.density_matrix(x)
     return joint_probabilities(rho, sim.dims)
+
+
+def load_gibbs_trial(path: Path, hid: int, ansatz: str, ndepth: int) -> dict:
+    """Pick the lowest-⟨H⟩ Gibbs trial for this (H, ansatz, depth)."""
+    payload = json.loads(Path(path).read_text())
+    matches = [
+        t
+        for t in payload.get("trials", [])
+        if int(t.get("hamiltonian_id", -1)) == int(hid)
+        and str(t.get("ansatz", "")).lower() == str(ansatz).lower()
+        and int(t.get("ndepth", -1)) == int(ndepth)
+    ]
+    if not matches:
+        raise FileNotFoundError(
+            f"no Gibbs trial for {ansatz} H{int(hid):03d} nd={int(ndepth)} in {path}"
+        )
+    return min(matches, key=lambda t: float(t["energy_physical"]))
+
+
+def _prep_ket(prep) -> np.ndarray | None:
+    if prep is None:
+        return None
+    return prep_params_to_ket(np.asarray(prep, dtype=float), NFOCKS)
 
 
 def _style(ax) -> None:
@@ -229,6 +259,7 @@ def get_or_optimize_params(
     seed_base: int,
     maxiter: int,
     n_restarts: int,
+    gibbs_json: Path | None = None,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """Return (x_random, x_optimized, meta). Cache the optimized vector."""
     rng = np.random.default_rng(int(seed_base) + 17 * (0 if ansatz == "ecd" else 1) + hid)
@@ -238,6 +269,35 @@ def get_or_optimize_params(
         x_random = random_parameters(ndepth, rng)
 
     cache_path = outdir / f"optimized_params_{ansatz}_h{hid:03d}_nd{ndepth}.json"
+    if gibbs_json is not None:
+        trial = load_gibbs_trial(Path(gibbs_json), hid, ansatz, ndepth)
+        x_opt = np.asarray(trial["x"], dtype=float)
+        prep = trial.get("prep")
+        meta = {
+            "ansatz": ansatz,
+            "ndepth": int(ndepth),
+            "hamiltonian_id": int(hid),
+            "seed_base": int(seed_base),
+            "maxiter": int(maxiter),
+            "n_restarts": int(n_restarts),
+            "fun": float(trial["energy_physical"]),
+            "energy_physical": float(trial["energy_physical"]),
+            "energy_min": trial.get("energy_min"),
+            "gap_to_min": trial.get("gap_to_min"),
+            "source": "gibbs",
+            "gibbs_json": str(gibbs_json),
+            "prep": None if prep is None else np.asarray(prep, dtype=float).tolist(),
+            "x": x_opt.tolist(),
+            "x_random": np.asarray(x_random, dtype=float).tolist(),
+        }
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        cache_path.write_text(json.dumps(json_ready(meta), indent=2))
+        print(
+            f"  loaded Gibbs {ansatz} params from {Path(gibbs_json).name}  "
+            f"E={meta['fun']:.6f}  deficit={float(trial.get('energy_physical', 0.0)) - float(trial.get('energy_min') or 0.0):.4f}"
+        )
+        return x_random, x_opt, meta
+
     if cache_path.is_file():
         cached = json.loads(cache_path.read_text())
         if (
@@ -417,9 +477,9 @@ def _fmt(val, digits=4):
     return f"{float(val):.{digits}f}"
 
 
-def write_summary_txt(path: Path, records: list[dict], headline_kt: float) -> None:
+def write_summary_txt(path: Path, records: list[dict], headline_kt: float, ham_family: str = "mixed_p_spin") -> None:
     lines = [
-        "Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)",
+        f"Gaussian Data Regression on {ham_family} (hybrid ECD / SNAP)",
         "Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, "
         "gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, "
         "zne_idle, readout_then_zne",
@@ -645,13 +705,28 @@ def mitigate_target(
     return out
 
 
-def load_instance(hid: int) -> dict:
-    ham_dir = HAM_DIR if HAM_DIR.is_dir() else DEFAULT_MIXED_P_SPIN_DIR
-    instances = load_mixed_p_spin_instances(ham_dir, nfocks=NFOCKS)
+def load_instance(
+    hid: int,
+    family: str = "mixed_p_spin",
+    ham_dir: Path | None = None,
+) -> dict:
+    name = str(family or "mixed_p_spin").lower()
+    if name == "four_sat":
+        default_dir = FOUR_SAT_HAM_DIR if FOUR_SAT_HAM_DIR.is_dir() else DEFAULT_FOUR_SAT_DIR
+        loader = load_four_sat_instances
+        label = "4-SAT"
+    elif name == "mixed_p_spin":
+        default_dir = HAM_DIR if HAM_DIR.is_dir() else DEFAULT_MIXED_P_SPIN_DIR
+        loader = load_mixed_p_spin_instances
+        label = "mixed p-spin"
+    else:
+        raise ValueError(f"unknown Hamiltonian family {family!r}")
+    resolved = Path(ham_dir) if ham_dir is not None else default_dir
+    instances = loader(resolved, nfocks=NFOCKS)
     for inst in instances:
         if int(inst["hamiltonian_id"]) == int(hid):
             return inst
-    raise FileNotFoundError(f"mixed p-spin hamiltonian_id={hid} not found in {ham_dir}")
+    raise FileNotFoundError(f"{label} hamiltonian_id={hid} not found in {resolved}")
 
 
 def run(args: argparse.Namespace) -> dict:
@@ -674,12 +749,14 @@ def run(args: argparse.Namespace) -> dict:
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
-    inst = load_instance(int(args.instance))
+    ham_family = str(getattr(args, "ham_family", None) or "mixed_p_spin")
+    ham_dir = getattr(args, "ham_dir", None)
+    inst = load_instance(int(args.instance), family=ham_family, ham_dir=ham_dir)
     energy_tensor = np.asarray(inst["energy_tensor"], dtype=float)
     ground_qnm = tuple(int(v) for v in inst["ground_qnm"])
     hid = int(inst["hamiltonian_id"])
     print(
-        f"instance H{hid:03d}  file={inst.get('file')}  "
+        f"instance {ham_family} H{hid:03d}  file={inst.get('file')}  "
         f"E0={inst['energy_min']:.4f}  ground={inst.get('ground_bitstring')} {ground_qnm}"
     )
 
@@ -689,7 +766,7 @@ def run(args: argparse.Namespace) -> dict:
     product_tvds: list[float] = []
 
     for ansatz in ansätze:
-        ndepth = int(ANSATZ_SPEC[ansatz]["ndepth"])
+        ndepth = int(args.ndepth) if getattr(args, "ndepth", None) is not None else int(ANSATZ_SPEC[ansatz]["ndepth"])
         print(f"\n=== {ansatz}  N_d={ndepth} ===")
         x_random, x_opt, opt_meta = get_or_optimize_params(
             ansatz=ansatz,
@@ -701,13 +778,17 @@ def run(args: argparse.Namespace) -> dict:
             seed_base=int(args.seed),
             maxiter=int(preset["opt_maxiter"]),
             n_restarts=int(preset["opt_restarts"]),
+            gibbs_json=getattr(args, "gibbs_json", None),
         )
         param_sets = {"random": x_random, "optimized": x_opt}
         if param_filter != "both":
             param_sets = {param_filter: param_sets[param_filter]}
-        sim_ideal = make_sim(ansatz, ndepth, energy_tensor, ground_qnm)
 
         for pset, xvec in param_sets.items():
+            init_ket = _prep_ket(opt_meta.get("prep")) if pset == "optimized" else None
+            sim_ideal = make_sim(
+                ansatz, ndepth, energy_tensor, ground_qnm, initial_state=init_ket
+            )
             rng_tw = np.random.default_rng(case_seed("twins", ansatz, pset, args.seed))
             print(f"  building {n_train} Gaussian twins for {pset} ...")
             twin_design = getattr(args, "twin_design", "adaptive") or "adaptive"
@@ -744,7 +825,14 @@ def run(args: argparse.Namespace) -> dict:
             for family in families:
                 for kt in kappas:
                     cfg = circuit_noise(family, kt, dims=DIMS)
-                    sim_noisy = make_sim(ansatz, ndepth, energy_tensor, ground_qnm, noise=cfg)
+                    sim_noisy = make_sim(
+                        ansatz,
+                        ndepth,
+                        energy_tensor,
+                        ground_qnm,
+                        noise=cfg,
+                        initial_state=init_ket,
+                    )
                     print(f"  sim {family}  κτ={kt}  {pset}  (target + {len(twins)} twins) ...")
                     t_sim = time.time()
                     p_phys = physical_probs(sim_noisy, xvec)
@@ -754,7 +842,14 @@ def run(args: argparse.Namespace) -> dict:
                         if int(s) == 1:
                             continue
                         cfg_s = scale_noise(cfg, float(s))
-                        sim_s = make_sim(ansatz, ndepth, energy_tensor, ground_qnm, noise=cfg_s)
+                        sim_s = make_sim(
+                            ansatz,
+                            ndepth,
+                            energy_tensor,
+                            ground_qnm,
+                            noise=cfg_s,
+                            initial_state=init_ket,
+                        )
                         hist_phys_scale[int(s)] = physical_probs(sim_s, xvec)
                     print(f"    physical histograms in {time.time() - t_sim:.1f}s")
 
@@ -869,9 +964,10 @@ def run(args: argparse.Namespace) -> dict:
         plot_summary(outdir / f"summary_tvd_{ansatz}.png", records, ansatz)
 
     headline_kt = float(kappas[0])
-    write_summary_txt(outdir / "summary.txt", records, headline_kt)
+    write_summary_txt(outdir / "summary.txt", records, headline_kt, ham_family=ham_family)
     result = {
         "preset": args.preset,
+        "ham_family": ham_family,
         "hamiltonian_id": hid,
         "file": str(inst.get("file")),
         "ground_qnm": list(ground_qnm),
@@ -881,6 +977,8 @@ def run(args: argparse.Namespace) -> dict:
         "seed": int(args.seed),
         "shots": shots,
         "n_train": n_train,
+        "ndepth": getattr(args, "ndepth", None),
+        "gibbs_json": None if getattr(args, "gibbs_json", None) is None else str(args.gibbs_json),
         "families": list(families),
         "family_descriptions": {f: family_description(f) for f in families},
         "kappa_tau": list(kappas),
@@ -909,6 +1007,32 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--preset", choices=tuple(PRESETS), default="smoke")
     p.add_argument("--ansatz", choices=("ecd", "snap", "both"), default="both")
     p.add_argument("--instance", type=int, default=0)
+    p.add_argument(
+        "--family",
+        choices=("mixed_p_spin", "four_sat"),
+        default="mixed_p_spin",
+        dest="ham_family",
+        help="Hamiltonian family. Distinct from --families (circuit-noise families).",
+    )
+    p.add_argument(
+        "--ham-dir",
+        type=Path,
+        default=None,
+        help="Override the NPZ directory for --family.",
+    )
+    p.add_argument(
+        "--ndepth",
+        type=int,
+        default=None,
+        help="Override ANSATZ_SPEC depth (ecd=5, snap=2). Use with a single --ansatz.",
+    )
+    p.add_argument(
+        "--gibbs-json",
+        type=Path,
+        default=None,
+        dest="gibbs_json",
+        help="Load noiseless Gibbs (x, prep) for this instance instead of energy L-BFGS-B.",
+    )
     p.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR)
     p.add_argument("--shots", type=int, default=None)
     p.add_argument("--n-train", type=int, default=None)
