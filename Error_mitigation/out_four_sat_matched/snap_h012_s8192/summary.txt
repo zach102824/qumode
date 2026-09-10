@@ -1,0 +1,95 @@
+Gaussian Data Regression on four_sat (hybrid ECD / SNAP)
+Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, zne_idle, readout_then_zne
+
+Headline at κτ = 0.003  (readout_only vs gdr_param vs gdr_select vs oracle_binomial)
+
+snap  comprehensive             readout_realistic     raw.TVD=0.1818 dE=0.1279 GS=Y  readout_only.TVD=0.1362 dE=0.0858 GS=Y  oracle_binomial.TVD=0.0539 dE=0.0267 GS=Y  gdr_param.TVD=0.0620 dE=0.0324 GS=Y  gdr_select.TVD=0.0620 dE=0.0324 GS=Y  ideal_GS=Y
+
+Full table (all cases)
+
+ansatz params     family                       kt readout            method                  TVD       dE     dPgs   GS
+-----------------------------------------------------------------------------------------------------------------------
+snap   random     comprehensive             0.003 readout_realistic  raw                  0.0730   0.0001   0.0005   N
+snap   random     comprehensive             0.003 readout_realistic  readout_only         0.0584   0.0002   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  oracle_binomial      0.0409   0.0002   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  gdr_param            0.0404   0.0002   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  gdr_damped           0.0404   0.0002   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  gdr_mid              0.0413   0.0002   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  gdr_residual         0.0409   0.0002   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  gdr_afterburn        0.0409   0.0002   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  gdr_blend            0.0404   0.0002   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  gdr_select           0.0414   0.0002   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  gdr_full             0.2488   0.0000   0.0000   N
+snap   random     comprehensive             0.003 readout_realistic  scalar_cdr             —      0.0000     —      —
+snap   random     comprehensive             0.003 readout_realistic  zne_idle             0.1294   0.0002   0.0007   N
+snap   random     comprehensive             0.003 readout_realistic  readout_then_zne     0.1317   0.0000   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  raw                  0.3009   0.0004   0.0005   N
+snap   random     comprehensive             0.030 readout_realistic  readout_only         0.2920   0.0002   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  oracle_binomial      0.3303   0.0000   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  gdr_param            0.1956   0.0002   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  gdr_damped           0.2003   0.0002   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  gdr_mid              0.2049   0.0002   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  gdr_residual         0.1892   0.0004   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  gdr_afterburn        0.1892   0.0004   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  gdr_blend            0.1956   0.0002   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  gdr_select           0.1975   0.0002   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  gdr_full             0.5615   0.0000   0.0000   N
+snap   random     comprehensive             0.030 readout_realistic  scalar_cdr             —      0.0000     —      —
+snap   random     comprehensive             0.030 readout_realistic  zne_idle             0.2447   0.0004   0.0020   N
+snap   random     comprehensive             0.030 readout_realistic  readout_then_zne     0.2364   0.0007   0.0012   N
+snap   random     comprehensive             0.100 readout_realistic  raw                  0.4821   0.0004   0.0005   N
+snap   random     comprehensive             0.100 readout_realistic  readout_only         0.4795   0.0002   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  oracle_binomial      0.7992   0.0001   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  gdr_param            0.4318   0.0000   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  gdr_damped           0.4318   0.0000   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  gdr_mid              0.4455   0.0001   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  gdr_residual         0.4986   0.0001   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  gdr_afterburn        0.4986   0.0001   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  gdr_blend            0.4429   0.0000   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  gdr_select           0.4555   0.0002   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  gdr_full             0.9339   0.0000   0.0000   N
+snap   random     comprehensive             0.100 readout_realistic  scalar_cdr             —      0.0000     —      —
+snap   random     comprehensive             0.100 readout_realistic  zne_idle             0.4701   0.0012   0.0007   N
+snap   random     comprehensive             0.100 readout_realistic  readout_then_zne     0.4671   0.0006   0.0004   N
+snap   optimized  comprehensive             0.003 readout_realistic  raw                  0.1818   0.1279   0.1353   Y
+snap   optimized  comprehensive             0.003 readout_realistic  readout_only         0.1362   0.0858   0.0914   Y
+snap   optimized  comprehensive             0.003 readout_realistic  oracle_binomial      0.0539   0.0267   0.0283   Y
+snap   optimized  comprehensive             0.003 readout_realistic  gdr_param            0.0620   0.0324   0.0345   Y
+snap   optimized  comprehensive             0.003 readout_realistic  gdr_damped           0.0620   0.0324   0.0345   Y
+snap   optimized  comprehensive             0.003 readout_realistic  gdr_mid              0.0627   0.0320   0.0329   Y
+snap   optimized  comprehensive             0.003 readout_realistic  gdr_residual         0.0474   0.0179   0.0197   Y
+snap   optimized  comprehensive             0.003 readout_realistic  gdr_afterburn        0.0474   0.0179   0.0197   Y
+snap   optimized  comprehensive             0.003 readout_realistic  gdr_blend            0.0620   0.0324   0.0345   Y
+snap   optimized  comprehensive             0.003 readout_realistic  gdr_select           0.0620   0.0324   0.0345   Y
+snap   optimized  comprehensive             0.003 readout_realistic  gdr_full             0.1327   0.0023   0.0104   Y
+snap   optimized  comprehensive             0.003 readout_realistic  scalar_cdr             —      0.0496     —      —
+snap   optimized  comprehensive             0.003 readout_realistic  zne_idle             0.1191   0.0410   0.0575   Y
+snap   optimized  comprehensive             0.003 readout_realistic  readout_then_zne     0.0800   0.0030   0.0123   Y
+snap   optimized  comprehensive             0.030 readout_realistic  raw                  0.4722   0.3804   0.3707   Y
+snap   optimized  comprehensive             0.030 readout_realistic  readout_only         0.4505   0.3631   0.3508   Y
+snap   optimized  comprehensive             0.030 readout_realistic  oracle_binomial      0.5746   0.4153   0.4035   N
+snap   optimized  comprehensive             0.030 readout_realistic  gdr_param            0.2778   0.2294   0.1967   Y
+snap   optimized  comprehensive             0.030 readout_realistic  gdr_damped           0.2972   0.2495   0.2198   Y
+snap   optimized  comprehensive             0.030 readout_realistic  gdr_mid              0.2796   0.2414   0.2001   Y
+snap   optimized  comprehensive             0.030 readout_realistic  gdr_residual         0.5100   0.3236   0.3284   N
+snap   optimized  comprehensive             0.030 readout_realistic  gdr_afterburn        0.5100   0.3236   0.3284   N
+snap   optimized  comprehensive             0.030 readout_realistic  gdr_blend            0.2778   0.2294   0.1967   Y
+snap   optimized  comprehensive             0.030 readout_realistic  gdr_select           0.2778   0.2294   0.1967   Y
+snap   optimized  comprehensive             0.030 readout_realistic  gdr_full             0.4401   0.2902   0.2722   Y
+snap   optimized  comprehensive             0.030 readout_realistic  scalar_cdr             —      0.2732     —      —
+snap   optimized  comprehensive             0.030 readout_realistic  zne_idle             0.2742   0.1784   0.1848   Y
+snap   optimized  comprehensive             0.030 readout_realistic  readout_then_zne     0.2437   0.1498   0.1545   Y
+snap   optimized  comprehensive             0.100 readout_realistic  raw                  0.7013   0.5754   0.5544   N
+snap   optimized  comprehensive             0.100 readout_realistic  readout_only         0.6945   0.5745   0.5509   N
+snap   optimized  comprehensive             0.100 readout_realistic  oracle_binomial      0.8893   0.7036   0.6281   N
+snap   optimized  comprehensive             0.100 readout_realistic  gdr_param            0.7950   0.6698   0.5727   N
+snap   optimized  comprehensive             0.100 readout_realistic  gdr_damped           0.7738   0.6555   0.5694   N
+snap   optimized  comprehensive             0.100 readout_realistic  gdr_mid              0.7677   0.6584   0.5519   N
+snap   optimized  comprehensive             0.100 readout_realistic  gdr_residual         0.8928   0.6804   0.6280   N
+snap   optimized  comprehensive             0.100 readout_realistic  gdr_afterburn        0.8928   0.6804   0.6280   N
+snap   optimized  comprehensive             0.100 readout_realistic  gdr_blend            0.7950   0.6698   0.5727   N
+snap   optimized  comprehensive             0.100 readout_realistic  gdr_select           0.7950   0.6698   0.5727   N
+snap   optimized  comprehensive             0.100 readout_realistic  gdr_full             0.9001   0.5845   0.6272   N
+snap   optimized  comprehensive             0.100 readout_realistic  scalar_cdr             —      0.6553     —      —
+snap   optimized  comprehensive             0.100 readout_realistic  zne_idle             0.6261   0.5555   0.4947   N
+snap   optimized  comprehensive             0.100 readout_realistic  readout_then_zne     0.6189   0.5549   0.4883   N
