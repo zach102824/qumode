@@ -1,0 +1,31 @@
+{
+  "n": 8,
+  "n_samples_per_cell": 2000,
+  "uniform": 0.00390625,
+  "depths": [
+    {
+      "L": 4,
+      "k": 4,
+      "n_total": 2000,
+      "success_prob": 0.002,
+      "mean_p_ground": 0.003310064392322383,
+      "uniform": 0.00390625
+    },
+    {
+      "L": 8,
+      "k": 6,
+      "n_total": 2000,
+      "success_prob": 0.003,
+      "mean_p_ground": 0.0038571427446035082,
+      "uniform": 0.00390625
+    },
+    {
+      "L": 12,
+      "k": 4,
+      "n_total": 2000,
+      "success_prob": 0.002,
+      "mean_p_ground": 0.004038877437497976,
+      "uniform": 0.00390625
+    }
+  ]
+}

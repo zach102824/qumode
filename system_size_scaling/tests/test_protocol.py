@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from system_size_scaling.config import (
     L_MAX,
     L_START,
@@ -15,6 +17,15 @@ def test_canonical_protocol_constants():
     assert L_START == 4
     assert L_MAX == 40
     assert PROTOCOL_TAG == "200_joint_spsa_noiseless"
+
+
+def test_spsa_a_scaled_matches_n7_at_ref():
+    from system_size_scaling.config import N7_L4_NPARAMS, SPSA_A, spsa_a_scaled
+
+    assert spsa_a_scaled(N7_L4_NPARAMS) == pytest.approx(SPSA_A)
+    # n=8 L=4 is 70 params; scaled a is smaller
+    assert spsa_a_scaled(70) < SPSA_A
+    assert spsa_a_scaled(70) == pytest.approx(SPSA_A * (37 / 70) ** 0.5)
 
 
 def test_is_canonical_cell_rejects_70_spsa():

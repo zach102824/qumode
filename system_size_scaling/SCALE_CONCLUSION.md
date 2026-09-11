@@ -59,5 +59,5 @@ Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7
 
 ## Notes
 
-Restart: canonical protocol is 200 joint SPSA, L=4…40 soft cap. 70-SPSA cells moved to results_70spsa_superseded/. Live n=8…11 not started.
+Diagnosis in progress (see DIAGNOSIS.md). Live 200-SPSA L-sweep is paused until n=8 L=4/8/12 controlled study finishes.
 

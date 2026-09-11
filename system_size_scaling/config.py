@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 HAM_ROOT = ROOT / "Hamiltonians"
 RESULTS_ROOT = ROOT / "results"
 SUPERSEDED_70_ROOT = ROOT / "results_70spsa_superseded"
+DIAGNOSIS_ROOT = ROOT / "results" / "diagnosis"
 
 # Production n=7 4-SAT used ~18 clauses / 7 variables.
 CLAUSE_DENSITY = 18 / 7
@@ -102,6 +104,19 @@ def ham_seed(n: int) -> int:
 
 def trial_seed(n: int, hid: int, trial: int) -> int:
     return int(SEED_BASE) + 1000 * int(n) + 10 * int(hid) + int(trial)
+
+
+# Production n=7 L=4 joint dimension: 5 prep + 4*4*2 ECD = 37.
+N7_L4_NPARAMS = 37
+
+
+def n_joint_params(n_prep: int, ndepth: int, n_pairs: int) -> int:
+    return int(n_prep) + 4 * int(ndepth) * int(n_pairs)
+
+
+def spsa_a_scaled(n_params: int, a0: float = SPSA_A, n_ref: int = N7_L4_NPARAMS) -> float:
+    """Keep SPSA RMS step similar to the working n=7 L=4 budget."""
+    return float(a0) * math.sqrt(float(n_ref) / float(max(int(n_params), 1)))
 
 
 def ham_dir(n: int) -> Path:

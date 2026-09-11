@@ -3,8 +3,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from system_size_scaling.config import HARDWARE_DIM, clause_window
+from system_size_scaling.config import HARDWARE_DIM, clause_window, ham_dir
+from system_size_scaling.ecd import hybrid_energy_tensor
 from system_size_scaling.embedding import embedding_for_n, hardware_idle_modes
+from system_size_scaling.four_sat import load_instance
 
 
 def test_n11_is_exact_fill():
@@ -45,6 +47,51 @@ def test_encode_decode_roundtrip(n: int):
         occ = emb.encode_bits(bits)
         got = emb.decode_occupations(occ)
         assert np.array_equal(got, bits)
+
+
+@pytest.mark.parametrize("n", [8, 9])
+def test_exhaustive_logical_roundtrip(n: int):
+    emb = embedding_for_n(n)
+    for idx in range(1 << n):
+        bits = np.array([(idx >> (n - 1 - i)) & 1 for i in range(n)], dtype=int)
+        occ = emb.encode_bits(bits)
+        assert np.array_equal(emb.decode_occupations(occ), bits)
+
+
+@pytest.mark.parametrize("n", [8, 9])
+def test_planted_ground_roundtrip_and_unique_energy(n: int):
+    emb = embedding_for_n(n)
+    paths = sorted(ham_dir(n).glob("four_sat_[0-9][0-9][0-9].npz"))
+    assert len(paths) >= 20
+    for path in paths:
+        inst = load_instance(path)
+        bits = np.array([int(c) for c in inst["ground_bitstring"]], dtype=int)
+        occ = emb.encode_bits(bits)
+        assert np.array_equal(emb.decode_occupations(occ), bits)
+        tensor = hybrid_energy_tensor(emb, inst["logical_energies"])
+        assert tensor[occ] == pytest.approx(0.0, abs=1e-12)
+        n_zero = int(np.sum(np.isclose(tensor, 0.0)))
+        if n == 8:
+            # Exact fill of T0+T1+C0+C1: unique hybrid ground.
+            assert n_zero == 1
+        else:
+            # Unused C2 Fock bits alias the same logical string.
+            assert n_zero >= 1
+
+
+def test_n7_decode_matches_production_bits_from_qnm():
+    """Production Eq. (26): |q, n, m> → 1+3+3 bits, Fock MSB first."""
+    emb = embedding_for_n(7)
+    for q in range(2):
+        for nocc in range(8):
+            for m in range(8):
+                ours = emb.decode_occupations((q, nocc, m))
+                bits = [int(q)]
+                for k in range(2, -1, -1):
+                    bits.append((int(nocc) >> k) & 1)
+                for k in range(2, -1, -1):
+                    bits.append((int(m) >> k) & 1)
+                assert np.array_equal(ours, bits)
 
 
 def test_clause_targets_match_spec():

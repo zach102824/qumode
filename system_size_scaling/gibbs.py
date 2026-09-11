@@ -23,6 +23,7 @@ from .ecd import (
     prep_bounds,
     prep_to_ket,
     project_prep,
+    unpack_ecd,
     vacuum_prep,
 )
 from .embedding import Embedding
@@ -131,6 +132,7 @@ class AdaptiveGibbsResult:
     n_eta_clamps: int = 0
     n_eta_fallbacks: int = 0
     eta_history: list[dict] = field(default_factory=list)
+    step_log: list[dict] = field(default_factory=list)
 
 
 class EcdGibbsSim:
@@ -161,8 +163,8 @@ class EcdGibbsSim:
         psi = self.statevector(xvec)
         return (np.abs(psi) ** 2).reshape(self.emb.dims)
 
-    def evaluate(self, xvec: np.ndarray) -> EvalRecord:
-        probs = self.probabilities(xvec)
+    def evaluate_probs(self, probs: np.ndarray) -> EvalRecord:
+        probs = np.asarray(probs, dtype=float).reshape(self.emb.dims)
         flat_p = probs.reshape(-1)
         ml = int(np.argmax(flat_p))
         occ = [int(v) for v in np.unravel_index(ml, self.emb.dims)]
@@ -183,6 +185,9 @@ class EcdGibbsSim:
             eta=float(self.eta),
             most_likely_occupations=occ,
         )
+
+    def evaluate(self, xvec: np.ndarray) -> EvalRecord:
+        return self.evaluate_probs(self.probabilities(xvec))
 
     def cost(self, xvec: np.ndarray) -> float:
         probs = self.probabilities(xvec)
@@ -205,8 +210,14 @@ def optimize_gibbs_adaptive(
     alpha: float = SPSA_ALPHA,
     gamma: float = SPSA_GAMMA,
     prep_step_scale: float = PREP_STEP_SCALE,
+    log_every: int = 0,
 ) -> AdaptiveGibbsResult:
-    """Joint prep+ansatz SPSA with sampled_tail η (production protocol)."""
+    """Joint prep+ansatz SPSA with sampled_tail η (production protocol).
+
+    ``log_every>0`` records energy / p(GS) / mean|β| every that many SPSA
+    steps (and on step 1). Extra statevectors are skipped when the same
+    step already refreshes η.
+    """
     rng = rng or np.random.default_rng()
     sim = EcdGibbsSim(emb, energy_tensor, ndepth, ground_bitstring)
     if prep0 is None:
@@ -229,6 +240,26 @@ def optimize_gibbs_adaptive(
     sim.eta = float(st0.eta)
     eta0 = float(st0.eta)
 
+    step_log: list[dict] = []
+    log_every = int(log_every)
+
+    def _record(step: int, xvec: np.ndarray, probs: np.ndarray) -> None:
+        evk = sim.evaluate_probs(probs)
+        packed = unpack_ecd(xvec, ndepth, emb.n_pairs)
+        step_log.append(
+            {
+                "step": int(step),
+                "energy": float(evk.energy),
+                "p_ground": float(evk.p_ground),
+                "p_most_likely": float(evk.p_most_likely),
+                "gibbs_cost": float(evk.gibbs_cost),
+                "eta": float(sim.eta),
+                "success": bool(evk.success),
+                "mean_abs_beta": float(np.mean(np.abs(packed.beta))),
+                "max_abs_beta": float(np.max(np.abs(packed.beta))),
+            }
+        )
+
     def project_joint(z: np.ndarray) -> np.ndarray:
         z = np.asarray(z, dtype=float).copy()
         z[:n_prep] = project_prep(z[:n_prep], emb)
@@ -240,15 +271,23 @@ def optimize_gibbs_adaptive(
         return sim.cost(z[n_prep:])
 
     def before_joint(k: int, z: np.ndarray) -> None:
-        # sampled_tail only refreshes on step 1 and every refresh_every thereafter.
         k = int(k)
-        if k > 1 and (k - 1) % int(policy.refresh_every) != 0:
+        need_eta = k == 1 or (k - 1) % int(policy.refresh_every) == 0
+        need_log = log_every > 0 and (k == 1 or (k - 1) % log_every == 0)
+        if not need_eta and not need_log:
             return
         z = np.asarray(z, dtype=float)
         sim.prep = project_prep(z[:n_prep], emb)
-        probs = sim.probabilities(z[n_prep:])
-        st = policy.maybe_update(k, int(outer_iter), sim.energy_tensor, probs)
-        sim.eta = float(st.eta)
+        xvec = z[n_prep:]
+        probs = sim.probabilities(xvec)
+        if need_eta:
+            st = policy.maybe_update(k, int(outer_iter), sim.energy_tensor, probs)
+            sim.eta = float(st.eta)
+        if need_log:
+            _record(k, xvec, probs)
+
+    if log_every > 0:
+        _record(0, x0, init_probs)
 
     z0 = np.concatenate([prep0, x0])
     joint_scale = np.ones(z0.size, dtype=float)
@@ -296,4 +335,5 @@ def optimize_gibbs_adaptive(
         n_eta_clamps=int(snap["n_clamps"]),
         n_eta_fallbacks=int(snap["n_fallbacks"]),
         eta_history=list(snap["history"]),
+        step_log=step_log,
     )

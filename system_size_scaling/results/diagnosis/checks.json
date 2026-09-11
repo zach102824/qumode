@@ -1,0 +1,730 @@
+{
+  "roundtrips": {
+    "8": {
+      "n": 8,
+      "dim": 256,
+      "n_pairs": 4,
+      "exhaustive_logical": 256,
+      "exhaustive_roundtrip_failures": 0,
+      "planted": [
+        {
+          "file": "four_sat_000.npz",
+          "ground": "11101110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_001.npz",
+          "ground": "11111001",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_002.npz",
+          "ground": "10111011",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_003.npz",
+          "ground": "11101101",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_004.npz",
+          "ground": "10111011",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_005.npz",
+          "ground": "11101011",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_006.npz",
+          "ground": "11011110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_007.npz",
+          "ground": "11011101",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_008.npz",
+          "ground": "11010000",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_009.npz",
+          "ground": "11100111",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_010.npz",
+          "ground": "10011001",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_011.npz",
+          "ground": "11110011",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_012.npz",
+          "ground": "11101101",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_013.npz",
+          "ground": "11011100",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_014.npz",
+          "ground": "10101110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_015.npz",
+          "ground": "11011101",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_016.npz",
+          "ground": "11101001",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_017.npz",
+          "ground": "11111010",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_018.npz",
+          "ground": "01110000",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        },
+        {
+          "file": "four_sat_019.npz",
+          "ground": "11110101",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 1
+        }
+      ],
+      "hybrid_E0_unique": true,
+      "hybrid_E0_mean": 1.0,
+      "ok": true
+    },
+    "9": {
+      "n": 9,
+      "dim": 2048,
+      "n_pairs": 6,
+      "exhaustive_logical": 512,
+      "exhaustive_roundtrip_failures": 0,
+      "planted": [
+        {
+          "file": "four_sat_000.npz",
+          "ground": "101111011",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_001.npz",
+          "ground": "110111110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_002.npz",
+          "ground": "111111010",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_003.npz",
+          "ground": "110011000",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_004.npz",
+          "ground": "110111101",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_005.npz",
+          "ground": "111111100",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_006.npz",
+          "ground": "110111000",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_007.npz",
+          "ground": "111110101",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_008.npz",
+          "ground": "111110110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_009.npz",
+          "ground": "110101110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_010.npz",
+          "ground": "111110100",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_011.npz",
+          "ground": "111111000",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_012.npz",
+          "ground": "110111101",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_013.npz",
+          "ground": "111100110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_014.npz",
+          "ground": "110111110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_015.npz",
+          "ground": "110101110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_016.npz",
+          "ground": "111010110",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_017.npz",
+          "ground": "111011000",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_018.npz",
+          "ground": "111111001",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        },
+        {
+          "file": "four_sat_019.npz",
+          "ground": "111011011",
+          "roundtrip_ok": true,
+          "E_at_encode": 0.0,
+          "n_hybrid_E0": 4
+        }
+      ],
+      "hybrid_E0_unique": false,
+      "hybrid_E0_mean": 4.0,
+      "ok": true
+    }
+  },
+  "n7_production": {
+    "decode_mismatches": 0,
+    "decode_ok": true,
+    "n_pairs": 2,
+    "n_prep": 5,
+    "n_params_L4": 37,
+    "production_n_params_L4": 37,
+    "circuit": {
+      "qutip_available": true,
+      "statevector_fidelity": 0.9999999999999989,
+      "ok": true
+    },
+    "ok": true
+  },
+  "superseded_70": {
+    "7": {
+      "n": 7,
+      "cells": [
+        {
+          "L": 3,
+          "k": 158,
+          "n_total": 200,
+          "success_prob": 0.79,
+          "outer_iter": 70,
+          "mean_p_ground": 0.19853316305133295,
+          "max_p_ground": 0.7796654588755095,
+          "mean_energy": 0.918260878166661,
+          "n_h_with_hit": 20
+        },
+        {
+          "L": 4,
+          "k": 168,
+          "n_total": 200,
+          "success_prob": 0.84,
+          "outer_iter": 70,
+          "mean_p_ground": 0.19261406545994653,
+          "max_p_ground": 0.6723712476416396,
+          "mean_energy": 0.9332577043834798,
+          "n_h_with_hit": 20
+        },
+        {
+          "L": 5,
+          "k": 156,
+          "n_total": 200,
+          "success_prob": 0.78,
+          "outer_iter": 70,
+          "mean_p_ground": 0.16083747035754647,
+          "max_p_ground": 0.6651666637113731,
+          "mean_energy": 0.9665153680360092,
+          "n_h_with_hit": 20
+        },
+        {
+          "L": 6,
+          "k": 100,
+          "n_total": 200,
+          "success_prob": 0.5,
+          "outer_iter": 70,
+          "mean_p_ground": 0.1090566525425419,
+          "max_p_ground": 0.6854809270005511,
+          "mean_energy": 1.0261930600052402,
+          "n_h_with_hit": 20
+        },
+        {
+          "L": 7,
+          "k": 76,
+          "n_total": 200,
+          "success_prob": 0.38,
+          "outer_iter": 70,
+          "mean_p_ground": 0.07463193444626341,
+          "max_p_ground": 0.46975555171785444,
+          "mean_energy": 1.0531075536565482,
+          "n_h_with_hit": 20
+        },
+        {
+          "L": 8,
+          "k": 53,
+          "n_total": 200,
+          "success_prob": 0.265,
+          "outer_iter": 70,
+          "mean_p_ground": 0.04807059850024713,
+          "max_p_ground": 0.42955099351310166,
+          "mean_energy": 1.0846323784516547,
+          "n_h_with_hit": 17
+        },
+        {
+          "L": 9,
+          "k": 28,
+          "n_total": 200,
+          "success_prob": 0.14,
+          "outer_iter": 70,
+          "mean_p_ground": 0.02837569494825285,
+          "max_p_ground": 0.28591137832688546,
+          "mean_energy": 1.1008593306298058,
+          "n_h_with_hit": 17
+        },
+        {
+          "L": 10,
+          "k": 16,
+          "n_total": 200,
+          "success_prob": 0.08,
+          "outer_iter": 70,
+          "mean_p_ground": 0.020790123860730994,
+          "max_p_ground": 0.46846360698953393,
+          "mean_energy": 1.1096182799097574,
+          "n_h_with_hit": 11
+        },
+        {
+          "L": 11,
+          "k": 10,
+          "n_total": 200,
+          "success_prob": 0.05,
+          "outer_iter": 70,
+          "mean_p_ground": 0.015915016223746203,
+          "max_p_ground": 0.25408873870173093,
+          "mean_energy": 1.1109806032202119,
+          "n_h_with_hit": 8
+        },
+        {
+          "L": 12,
+          "k": 6,
+          "n_total": 200,
+          "success_prob": 0.03,
+          "outer_iter": 70,
+          "mean_p_ground": 0.014320017319141135,
+          "max_p_ground": 0.12801847390381585,
+          "mean_energy": 1.118110344524494,
+          "n_h_with_hit": 6
+        },
+        {
+          "L": 13,
+          "k": 7,
+          "n_total": 200,
+          "success_prob": 0.035,
+          "outer_iter": 70,
+          "mean_p_ground": 0.014087442114481364,
+          "max_p_ground": 0.0583818712588445,
+          "mean_energy": 1.1251058125291453,
+          "n_h_with_hit": 6
+        },
+        {
+          "L": 14,
+          "k": 4,
+          "n_total": 200,
+          "success_prob": 0.02,
+          "outer_iter": 70,
+          "mean_p_ground": 0.011908149028319352,
+          "max_p_ground": 0.05093116442663964,
+          "mean_energy": 1.12182927313051,
+          "n_h_with_hit": 4
+        },
+        {
+          "L": 15,
+          "k": 3,
+          "n_total": 200,
+          "success_prob": 0.015,
+          "outer_iter": 70,
+          "mean_p_ground": 0.011159701003676024,
+          "max_p_ground": 0.059243751422433405,
+          "mean_energy": 1.1263592368595012,
+          "n_h_with_hit": 3
+        },
+        {
+          "L": 16,
+          "k": 5,
+          "n_total": 200,
+          "success_prob": 0.025,
+          "outer_iter": 70,
+          "mean_p_ground": 0.01181785906014255,
+          "max_p_ground": 0.06395778779681635,
+          "mean_energy": 1.126430710542889,
+          "n_h_with_hit": 5
+        },
+        {
+          "L": 17,
+          "k": 2,
+          "n_total": 200,
+          "success_prob": 0.01,
+          "outer_iter": 70,
+          "mean_p_ground": 0.01166981489252732,
+          "max_p_ground": 0.05430732064580899,
+          "mean_energy": 1.1242932644356964,
+          "n_h_with_hit": 2
+        },
+        {
+          "L": 18,
+          "k": 2,
+          "n_total": 200,
+          "success_prob": 0.01,
+          "outer_iter": 70,
+          "mean_p_ground": 0.011129313819484224,
+          "max_p_ground": 0.043973962808003364,
+          "mean_energy": 1.1288781672922081,
+          "n_h_with_hit": 1
+        },
+        {
+          "L": 19,
+          "k": 1,
+          "n_total": 200,
+          "success_prob": 0.005,
+          "outer_iter": 70,
+          "mean_p_ground": 0.010897518598760559,
+          "max_p_ground": 0.03531332482553387,
+          "mean_energy": 1.122423742712661,
+          "n_h_with_hit": 1
+        },
+        {
+          "L": 20,
+          "k": 3,
+          "n_total": 200,
+          "success_prob": 0.015,
+          "outer_iter": 70,
+          "mean_p_ground": 0.009814613726178513,
+          "max_p_ground": 0.04090938792698553,
+          "mean_energy": 1.1258229581294488,
+          "n_h_with_hit": 3
+        }
+      ]
+    },
+    "8": {
+      "n": 8,
+      "cells": [
+        {
+          "L": 3,
+          "k": 109,
+          "n_total": 200,
+          "success_prob": 0.545,
+          "outer_iter": 70,
+          "mean_p_ground": 0.07774984295611403,
+          "max_p_ground": 0.5006346375524142,
+          "mean_energy": 1.2407565238803187,
+          "n_h_with_hit": 20
+        },
+        {
+          "L": 4,
+          "k": 39,
+          "n_total": 200,
+          "success_prob": 0.195,
+          "outer_iter": 70,
+          "mean_p_ground": 0.02564424881430676,
+          "max_p_ground": 0.24290321969311918,
+          "mean_energy": 1.2942862013658327,
+          "n_h_with_hit": 15
+        },
+        {
+          "L": 5,
+          "k": 12,
+          "n_total": 200,
+          "success_prob": 0.06,
+          "outer_iter": 70,
+          "mean_p_ground": 0.009571958827883434,
+          "max_p_ground": 0.05461532031489079,
+          "mean_energy": 1.3128440710395903,
+          "n_h_with_hit": 7
+        },
+        {
+          "L": 6,
+          "k": 3,
+          "n_total": 200,
+          "success_prob": 0.015,
+          "outer_iter": 70,
+          "mean_p_ground": 0.007227578878951415,
+          "max_p_ground": 0.03137860285718376,
+          "mean_energy": 1.3094252620480527,
+          "n_h_with_hit": 2
+        },
+        {
+          "L": 7,
+          "k": 3,
+          "n_total": 200,
+          "success_prob": 0.015,
+          "outer_iter": 70,
+          "mean_p_ground": 0.006407735389373845,
+          "max_p_ground": 0.043499751076863574,
+          "mean_energy": 1.3076578936942846,
+          "n_h_with_hit": 3
+        },
+        {
+          "L": 8,
+          "k": 1,
+          "n_total": 200,
+          "success_prob": 0.005,
+          "outer_iter": 70,
+          "mean_p_ground": 0.0058048203836234095,
+          "max_p_ground": 0.027187652527746842,
+          "mean_energy": 1.30925537969723,
+          "n_h_with_hit": 1
+        },
+        {
+          "L": 9,
+          "k": 1,
+          "n_total": 200,
+          "success_prob": 0.005,
+          "outer_iter": 70,
+          "mean_p_ground": 0.005619032574614815,
+          "max_p_ground": 0.026891166816588947,
+          "mean_energy": 1.315144713483097,
+          "n_h_with_hit": 1
+        },
+        {
+          "L": 10,
+          "k": 2,
+          "n_total": 200,
+          "success_prob": 0.01,
+          "outer_iter": 70,
+          "mean_p_ground": 0.005814519253984736,
+          "max_p_ground": 0.030968266635959092,
+          "mean_energy": 1.3141335533997704,
+          "n_h_with_hit": 2
+        },
+        {
+          "L": 11,
+          "k": 2,
+          "n_total": 200,
+          "success_prob": 0.01,
+          "outer_iter": 70,
+          "mean_p_ground": 0.005383499615143094,
+          "max_p_ground": 0.023859908065890598,
+          "mean_energy": 1.3152391829017043,
+          "n_h_with_hit": 2
+        },
+        {
+          "L": 12,
+          "k": 3,
+          "n_total": 200,
+          "success_prob": 0.015,
+          "outer_iter": 70,
+          "mean_p_ground": 0.005496524488859098,
+          "max_p_ground": 0.029581109612293273,
+          "mean_energy": 1.312116989395709,
+          "n_h_with_hit": 3
+        },
+        {
+          "L": 13,
+          "k": 2,
+          "n_total": 200,
+          "success_prob": 0.01,
+          "outer_iter": 70,
+          "mean_p_ground": 0.005651232731838223,
+          "max_p_ground": 0.027790914841528687,
+          "mean_energy": 1.3181716118495337,
+          "n_h_with_hit": 2
+        },
+        {
+          "L": 14,
+          "k": 0,
+          "n_total": 200,
+          "success_prob": 0.0,
+          "outer_iter": 70,
+          "mean_p_ground": 0.0049794466242054,
+          "max_p_ground": 0.019645138188191944,
+          "mean_energy": 1.3137587085692775,
+          "n_h_with_hit": 0
+        },
+        {
+          "L": 15,
+          "k": 1,
+          "n_total": 200,
+          "success_prob": 0.005,
+          "outer_iter": 70,
+          "mean_p_ground": 0.00582065052037376,
+          "max_p_ground": 0.024347850986189915,
+          "mean_energy": 1.3107387838798303,
+          "n_h_with_hit": 1
+        },
+        {
+          "L": 16,
+          "k": 0,
+          "n_total": 200,
+          "success_prob": 0.0,
+          "outer_iter": 70,
+          "mean_p_ground": 0.005293564712502184,
+          "max_p_ground": 0.020329872965316312,
+          "mean_energy": 1.3136664946645202,
+          "n_h_with_hit": 0
+        },
+        {
+          "L": 17,
+          "k": 1,
+          "n_total": 200,
+          "success_prob": 0.005,
+          "outer_iter": 70,
+          "mean_p_ground": 0.004969316682111968,
+          "max_p_ground": 0.024599050280632223,
+          "mean_energy": 1.3176851023367064,
+          "n_h_with_hit": 1
+        },
+        {
+          "L": 18,
+          "k": 1,
+          "n_total": 200,
+          "success_prob": 0.005,
+          "outer_iter": 70,
+          "mean_p_ground": 0.004704910409300581,
+          "max_p_ground": 0.02471680999117871,
+          "mean_energy": 1.3110302428123433,
+          "n_h_with_hit": 1
+        },
+        {
+          "L": 19,
+          "k": 0,
+          "n_total": 200,
+          "success_prob": 0.0,
+          "outer_iter": 70,
+          "mean_p_ground": 0.004713453183459039,
+          "max_p_ground": 0.02281731576600115,
+          "mean_energy": 1.315477806103815,
+          "n_h_with_hit": 0
+        },
+        {
+          "L": 20,
+          "k": 1,
+          "n_total": 200,
+          "success_prob": 0.005,
+          "outer_iter": 70,
+          "mean_p_ground": 0.004652736003916537,
+          "max_p_ground": 0.02178632776200487,
+          "mean_energy": 1.3188647649614875,
+          "n_h_with_hit": 1
+        }
+      ]
+    }
+  }
+}

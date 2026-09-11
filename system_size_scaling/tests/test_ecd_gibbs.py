@@ -116,10 +116,14 @@ def test_one_spsa_step_smoke():
         ndepth=3,
         outer_iter=1,
         rng=rng,
+        log_every=1,
     )
     assert np.isfinite(result.fun)
     assert result.eval_final.most_likely_bitstring
     assert result.nfev >= 2
+    assert result.step_log
+    assert result.step_log[0]["step"] == 0
+    assert "p_ground" in result.step_log[0]
     # Gibbs on a probability histogram is defined.
     p = np.ones(emb.dims, dtype=float)
     assert np.isfinite(gibbs_objective(p, energy, 1.0))
