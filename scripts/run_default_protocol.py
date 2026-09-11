@@ -213,26 +213,96 @@ def _print_line(i: int, n: int, rec: dict, kind: str) -> None:
     )
 
 
-def _run_pool(jobs: list[dict], workers: int, fn, kind: str) -> list[dict]:
-    records: list[dict] = []
-    if workers <= 1 or len(jobs) <= 1:
-        for i, job in enumerate(jobs, 1):
-            rec = fn(job)
-            records.append(rec)
-            _print_line(i, len(jobs), rec, kind)
-    else:
-        with ProcessPoolExecutor(max_workers=int(workers)) as pool:
-            futs = {pool.submit(fn, job): job for job in jobs}
-            done = 0
-            for fut in as_completed(futs):
-                rec = fut.result()
-                records.append(rec)
-                done += 1
-                _print_line(done, len(jobs), rec, kind)
-    records.sort(
+def _record_key(rec: dict) -> tuple:
+    return (
+        str(rec.get("ansatz", "")).lower(),
+        int(rec.get("ndepth", 0)),
+        int(rec["hamiltonian_id"]),
+        int(rec["trial"]),
+        round(float(rec.get("kappa_tau", 0.0)), 6),
+    )
+
+
+def _job_key(job: dict) -> tuple:
+    return (
+        str(job.get("ansatz", "")).lower(),
+        int(job.get("ndepth", 0)),
+        int(job["hamiltonian_id"]),
+        int(job["trial"]),
+        round(float(job.get("kappa_tau", 0.0)), 6),
+    )
+
+
+def _load_jsonl(path: Path) -> list[dict]:
+    path = Path(path)
+    if not path.is_file():
+        return []
+    recs: list[dict] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        recs.append(json.loads(line))
+    return recs
+
+
+def _append_jsonl(path: Path, rec: dict) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(_json_ready(rec), separators=(",", ":")) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
+
+
+def _dedupe_records(records: list[dict]) -> list[dict]:
+    by_key: dict[tuple, dict] = {}
+    for rec in records:
+        by_key[_record_key(rec)] = rec
+    out = list(by_key.values())
+    out.sort(
         key=lambda r: (int(r.get("hamiltonian_id", 0)), int(r["trial"]), str(r.get("kappa_tau", "")))
     )
-    return records
+    return out
+
+
+def _run_pool(
+    jobs: list[dict],
+    workers: int,
+    fn,
+    kind: str,
+    *,
+    existing: list[dict] | None = None,
+    checkpoint: Path | None = None,
+) -> list[dict]:
+    records = _dedupe_records(list(existing or []))
+    done = {_record_key(r) for r in records}
+    pending = [j for j in jobs if _job_key(j) not in done]
+    n_total = len(jobs)
+    n_skip = n_total - len(pending)
+    if n_skip:
+        print(f"  resume: skipping {n_skip} finished {kind} trials, {len(pending)} remaining", flush=True)
+    if not pending:
+        return records
+    done_n = n_skip
+
+    def _accept(rec: dict) -> None:
+        nonlocal done_n
+        records.append(rec)
+        done_n += 1
+        if checkpoint is not None:
+            _append_jsonl(checkpoint, rec)
+        _print_line(done_n, n_total, rec, kind)
+
+    if workers <= 1 or len(pending) <= 1:
+        for job in pending:
+            _accept(fn(job))
+    else:
+        with ProcessPoolExecutor(max_workers=int(workers)) as pool:
+            futs = {pool.submit(fn, job): job for job in pending}
+            for fut in as_completed(futs):
+                _accept(fut.result())
+    return _dedupe_records(records)
 
 
 def _write_json(path: Path, payload: dict) -> Path:
@@ -410,13 +480,41 @@ def run_noisy(args: argparse.Namespace) -> dict:
                         "gdr_fit": fit.get("fit"),
                     }
                 )
+    ktag = "-".join(str(k) for k in kappas)
+    out = Path(args.outdir) / f"gibbs_four_sat_{ansatz}_l{ndepth}_noisy_kt{ktag}.json"
+    if args.output:
+        out = Path(args.output)
+    ckpt = out.with_suffix(".jsonl")
+    existing: list[dict] = []
+    if bool(getattr(args, "resume", True)):
+        existing.extend(_load_jsonl(ckpt))
+        if out.is_file():
+            try:
+                prev = json.loads(out.read_text(encoding="utf-8"))
+                existing.extend(prev.get("trials") or [])
+            except json.JSONDecodeError:
+                pass
+        existing = _dedupe_records(existing)
+        if existing:
+            print(
+                f"  resume: loaded {len(existing)} trials from {ckpt.name} / {out.name}",
+                flush=True,
+            )
+
     print(
         f"=== noisy-in-loop four_sat {ansatz} L{ndepth}: {len(instances)} H × {n_trials} "
         f"trials × {len(kappas)} κτ, {outer_iter} SPSA, workers={workers} ===",
         flush=True,
     )
     t0 = time.perf_counter()
-    records = _run_pool(jobs, workers, run_noisy_trial, "noisy")
+    records = _run_pool(
+        jobs,
+        workers,
+        run_noisy_trial,
+        "noisy",
+        existing=existing,
+        checkpoint=ckpt,
+    )
     elapsed = time.perf_counter() - t0
 
     by_kt: dict[str, list[dict]] = {}
@@ -465,12 +563,11 @@ def run_noisy(args: argparse.Namespace) -> dict:
         "hamiltonians": [_ham_meta(inst) for inst in instances],
         "trials": records,
         "spsa": {"a": SPSA_A, "c": SPSA_C, "A": SPSA_A_STAB, "alpha": SPSA_ALPHA, "gamma": SPSA_GAMMA},
+        "resumed_trials": len(existing),
     }
-    ktag = "-".join(str(k) for k in kappas)
-    out = Path(args.outdir) / f"gibbs_four_sat_{ansatz}_l{ndepth}_noisy_kt{ktag}.json"
-    if args.output:
-        out = Path(args.output)
     _write_json(out, payload)
+    if ckpt.is_file():
+        ckpt.unlink()
     print(
         f"  noisy-in-loop {ansatz} L{ndepth}: {n_success}/{len(records)}  wall {elapsed:.1f}s",
         flush=True,
@@ -666,6 +763,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ny.add_argument("--n-train", type=int, default=PROTOCOL_N_TRAIN)
     ny.add_argument("--twin-shots", type=int, default=PROTOCOL_TWIN_SHOTS)
     ny.add_argument("--fit-maxiter", type=int, default=200)
+    ny.add_argument(
+        "--no-resume",
+        dest="resume",
+        action="store_false",
+        help="Ignore existing JSON/JSONL and rerun every trial.",
+    )
+    ny.set_defaults(resume=True)
 
     pl = sub.add_parser("plots", help="⟨H⟩ and p(GS) vs step for example trials.")
     pl.add_argument("--outdir", type=Path, default=OUTDIR)

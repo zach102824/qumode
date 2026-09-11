@@ -124,6 +124,24 @@ def test_rl_inverts_binomial_blur():
     assert rec[1, 3, 2] > 0.8
 
 
+def test_richardson_lucy_nan_histogram_returns_finite_simplex():
+    q = np.full((2, 4, 4), np.nan)
+    p = richardson_lucy(q, np.eye(2), np.eye(4), np.eye(4), n_iter=20)
+    assert np.all(np.isfinite(p))
+    assert p.shape == (2, 4, 4)
+    np.testing.assert_allclose(p.sum(), 1.0)
+
+
+def test_richardson_lucy_inf_kernel_returns_finite_simplex():
+    cq = np.eye(2)
+    c1 = np.full((4, 4), np.inf)
+    c2 = np.eye(4)
+    q = np.ones((2, 4, 4)) / 32.0
+    p = richardson_lucy(q, cq, c1, c2, n_iter=20)
+    assert np.all(np.isfinite(p))
+    np.testing.assert_allclose(p.sum(), 1.0)
+
+
 def test_ecd_gaussian_twins_match_poisson():
     sim = HybridSimulator(ndepth=2, nfocks=(8, 8), ansatz="ecd", energy_tensor=hybrid_energy_tensor((8, 8)))
     rng = np.random.default_rng(2026)

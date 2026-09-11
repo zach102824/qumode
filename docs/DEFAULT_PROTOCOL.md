@@ -83,6 +83,12 @@ python -u scripts/run_default_protocol.py plots
 python -u scripts/run_default_protocol.py conclude
 ```
 
+Interrupted noisy cells can be resumed: the runner appends each finished trial
+to a sibling `.jsonl` and skips those `(H, trial, κτ)` keys on the next
+`noisy` invocation (pass `--no-resume` to ignore it). Richardson–Lucy unfold
+stays `gdr_param` with fixed `n_iter=80`; non-finite iterates fall back to
+the uniform simplex instead of propagating NaNs.
+
 Noisy-in-loop is expensive. Triage order: (1) code + \(\kappa_\phi\) + logging,
 (2) wipe unused research dumps, (3) full noiseless ECD+SNAP, (4) smoke + at
 least one κτ full noisy per ansatz, then remaining κτ. `CONCLUSION.md`

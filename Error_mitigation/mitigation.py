@@ -245,15 +245,24 @@ def richardson_lucy(
         return np.full(qn.shape, 1.0 / qn.size)
     qn = qn / total
     p = np.full(qn.shape, 1.0 / qn.size, dtype=float)
-    for _ in range(int(n_iter)):
+    uniform = np.full(qn.shape, 1.0 / qn.size, dtype=float)
+    n_rl = max(int(n_iter), 0)
+    for _ in range(n_rl):
         mp = np.clip(apply_transfer(p, cq, c1, c2), eps, None)
-        p = p * apply_transfer_T(qn / mp, cq, c1, c2)
+        ratio = qn / mp
+        if not np.all(np.isfinite(ratio)):
+            return uniform
+        p = p * apply_transfer_T(ratio, cq, c1, c2)
         if soft_clip:
             p = _softplus_nonneg(p, soft_eps)
         else:
             p = np.clip(p, 0.0, None)
+        if not np.all(np.isfinite(p)):
+            return uniform
         s = float(p.sum())
-        p = p / s if s > 0.0 else np.full(qn.shape, 1.0 / qn.size)
+        if not np.isfinite(s) or s <= 0.0:
+            return uniform
+        p = p / s
     return p
 
 

@@ -139,3 +139,47 @@ def test_gdr_in_loop_one_spsa_step(tmp_path):
     )
     assert again["from_cache"] is True
     np.testing.assert_allclose(again["theta"], fit["theta"])
+
+
+def test_noisy_pool_resume_skips_finished_trials(tmp_path):
+    import importlib.util
+
+    path = ROOT / "scripts" / "run_default_protocol.py"
+    spec = importlib.util.spec_from_file_location("protocol_resume", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    jobs = [
+        {"ansatz": "ecd", "ndepth": 4, "hamiltonian_id": 0, "trial": t, "kappa_tau": 0.03}
+        for t in range(3)
+    ]
+    existing = [
+        {
+            "ansatz": "ecd",
+            "ndepth": 4,
+            "hamiltonian_id": 0,
+            "trial": 0,
+            "kappa_tau": 0.03,
+            "success": True,
+        }
+    ]
+    calls = []
+
+    def fn(job):
+        calls.append(job["trial"])
+        return {
+            "ansatz": "ecd",
+            "ndepth": 4,
+            "hamiltonian_id": 0,
+            "trial": job["trial"],
+            "kappa_tau": job["kappa_tau"],
+            "success": False,
+        }
+
+    ckpt = tmp_path / "cell.jsonl"
+    recs = mod._run_pool(jobs, 1, fn, "noisy", existing=existing, checkpoint=ckpt)
+    assert calls == [1, 2]
+    assert len(recs) == 3
+    assert ckpt.is_file()
+    lines = [ln for ln in ckpt.read_text().splitlines() if ln.strip()]
+    assert len(lines) == 2
