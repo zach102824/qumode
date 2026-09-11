@@ -67,5 +67,5 @@ Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7
 
 ## Notes
 
-Live ladder complete under 200 joint SPSA with a=0.2*sqrt(37/n_params). Every n=8…11 hits ≥90% at L=4 (n=8 196/200, n=9 198/200, n=10 196/200, n=11 188/200). Do not raise L: diagnosis showed deeper L collapses at this SPSA budget. See DIAGNOSIS.md for the n=8 depth-collapse root cause.
+Live ladder **complete** (48h extension received after this already finished; not used for an L=5…40 sweep). Protocol: 200 joint SPSA, `a=0.2*sqrt(37/n_params)`. Every n=8…11 hits ≥90% at **L=4** (n=8 196/200, n=9 198/200, n=10 196/200, n=11 188/200). The original “increase L until ≥90%” rule therefore **stops at L=4**. Diagnosis (`DIAGNOSIS.md`) showed raising L at this budget collapses success (n=8 L=8 is 84/200 even with scaled `a`; 8/200 at unscaled `a=0.2`).
 
