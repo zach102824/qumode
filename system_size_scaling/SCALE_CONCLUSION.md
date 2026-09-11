@@ -13,7 +13,7 @@ Live ladder is **n=8…11 starting at L=4** (increment until ≥90% or L=20).
 |---|----|-------|---------|----------|--------|
 | 7 | 4 | 186/200 | 0.930 | — | prior_data_pr14 |
 | 8 | — | 39/200 | 0.195 | 2390.6 | capped_L20_below_threshold |
-| 9 | — | 51/200 | 0.255 | 3244.9 | in_progress |
+| 9 | — | 51/200 | 0.255 | 3980.7 | capped_L20_below_threshold |
 | 10 | — | — | — | — | not_started |
 | 11 | — | — | — | — | not_started |
 
@@ -66,6 +66,8 @@ This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the
 | 16 | 0/200 | 0.000 | 307.7 |
 | 17 | 0/200 | 0.000 | 326.1 |
 | 18 | 1/200 | 0.005 | 349.1 |
+| 19 | 0/200 | 0.000 | 354.4 |
+| 20 | 0/200 | 0.000 | 381.3 |
 
 ### n=10
 
@@ -77,5 +79,5 @@ Not started.
 
 ## Notes
 
-Protocol retargeted: n=7 is PR #14 prior data (L*=4, 186/200). Live ladder is n=8…11 starting at L=4. n=8 L=4…20 is complete and never hit 90% (best L=4 at 39/200). n=9 L≥4 through L=18 on disk (best L=4 at 51/200); L=19–20 finishing. n=10–11 not started.
+Protocol retargeted: n=7 is PR #14 prior data (L*=4, 186/200). Live ladder is n=8…11 starting at L=4. n=8 and n=9 L=4…20 are complete and never hit 90% (n=8 best L=4 39/200; n=9 best L=4 51/200). n=10–11 not started.
 
