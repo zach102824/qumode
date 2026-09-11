@@ -131,10 +131,17 @@ def run_depth(
     emb = embedding_for_n(n)
     out_path = results_path(n, depth)
     existing: dict[tuple[int, int], dict] = {}
+    expected = len(instances) * int(n_trials)
     if resume and out_path.exists():
         prev = json.loads(out_path.read_text(encoding="utf-8"))
         for rec in prev.get("trials", []):
             existing[(int(rec["hamiltonian_id"]), int(rec["trial"]))] = rec
+        if len(existing) >= expected:
+            print(
+                f"=== n={n}  L={depth}  skip complete {len(existing)}/{expected}  → {out_path} ===",
+                flush=True,
+            )
+            return prev
 
     jobs = []
     for inst in instances:
