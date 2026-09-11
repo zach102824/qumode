@@ -4,7 +4,7 @@
   "k": 11,
   "n_total": 200,
   "success_prob": 0.055,
-  "wall_s": 1576.8059821120005,
+  "wall_s": 2698.741606518999,
   "curve": [
     {
       "L": 4,
@@ -75,6 +75,34 @@
       "n_total": 200,
       "success_prob": 0.0,
       "wall_s": 235.6830149840007
+    },
+    {
+      "L": 14,
+      "k": 0,
+      "n_total": 200,
+      "success_prob": 0.0,
+      "wall_s": 254.07450938500006
+    },
+    {
+      "L": 15,
+      "k": 1,
+      "n_total": 200,
+      "success_prob": 0.005,
+      "wall_s": 272.364308921
+    },
+    {
+      "L": 16,
+      "k": 0,
+      "n_total": 200,
+      "success_prob": 0.0,
+      "wall_s": 289.23874543199963
+    },
+    {
+      "L": 17,
+      "k": 0,
+      "n_total": 200,
+      "success_prob": 0.0,
+      "wall_s": 306.25806066899895
     }
   ],
   "status": "in_progress",
