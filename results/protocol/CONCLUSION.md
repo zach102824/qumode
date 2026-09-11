@@ -18,6 +18,7 @@ Mitigation: **gdr_param only**, M policy B (fit once per (H, κτ, ansatz), reus
 | ansatz | depth | κτ | mit k/N | raw k/N | mean ⟨H⟩ | file |
 |--------|------:|---:|--------:|--------:|---------:|------|
 | ecd | L4 | 0.003 | 186/200 | 186/200 | 0.880 | `gibbs_four_sat_ecd_l4_noisy_kt0.003.json` |
+| ecd | L4 | 0.03 | 183/200 | 131/200 | 1.024 | `gibbs_four_sat_ecd_l4_noisy_kt0.03.json` |
 | snap | L3 | 0.003 | 188/200 | 188/200 | 0.681 | `gibbs_four_sat_snap_l3_noisy_kt0.003.json` |
 
 ## Commands
