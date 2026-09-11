@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""n=7 → 8 → 9 → 10 → 11 depth-sweep ladder."""
+"""n=8 → 9 → 10 → 11 depth-sweep ladder (L starts at 4). n=7 is prior PR #14 data."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def ensure_hamiltonians(n: int, n_hamiltonians: int, search_trials: int) -> None
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--from-n", type=int, default=7)
+    parser.add_argument("--from-n", type=int, default=8)
     parser.add_argument("--to-n", type=int, default=11)
     parser.add_argument("--n-trials", type=int, default=N_TRIALS)
     parser.add_argument("--n-hamiltonians", type=int, default=N_HAMILTONIANS)

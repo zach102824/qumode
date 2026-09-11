@@ -1,147 +1,99 @@
 {
-  "n": 8,
+  "n": 9,
   "L_star": null,
-  "k": 39,
+  "k": 51,
   "n_total": 200,
-  "success_prob": 0.195,
-  "wall_s": 2390.648029412,
+  "success_prob": 0.255,
+  "wall_s": 1704.8831421769992,
   "curve": [
     {
       "L": 4,
-      "k": 39,
+      "k": 51,
       "n_total": 200,
-      "success_prob": 0.195,
-      "wall_s": 49.14967292900019
+      "success_prob": 0.255,
+      "wall_s": 82.40602969199972
     },
     {
       "L": 5,
-      "k": 12,
+      "k": 24,
       "n_total": 200,
-      "success_prob": 0.06,
-      "wall_s": 59.77789734399994
+      "success_prob": 0.12,
+      "wall_s": 100.85789975899934
     },
     {
       "L": 6,
-      "k": 3,
+      "k": 8,
       "n_total": 200,
-      "success_prob": 0.015,
-      "wall_s": 70.52918667199992
+      "success_prob": 0.04,
+      "wall_s": 123.1773452769994
     },
     {
       "L": 7,
-      "k": 3,
+      "k": 2,
       "n_total": 200,
-      "success_prob": 0.015,
-      "wall_s": 81.02748471300038
+      "success_prob": 0.01,
+      "wall_s": 143.46560946999944
     },
     {
       "L": 8,
-      "k": 1,
+      "k": 5,
       "n_total": 200,
-      "success_prob": 0.005,
-      "wall_s": 96.3588333079997
+      "success_prob": 0.025,
+      "wall_s": 163.9458139389999
     },
     {
       "L": 9,
       "k": 1,
       "n_total": 200,
       "success_prob": 0.005,
-      "wall_s": 109.1828223499997
+      "wall_s": 182.86895615699996
     },
     {
       "L": 10,
-      "k": 2,
+      "k": 1,
       "n_total": 200,
-      "success_prob": 0.01,
-      "wall_s": 116.14645034900059
+      "success_prob": 0.005,
+      "wall_s": 201.51156429999992
     },
     {
       "L": 11,
-      "k": 2,
+      "k": 0,
       "n_total": 200,
-      "success_prob": 0.01,
-      "wall_s": 125.7556626859996
+      "success_prob": 0.0,
+      "wall_s": 218.5237456220002
     },
     {
       "L": 12,
       "k": 3,
       "n_total": 200,
       "success_prob": 0.015,
-      "wall_s": 136.7827146310001
+      "wall_s": 240.51769387400054
     },
     {
       "L": 13,
-      "k": 2,
-      "n_total": 200,
-      "success_prob": 0.01,
-      "wall_s": 151.62440815799982
-    },
-    {
-      "L": 14,
       "k": 0,
       "n_total": 200,
       "success_prob": 0.0,
-      "wall_s": 166.07836984799997
-    },
-    {
-      "L": 15,
-      "k": 1,
-      "n_total": 200,
-      "success_prob": 0.005,
-      "wall_s": 176.83755781400032
-    },
-    {
-      "L": 16,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 188.77439712700016
-    },
-    {
-      "L": 17,
-      "k": 1,
-      "n_total": 200,
-      "success_prob": 0.005,
-      "wall_s": 200.4554297879995
-    },
-    {
-      "L": 18,
-      "k": 1,
-      "n_total": 200,
-      "success_prob": 0.005,
-      "wall_s": 208.62298129099963
-    },
-    {
-      "L": 19,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 219.54163644500022
-    },
-    {
-      "L": 20,
-      "k": 1,
-      "n_total": 200,
-      "success_prob": 0.005,
-      "wall_s": 234.00252395900043
+      "wall_s": 247.60848408700076
     }
   ],
-  "status": "capped_L20_below_threshold",
+  "status": "in_progress",
   "embedding": {
-    "n_qubits": 8,
-    "dim": 256,
+    "n_qubits": 9,
+    "dim": 2048,
     "hardware_dim": 2048,
     "max_logical_bits": 11,
     "dims": [
       2,
       2,
       8,
+      8,
       8
     ],
     "n_transmons": 2,
-    "n_cavities": 2,
-    "n_prep_params": 6,
-    "n_pairs": 4,
+    "n_cavities": 3,
+    "n_prep_params": 8,
+    "n_pairs": 6,
     "ecd_pairs": [
       {
         "transmon_axis": 0,
@@ -158,6 +110,14 @@
       {
         "transmon_axis": 1,
         "cavity_axis": 3
+      },
+      {
+        "transmon_axis": 0,
+        "cavity_axis": 4
+      },
+      {
+        "transmon_axis": 1,
+        "cavity_axis": 4
       }
     ],
     "modes": [
@@ -188,6 +148,13 @@
         "dim": 8,
         "n_bits": 3,
         "axis": 3
+      },
+      {
+        "name": "C2",
+        "kind": "cavity",
+        "dim": 8,
+        "n_bits": 1,
+        "axis": 4
       }
     ],
     "bit_partition": [
@@ -238,12 +205,16 @@
         "mode": "C1",
         "label": "C1[fock bit 0]",
         "kind": "cavity"
+      },
+      {
+        "bit": 8,
+        "mode": "C2",
+        "label": "C2[fock bit 0]",
+        "kind": "cavity"
       }
     ],
-    "subspace_of_2048": true
+    "subspace_of_2048": false
   },
-  "idle_hardware_modes": [
-    "C2"
-  ],
-  "success_fraction": "39/200"
+  "idle_hardware_modes": [],
+  "success_fraction": "51/200"
 }

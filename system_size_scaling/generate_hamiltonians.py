@@ -13,7 +13,7 @@ from .four_sat import generate_dataset
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--n", type=int, default=None, help="Single n in 7…11.")
-    parser.add_argument("--all", action="store_true", help="Generate n=7…11.")
+    parser.add_argument("--all", action="store_true", help="Generate n=8…11 (live ladder).")
     parser.add_argument("--n-hamiltonians", type=int, default=N_HAMILTONIANS)
     parser.add_argument("--search-trials", type=int, default=SEARCH_TRIALS)
     parser.add_argument("--seed", type=int, default=None)

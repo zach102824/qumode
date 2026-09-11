@@ -7,7 +7,9 @@ All code and results for this study live in this folder. Upstream
 ## Question
 
 At fixed clause density ≈ `18/7 ≈ 2.57`, how does ECD depth `L` needed for
-**≥ 90%** most-likely-bitstring success (`k/200`) grow from `n=7` to `n=11`?
+**≥ 90%** most-likely-bitstring success (`k/200`) grow from `n=8` to `n=11`?
+`n=7` L* is **prior data** from [PR #14](https://github.com/zach102824/qumode/pull/14)
+(ECD L4 = 186/200), not re-run here.
 
 Success = `most_likely_bitstring == ground_bitstring`.
 Each `(n, L)` cell is **20 Hamiltonians × 10 trials = 200**.
@@ -59,19 +61,18 @@ fixed 12–20 window).
 From the repo root:
 
 ```bash
-# 20 instances for one n (or the full ladder of sizes)
-python -m system_size_scaling.generate_hamiltonians --n 7
+# 20 instances for one n (or n=8…11)
+python -m system_size_scaling.generate_hamiltonians --n 8
 python -m system_size_scaling.generate_hamiltonians --all
 
-# one n: start at L=3, increment until ≥90% or L=20
-python -m system_size_scaling.run_one_n --n 7
+# one n: start at L=4, increment until ≥90% or L=20
+python -m system_size_scaling.run_one_n --n 8
 
-# full ladder n=7 → 11 (generates missing Hamiltonians)
+# live ladder n=8 → 11 (generates missing Hamiltonians)
 python -m system_size_scaling.run_ladder
 
-# smoke: 1 H × 1 trial × L=3 × 2 SPSA steps
-python -m system_size_scaling.generate_hamiltonians --n 7 --n-hamiltonians 2 --search-trials 800
-python -m system_size_scaling.run_one_n --n 7 --L 3 --max-hamiltonians 1 --n-trials 1 --outer-iter 2 --no-sweep
+# smoke: 1 H × 1 trial × L=4 × 2 SPSA steps
+python -m system_size_scaling.run_one_n --n 8 --L 4 --max-hamiltonians 1 --n-trials 1 --outer-iter 2 --no-sweep
 
 # unit tests
 python -m pytest system_size_scaling/tests -q
@@ -87,7 +88,7 @@ unless BLAS is pinned; use `--workers 1`. Results land in
 | item | value |
 |------|-------|
 | trials | 10 / Hamiltonian, 20 H |
-| L sweep | 3 … 20, stop at ≥ 90% |
+| L sweep | n≥8: 4 … 20, stop at ≥ 90%; n=7 not re-run |
 | SPSA | joint 70, `a=0.2, c=0.15, A=10, α=0.602, γ=0.101` |
 | η | `sampled_tail` (5%/25% quantiles, EMA, no known `E_min`) |
 | prep init | vacuum |

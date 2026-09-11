@@ -15,10 +15,35 @@ N_HAMILTONIANS = 20
 N_TRIALS = 10
 SEARCH_TRIALS = 4000
 
-# Depth sweep: start L=3, increment to L=20 or until success ≥ 90%.
-L_START = 3
+# Depth sweep for the live ladder (n=8…11): start L=4, increment to L=20
+# or until success ≥ 90%. n=7 is not re-run; see PRIOR_N7.
+L_START = 4
 L_MAX = 20
 SUCCESS_THRESHOLD = 0.90
+
+# Official n=7 scoreboard row — PR #14 noiseless ECD L4 (200 joint SPSA),
+# not this folder's n=7 L-sweep. Do not regenerate n=7 for the table.
+PRIOR_N7 = {
+    "n": 7,
+    "L_star": 4,
+    "k": 186,
+    "n_total": 200,
+    "success_prob": 0.93,
+    "success_fraction": "186/200",
+    "wall_s": None,
+    "status": "prior_data_pr14",
+    "source": "https://github.com/zach102824/qumode/pull/14",
+    "protocol_note": (
+        "PR #14 matched 4-SAT fleet, noiseless ECD L4, 20 H × 10 trials, "
+        "200 joint SPSA, vacuum, sampled_tail η. Not re-run in this folder."
+    ),
+    "this_folder_l3_smoke": {
+        "k": 158,
+        "n_total": 200,
+        "success_prob": 0.79,
+        "note": "this folder n=7 L=3 / 70 SPSA; not the official L*",
+    },
+}
 
 # Hardware target: 2 transmons × 3 cavities × 8 levels = 2048.
 N_TRANSMONS = 2
@@ -44,7 +69,8 @@ SEED_BASE = 41000
 CLAUSE_BAND_BELOW = 6
 CLAUSE_BAND_ABOVE = 8
 
-LADDER_NS = (7, 8, 9, 10, 11)
+LADDER_NS = (8, 9, 10, 11)
+ALL_NS = (7, 8, 9, 10, 11)
 
 
 def clause_window(n: int) -> tuple[int, int, int]:

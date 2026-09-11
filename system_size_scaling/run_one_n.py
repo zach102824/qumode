@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Depth sweep for one n: ECD L=3…20 until bitstring success ≥ 90%."""
+"""Depth sweep for one n: ECD L=4…20 until bitstring success ≥ 90%."""
 
 from __future__ import annotations
 
@@ -252,6 +252,7 @@ def run_depth(
 
 
 def summarize_n(n: int, curve: list[dict], wall_s: float) -> dict:
+    curve = [c for c in curve if int(c["L"]) >= L_START]
     hit = next((c for c in curve if float(c["success_prob"]) >= SUCCESS_THRESHOLD), None)
     best = max(curve, key=lambda r: (float(r["success_prob"]), -int(r["L"]))) if curve else None
     chosen = hit or best

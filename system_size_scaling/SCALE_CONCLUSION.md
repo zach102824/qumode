@@ -2,50 +2,33 @@
 
 Noiseless Gibbs **ECD only** (no SNAP, no GDR / noise).
 Success = `most_likely_bitstring == ground_bitstring`.
-Each cell is **20 Hamiltonians × 10 trials = 200**.
+Each live cell is **20 Hamiltonians × 10 trials = 200**.
 Cost = Gibbs `-ln⟨e^{-ηE}⟩` with `sampled_tail` η.
 Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exact fill).
+Live ladder is **n=8…11 starting at L=4** (increment until ≥90% or L=20).
 
 ## Summary table
 
 | n | L* | k/200 | success | wall (s) | status |
 |---|----|-------|---------|----------|--------|
-| 7 | — | 168/200 | 0.840 | 2848.6 | capped_L20_below_threshold |
-| 8 | — | 109/200 | 0.545 | 2429.4 | capped_L20_below_threshold |
-| 9 | — | — | — | — | not_started |
+| 7 | 4 | 186/200 | 0.930 | — | prior_data_pr14 |
+| 8 | — | 39/200 | 0.195 | 2390.6 | capped_L20_below_threshold |
+| 9 | — | 51/200 | 0.255 | 1704.9 | in_progress |
 | 10 | — | — | — | — | not_started |
 | 11 | — | — | — | — | not_started |
 
-## Depth curves
+## n=7 prior data (not re-run here)
 
-### n=7
+Official L* comes from [PR #14](https://github.com/zach102824/qumode/pull/14) noiseless ECD **L4: 186/200 = 93%** (20 H × 10 trials, **200** joint SPSA, vacuum, `sampled_tail` η, production 1q+2cav / original `four_sat` fleet).
 
-| L | k/N | success | wall (s) |
-|---|-----|---------|----------|
-| 3 | 158/200 | 0.790 | 1689.2 |
-| 4 | 168/200 | 0.840 | 27.2 |
-| 5 | 156/200 | 0.780 | 31.3 |
-| 6 | 100/200 | 0.500 | 36.6 |
-| 7 | 76/200 | 0.380 | 42.0 |
-| 8 | 53/200 | 0.265 | 47.3 |
-| 9 | 28/200 | 0.140 | 52.2 |
-| 10 | 16/200 | 0.080 | 57.3 |
-| 11 | 10/200 | 0.050 | 63.0 |
-| 12 | 6/200 | 0.030 | 67.9 |
-| 13 | 7/200 | 0.035 | 72.7 |
-| 14 | 4/200 | 0.020 | 77.8 |
-| 15 | 3/200 | 0.015 | 83.4 |
-| 16 | 5/200 | 0.025 | 88.0 |
-| 17 | 2/200 | 0.010 | 93.1 |
-| 18 | 2/200 | 0.010 | 99.1 |
-| 19 | 1/200 | 0.005 | 107.0 |
-| 20 | 3/200 | 0.015 | 113.6 |
+This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the scoreboard L*. n=7 L=4…20 cells in `results/` are leftover from an earlier mis-scoped sweep and are not used in the table.
+
+## Depth curves (live ladder, L≥4)
 
 ### n=8
 
 | L | k/N | success | wall (s) |
 |---|-----|---------|----------|
-| 3 | 109/200 | 0.545 | 38.4 |
 | 4 | 39/200 | 0.195 | 49.1 |
 | 5 | 12/200 | 0.060 | 59.8 |
 | 6 | 3/200 | 0.015 | 70.5 |
@@ -66,7 +49,18 @@ Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exac
 
 ### n=9
 
-Not started.
+| L | k/N | success | wall (s) |
+|---|-----|---------|----------|
+| 4 | 51/200 | 0.255 | 82.4 |
+| 5 | 24/200 | 0.120 | 100.9 |
+| 6 | 8/200 | 0.040 | 123.2 |
+| 7 | 2/200 | 0.010 | 143.5 |
+| 8 | 5/200 | 0.025 | 163.9 |
+| 9 | 1/200 | 0.005 | 182.9 |
+| 10 | 1/200 | 0.005 | 201.5 |
+| 11 | 0/200 | 0.000 | 218.5 |
+| 12 | 3/200 | 0.015 | 240.5 |
+| 13 | 0/200 | 0.000 | 247.6 |
 
 ### n=10
 
@@ -78,7 +72,5 @@ Not started.
 
 ## Notes
 
-n=7: never hit 90%. Best L=4 at 168/200 (84%); deeper L collapses with 70-step SPSA.
-n=8: never hit 90%. Best L=3 at 109/200 (54.5%); L≥5 is ≤6%.
-L* is undefined at both sizes (cap L=20). n=9…11 next.
+Protocol retargeted: n=7 is PR #14 prior data (L*=4, 186/200). Live ladder is n=8…11 starting at L=4. n=8 L=4…20 is complete and never hit 90% (best L=4 at 39/200). n=9 L≥4 cells are being finished; n=10–11 not started.
 
