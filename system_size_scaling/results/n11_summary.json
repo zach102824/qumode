@@ -1,134 +1,29 @@
 {
-  "n": 10,
+  "n": 11,
   "L_star": null,
-  "k": 11,
+  "k": 2,
   "n_total": 200,
-  "success_prob": 0.055,
-  "wall_s": 3736.291725684001,
+  "success_prob": 0.01,
+  "wall_s": 178.22794958899976,
   "curve": [
     {
       "L": 4,
-      "k": 11,
+      "k": 2,
       "n_total": 200,
-      "success_prob": 0.055,
-      "wall_s": 79.21680180799922
+      "success_prob": 0.01,
+      "wall_s": 80.04922486000032
     },
     {
       "L": 5,
-      "k": 4,
-      "n_total": 200,
-      "success_prob": 0.02,
-      "wall_s": 96.58886168800018
-    },
-    {
-      "L": 6,
-      "k": 3,
-      "n_total": 200,
-      "success_prob": 0.015,
-      "wall_s": 114.29491436200078
-    },
-    {
-      "L": 7,
       "k": 0,
       "n_total": 200,
       "success_prob": 0.0,
-      "wall_s": 131.7059420330006
-    },
-    {
-      "L": 8,
-      "k": 1,
-      "n_total": 200,
-      "success_prob": 0.005,
-      "wall_s": 149.252279069
-    },
-    {
-      "L": 9,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 166.68601948299874
-    },
-    {
-      "L": 10,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 183.79743042600057
-    },
-    {
-      "L": 11,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 201.02703238600043
-    },
-    {
-      "L": 12,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 218.55368587299927
-    },
-    {
-      "L": 13,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 235.6830149840007
-    },
-    {
-      "L": 14,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 254.07450938500006
-    },
-    {
-      "L": 15,
-      "k": 1,
-      "n_total": 200,
-      "success_prob": 0.005,
-      "wall_s": 272.364308921
-    },
-    {
-      "L": 16,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 289.23874543199963
-    },
-    {
-      "L": 17,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 306.25806066899895
-    },
-    {
-      "L": 18,
-      "k": 1,
-      "n_total": 200,
-      "success_prob": 0.005,
-      "wall_s": 328.2786280519995
-    },
-    {
-      "L": 19,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 345.77376187400114
-    },
-    {
-      "L": 20,
-      "k": 0,
-      "n_total": 200,
-      "success_prob": 0.0,
-      "wall_s": 363.4977292390013
+      "wall_s": 98.17872472899944
     }
   ],
-  "status": "capped_L20_below_threshold",
+  "status": "in_progress",
   "embedding": {
-    "n_qubits": 10,
+    "n_qubits": 11,
     "dim": 2048,
     "hardware_dim": 2048,
     "max_logical_bits": 11,
@@ -202,7 +97,7 @@
         "name": "C2",
         "kind": "cavity",
         "dim": 8,
-        "n_bits": 2,
+        "n_bits": 3,
         "axis": 4
       }
     ],
@@ -258,11 +153,17 @@
       {
         "bit": 8,
         "mode": "C2",
-        "label": "C2[fock bit 1]",
+        "label": "C2[fock bit 2]",
         "kind": "cavity"
       },
       {
         "bit": 9,
+        "mode": "C2",
+        "label": "C2[fock bit 1]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 10,
         "mode": "C2",
         "label": "C2[fock bit 0]",
         "kind": "cavity"
@@ -271,5 +172,5 @@
     "subspace_of_2048": false
   },
   "idle_hardware_modes": [],
-  "success_fraction": "11/200"
+  "success_fraction": "2/200"
 }

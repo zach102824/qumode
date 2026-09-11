@@ -188,8 +188,11 @@ def write_conclusion(status_note: str = "") -> Path:
             )
         lines.append("")
 
-    if status_note:
-        lines.extend(["## Notes", "", status_note.rstrip(), ""])
+    note = status_note.rstrip() if status_note else (
+        "Protocol: n=7 is PR #14 prior data (L*=4, 186/200 = 93%). "
+        "Live ladder is n=8…11 starting at L=4 (L=3 is not scored)."
+    )
+    lines.extend(["## Notes", "", note, ""])
 
     path = ROOT / "SCALE_CONCLUSION.md"
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
