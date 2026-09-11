@@ -9,7 +9,7 @@ PR #6 baseline (`Error_mitigation/out/`, 108 cells @ 8192 shots / 40 twins) is *
 | PR #6 smoke | **done** (`out_smoke/`, 4000 shots) |
 | PR #6 full | **done** (`out/`, 108 cells, product-state TVD max ~1e-15, wall ~64 min) |
 | PR #8 research | **done** on `cursor/gdr-improve-30h-v2-4f00` — official defaults **frozen** |
-| Official default | `--twin-design adaptive` + gated `gdr_damped` + `gdr_param` on optimized + `n_train=40` |
+| Official default | `--twin-design adaptive` + **`gdr_param`** (random and optimized) + `n_train=40`. Gated `gdr_damped` is an optional extra. |
 | Tests | 29 `test_error_mitigation` + full non-slow suite |
 | `src/` | **do not edit** |
 
@@ -17,12 +17,12 @@ Do **not** re-run the full 108-cell baseline. Cheap loops: `run_ablation.py` (wr
 
 ### Shipped recipe (frozen)
 
-1. **`--twin-design adaptive`:** log-spaced \(\lvert\alpha\rvert\in[0.25,1.35]\) on **random**; PR #6 `U(0.5,1)` on **optimized**.
-2. Always report `gdr_param`.
-3. `gdr_damped` on random; **gated conservative floor only on random + comprehensive + κτ≤0.003**.
-4. `gdr_residual` as an extra on optimized **loss / thermal** (not the `gdr_select` default).
+1. **`--twin-design adaptive`:** log-spaced \(\lvert\alpha\rvert\in[0.25,1.35]\) on **random**; PR #6 `U(0.5,1)` on **optimized**. Twin mix still depends on circuit class; the unfold does not.
+2. Official / default reported method is always **`gdr_param`**, for **both** random and optimized circuits.
+3. `gdr_damped` is an optional extra (still fitted). **Gated conservative floor only on random + comprehensive + κτ≤0.003**.
+4. `gdr_residual` as an extra on optimized **loss / thermal** (not the default).
 5. `readout_then_zne` whenever reporting ZNE under readout.
-6. `gdr_select`: `gdr_param` on optimized; holdout among `{safe, gdr_param, gdr_mid, gdr_damped}` on random.
+6. `gdr_select` remains an ablation/holdout extra and is **not** the official recipe. Do not pick it on random circuits by default.
 7. `n_train=40`.
 
 Adaptive hybrid vs PR #6 `gdr_param`: **86/108** better, **108/108** beats raw, **0/108** worse than raw. Do **not** reopen `params=auto`, interleave, middle/split/band, energy-weighted fit, or tail-bin truncation.
@@ -52,7 +52,7 @@ CI-ish research smoke of the **shipped adaptive recipe** (writes only under `out
 python -u Error_mitigation/run_ablation.py --preset research_smoke
 ```
 
-That slice is ECD **optimized** loss κτ=0.003, adaptive twins (→ PR #6 mix), 2048 shots, `n_train=40`, ideal + realistic readout, methods `{raw, gdr_param, gdr_damped, gdr_select}`.
+That slice is ECD **optimized** loss κτ=0.003, adaptive twins (→ PR #6 mix), 2048 shots, `n_train=40`, ideal + realistic readout, methods `{raw, gdr_param, gdr_damped}`.
 
 ### How to reproduce PR #8 headlines
 
@@ -80,7 +80,7 @@ python -u Error_mitigation/run_ablation.py --preset research_smoke
 python -u Error_mitigation/plot_hard_cells.py
 ```
 
-`research_smoke` reuses `ecd_optimized_loss_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0` (not a headline cell; checks that optimized select keeps `gdr_param`). Bootstrap ± on the figure is `out_research/leftover_bootstrap/`.
+`research_smoke` reuses `ecd_optimized_loss_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0` (not a headline cell; checks the default `gdr_param` path on optimized adaptive twins). Bootstrap ± on the figure is `out_research/leftover_bootstrap/`.
 
 Useful flags: `--ansatz ecd|snap|both`, `--instance 0`, `--outdir Error_mitigation/out`, `--shots`, `--n-train`, `--seed`, `--readout ideal|readout_realistic|readout_strong|all`, `--families`, `--kappa-tau`, `--params`, `--twin-design adaptive|span|default`.
 
@@ -139,10 +139,10 @@ Twins are measured with the **same** readout level and shot count as the target.
 | `raw` | official | yes | Shot histogram. Baseline. |
 | `readout_only` | official | yes | Invert only the calibrated readout confusion (Maciejewski et al., Quantum 4, 257). Skipped when readout is ideal. |
 | `oracle_binomial` | official | yes | Known-model end-of-circuit thermal-loss kernel with the true cumulative \(\eta=e^{-\sum\kappa\tau}\), composed with the **true** readout confusion. No learning. Residual TVD\((M p_{\mathrm{ideal}}, q_{\mathrm{noisy}})\) is the interleaved-vs-end-of-circuit error plus shot noise. |
-| `gdr_param` | **shipped** | yes | Fit \(M(\eta_1,\eta_2,n_{\mathrm{th}},p_\downarrow,p_\uparrow,\varepsilon,p_{01},p_{10},p_{nn})\) by multinomial MLE on the twins, then Richardson–Lucy unfold. Loss and readout are fitted **jointly**. Official choice on **optimized** circuits. |
-| `gdr_damped` | **shipped** | yes | Same fit as `gdr_param`, then mix the unfold with the readout-inverted (or raw) histogram. Mix weight α is chosen on twins. On **random comprehensive** at κτ≤0.003 a conservative floor (largest α within 0.003 of the best twin TVD, only if safe is already close) kills the leftover SNAP over-correct. |
-| `gdr_select` | **shipped** | yes | Circuit-class recipe plus holdout. On **optimized** parameters keep `gdr_param` (residual is reported separately; it hurts comprehensive / SNAP high-κτ once default twins are used). On **random** circuits, Gaussian holdout among `{safe, gdr_param, gdr_mid, gdr_damped}`. |
-| `gdr_mid` | holdout candidate | yes | Fit only \((\eta_1,\eta_2,p_{01},p_{10},p_{nn})\); freeze heating/hops/leak. In the random-circuit select pool; not the optimized default. |
+| `gdr_param` | **official default** | yes | Fit \(M(\eta_1,\eta_2,n_{\mathrm{th}},p_\downarrow,p_\uparrow,\varepsilon,p_{01},p_{10},p_{nn})\) by multinomial MLE on the twins, then Richardson–Lucy unfold. Loss and readout are fitted **jointly**. Default on **both** random and optimized circuits. |
+| `gdr_damped` | optional extra | yes | Same fit as `gdr_param`, then mix the unfold with the readout-inverted (or raw) histogram. Mix weight α is chosen on twins. On **random comprehensive** at κτ≤0.003 a conservative floor (largest α within 0.003 of the best twin TVD, only if safe is already close) kills the leftover SNAP over-correct. |
+| `gdr_select` | ablation-only | yes | Optional holdout among `{safe, gdr_param, gdr_mid, gdr_damped}` (still forces `gdr_param` on optimized). **Not** the official recipe. Request it explicitly in the ablation driver. |
+| `gdr_mid` | holdout candidate | yes | Fit only \((\eta_1,\eta_2,p_{01},p_{10},p_{nn})\); freeze heating/hops/leak. Ablation candidate for `gdr_select`; not the official default. |
 | `gdr_residual` | extra (not select) | yes | Oracle end-of-circuit kernel composed with a small extra hop/leak fitted on twins (especially \(t_{\mathrm{free}}>0\)). Extra on optimized **loss / thermal** only. |
 | `gdr_full` | official extra | yes | Unstructured column-stochastic \(C_q\otimes C_1\otimes C_2\), alternating NNLS, initialized from `gdr_param`. Shows the cost of over-parametrization. |
 | `scalar_cdr` | official extra | no | Classic CDR on the energy only: \(E_{\mathrm{ideal}}\approx a_1 E_{\mathrm{noisy}}+a_0\). |
@@ -159,7 +159,7 @@ Unfolding is Richardson–Lucy on the simplex; NNLS is stored as a `gdr_param` c
 ## Outputs (`Error_mitigation/out/`)
 
 - `results.json` — metrics, fitted parameters vs true \((\eta, p_{nn}, p_{01}, p_{10})\), factorial-moment diagnostic, histograms.
-- `summary.txt` — full table, plus a headline at \(\kappa\tau=0.003\): `readout_only` vs `gdr_param` vs `oracle_binomial` for each readout level (optimized parameters).
+- `summary.txt` — full table, plus a headline at \(\kappa\tau=0.003\): `readout_only` vs `gdr_param` vs `oracle_binomial` for each readout level (optimized parameters). `gdr_param` is the default reported method on random circuits too.
 - `hist_<ansatz>_<params>_<family>_<readout>.png` — grouped bars on the top-12 ideal bins and per-mode photon-number marginals.
 - `summary_tvd_<ansatz>.png` — TVD and \(\lvert\Delta E\rvert\) vs \(\kappa\tau\); one color per method, line style per readout level, panels per noise family and parameter set.
 - `optimized_params_*.json` — cached noiseless optima.

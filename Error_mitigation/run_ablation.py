@@ -69,6 +69,7 @@ from Error_mitigation.mitigation import (
     oracle_kernels,
     oracle_residual,
     params_to_kernels,
+    PRIMARY_METHOD,
     readout_then_zne,
     run_readout_only,
     safe_histogram,
@@ -161,7 +162,7 @@ CHEAP_METHODS = (
     "gdr_mid",
     "gdr_tfree",
     "gdr_residual",
-    "gdr_select",
+    "gdr_select",  # ablation holdout; not PRIMARY_METHOD
     "gdr_anneal",
     "gdr_eta",
     "gdr_fisher",
@@ -1413,6 +1414,7 @@ def run(args: argparse.Namespace) -> dict:
         "methods": list(methods),
         "hamiltonian_id": hid,
         "records": records,
+        "primary_method": PRIMARY_METHOD,
     }
     (run_dir / "results.json").write_text(json.dumps(json_ready(result), indent=2))
     write_summary_txt(run_dir / "summary.txt", records, float(kappas[0]))
@@ -1433,7 +1435,7 @@ RESEARCH_SMOKE = {
     "n_rank2": 10,
     "twin_design": "adaptive",
     "readout": "ideal,readout_realistic",
-    "methods": "raw,gdr_param,gdr_damped,gdr_select",
+    "methods": "raw,gdr_param,gdr_damped",
 }
 
 
@@ -1477,7 +1479,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--families", default="loss")
     p.add_argument("--kappa-tau", default="0.003,0.1")
     p.add_argument("--readout", default="all")
-    p.add_argument("--methods", default=",".join(CHEAP_METHODS))
+    p.add_argument(
+        "--methods",
+        default=",".join(CHEAP_METHODS),
+        help="Comma-separated methods. Official / reported default is gdr_param; "
+        "gdr_select is an optional ablation extra.",
+    )
     p.add_argument("--fit-maxiter", type=int, default=120)
     p.add_argument(
         "--twin-design",

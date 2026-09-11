@@ -4,12 +4,12 @@ PR #8 on `cursor/gdr-improve-30h-v2-4f00`, from PR #6 (`cursor/error-mitigation-
 
 ## Shipped recipe
 
-1. `--twin-design adaptive`: log-spaced \(|\alpha|\in[0.25,1.35]\) on **random**; PR #6 \(U(0.5,1)\) on **optimized**.
-2. Always report `gdr_param` (official choice on optimized).
-3. `gdr_damped` on random; conservative floor **only** on random + comprehensive + \(\kappa\tau\le 0.003\).
-4. `gdr_select`: `gdr_param` on optimized; holdout \(\{\mathrm{safe},\,\mathrm{gdr},\,\mathrm{mid},\,\mathrm{damped}\}\) on random.
+1. `--twin-design adaptive`: log-spaced \(|\alpha|\in[0.25,1.35]\) on **random**; PR #6 \(U(0.5,1)\) on **optimized**. Twin mix still depends on circuit class; the unfold does not.
+2. Always report `gdr_param` (official choice on **both** random and optimized).
+3. `gdr_damped` is an optional extra; conservative floor **only** on random + comprehensive + \(\kappa\tau\le 0.003\).
+4. `gdr_select` is an optional holdout ablation, **not** the official recipe.
 5. `readout_then_zne` when reporting ZNE under readout.
-6. `n_train=40`. `gdr_residual` is an extra on optimized loss/thermal, not the select default.
+6. `n_train=40`. `gdr_residual` is an extra on optimized loss/thermal, not the default.
 
 ## Headline vs PR #6
 
@@ -19,16 +19,16 @@ PR #8 on `cursor/gdr-improve-30h-v2-4f00`, from PR #6 (`cursor/error-mitigation-
 | beats same-run raw | **108 / 108** |
 | worse than raw | **0 / 108** |
 
-## Hard cells (bootstrap ± is 8×8192, official select)
+## Hard cells (bootstrap ± is 8×8192; official method is `gdr_param`)
 
-| cell | raw | PR #6 `gdr_param` | adaptive (single) | select bootstrap |
+| cell | raw | PR #6 `gdr_param` | adaptive (single) | bootstrap |
 |------|----:|------------------:|------------------:|-----------------:|
 | ECD random loss \(\kappa\tau=0.1\) ideal | 0.298 | 0.373 (lose) | **0.203** | **0.208 ± 0.012** |
 | ECD random comprehensive \(0.1\) ideal | 0.403 | 0.539 (lose) | **0.342** | **0.314 ± 0.013** |
 | ECD opt comprehensive \(0.1\) ideal | 0.909 | **0.343** | **0.343** | **0.346 ± 0.008** |
 | SNAP random comprehensive \(0.003\) ideal | 0.037 | 0.045 (lose) | **0.0369** | **0.036 ± 0.004** |
 
-Plot: `out_research/figures/hard_cells_adaptive.png`. Adaptive = span+damped (gated) on random, default-twin `gdr_param` on optimized.
+Plot: `out_research/figures/hard_cells_adaptive.png`. Adaptive twins = span on random / default mix on optimized. Official reported method is `gdr_param` on both; gated `gdr_damped` is an optional extra (used in this historical hybrid scoreboard on random).
 
 ## Transfer caveat (needs a near-\(E_0\) opt)
 
