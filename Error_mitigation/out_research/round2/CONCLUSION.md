@@ -2,9 +2,10 @@
 
 **Adaptive is unbeaten. Ban list stays banned. Official runner was not wired.**
 
-Three passes of honest negatives. Frozen PR #8 recipe stays the 8192-shot
-default: `--twin-design adaptive`, `gdr_param` on optimized, gated
-`gdr_damped` / `gdr_select` on random, `n_train=40`. Protect cells still
+Three passes of honest negatives. Official reported method is always `gdr_param` (random and optimized).
+Twin design stays `--twin-design adaptive`; gated `gdr_damped` remains an
+optional extra. `gdr_select` is ablation-only, **not** the official default.
+Protect cells still
 hold: ECD opt comprehensive κτ=0.1 **0.3419**, SNAP gated floor, multi-H
 mild H000/H004/H009 **0.1012 / 0.0763 / 0.0932**. ECD random
 loss/comprehensive 0.1 remains **0.2011 / 0.3424**.

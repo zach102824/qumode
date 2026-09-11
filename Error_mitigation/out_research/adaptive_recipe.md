@@ -1,6 +1,13 @@
 # Adaptive recipe vs PR #6
 
-Hybrid scoreboard (no new target shots beyond `phase3` + `opt_default`):
+Official reported method is always **`gdr_param`** (random and optimized).
+Twin design is still `--twin-design adaptive`. Gated `gdr_damped` is an
+optional extra. `gdr_select` is ablation-only.
+
+Hybrid scoreboard below (no new target shots beyond `phase3` + `opt_default`)
+used span twins on random and U(0.5,1) twins on optimized. Random-cell
+"adaptive" numbers used gated `gdr_damped` as a research extra, not as the
+official default:
 
 - **random** cells: `phase3` span twins + `gdr_damped` (conservative floor on comprehensive κτ≤0.003)
 - **optimized** cells: `opt_default` U(0.5,1) twins + `gdr_param`
@@ -30,7 +37,7 @@ Headline cells the original plan called out:
 
 Canonical four-cell table (same numbers as `PAPER_SUMMARY.md` and `figures/hard_cells_adaptive.png`). Bars are the single-draw adaptive TVD; ± is bootstrap σ from 8×8192 (`leftover_bootstrap/`).
 
-| cell | raw | PR #6 `gdr_param` | adaptive (single) | select bootstrap |
+| cell | raw | PR #6 `gdr_param` | adaptive (single) | bootstrap |
 |------|----:|------------------:|------------------:|-----------------:|
 | ECD random loss \(\kappa\tau=0.1\) ideal | 0.298 | 0.373 (lose) | **0.203** | **0.208 ± 0.012** |
 | ECD random comprehensive \(0.1\) ideal | 0.403 | 0.539 (lose) | **0.342** | **0.314 ± 0.013** |

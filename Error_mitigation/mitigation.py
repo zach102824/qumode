@@ -16,6 +16,8 @@ gdr_param
     Parametric Gaussian Data Regression. Fit a few-parameter Kronecker
     transfer (thermal loss × extra hops × leak × readout) by multinomial
     MLE on Gaussian twins, then unfold the target with Richardson-Lucy.
+    Official / default reported method for both random and optimized
+    circuits. Do not swap this for gdr_select on random circuits.
 gdr_full
     Same twins, unstructured column-stochastic Cq ⊗ C1 ⊗ C2 fitted by
     alternating least squares (initialized from gdr_param).
@@ -79,6 +81,10 @@ PARAM_BOUNDS = [
 ]
 
 EPS_PROB = 1e-15
+
+# Official reported method. Twin design may still be adaptive (span on
+# random, PR #6 mix on optimized); the unfold itself does not branch.
+PRIMARY_METHOD = "gdr_param"
 
 
 def _normalize_columns(matrix: np.ndarray) -> np.ndarray:
@@ -1824,13 +1830,16 @@ def select_research_method(
     tfree_margin: float = 0.005,
     circuit_kind: str | None = None,
 ) -> tuple[str, dict]:
-    """Pick a method from twins plus the known circuit class.
+    """Ablation holdout among GDR variants. Not the official default.
+
+    The official / reported method is always ``gdr_param`` (see
+    ``PRIMARY_METHOD``), for both random and optimized circuits. This
+    selector remains for ``gdr_select`` ablations only.
 
     Rank-2 Gaussian twins are still too close to end-of-circuit GDR, so a
     t_free holdout almost never selects ``gdr_residual`` even when residual
     wins on the non-Gaussian target. Phase 3: residual beat ``gdr_param`` on
-    23 optimized cells and lost on random (22/108 worse than raw). Use the
-    known parameter set (``optimized`` vs ``random``), not target TVD.
+    23 optimized cells and lost on random (22/108 worse than raw).
     """
     extra: dict = {
         "residual_hops": None if residual_hops is None else float(residual_hops),

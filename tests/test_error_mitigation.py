@@ -422,8 +422,62 @@ def test_research_smoke_preset_stays_in_out_research():
     assert int(args.n_train) == 40
     assert int(args.n_rank2) == 10
     assert args.families == RESEARCH_SMOKE["families"]
+    assert "gdr_param" in args.methods.split(",")
+    assert "gdr_select" not in args.methods.split(",")
     assert DEFAULT_OUT.name == "out_research"
     assert Path(args.outdir).resolve() == DEFAULT_OUT.resolve()
+
+
+def test_official_default_method_is_gdr_param():
+    from Error_mitigation.mitigation import PRIMARY_METHOD
+    from Error_mitigation.run_mitigation_experiment import BAR_METHODS, write_summary_txt
+
+    assert PRIMARY_METHOD == "gdr_param"
+    assert "gdr_param" in BAR_METHODS
+    assert "gdr_select" not in BAR_METHODS
+
+    readme = (ROOT / "Error_mitigation" / "README.md").read_text()
+    official_lines = [ln for ln in readme.splitlines() if "Official default" in ln]
+    assert official_lines
+    assert "gdr_param" in official_lines[0]
+    assert "gdr_select" not in official_lines[0]
+    paper = (ROOT / "Error_mitigation" / "out_research" / "PAPER_SUMMARY.md").read_text()
+    assert "both** random and optimized" in paper or "both random and optimized" in paper.lower()
+    assert "not** the official recipe" in paper or "not the official recipe" in paper.lower()
+    recipe = (ROOT / "Error_mitigation" / "out_research" / "adaptive_recipe.md").read_text()
+    assert "gdr_param" in recipe
+    assert "ablation-only" in recipe.lower() or "not the official" in recipe.lower()
+
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "summary.txt"
+        write_summary_txt(
+            path,
+            [
+                {
+                    "kappa_tau": 0.003,
+                    "params": "optimized",
+                    "ansatz": "ecd",
+                    "family": "loss",
+                    "readout": "ideal",
+                    "metrics": {
+                        "raw": {"tvd": 0.1, "dE": 0.2, "dPgs": 0.0},
+                        "gdr_param": {"tvd": 0.05, "dE": 0.04, "dPgs": 0.0},
+                        "gdr_select": {"tvd": 0.04, "dE": 0.03, "dPgs": 0.0},
+                        "oracle_binomial": {"tvd": 0.06, "dE": 0.05, "dPgs": 0.0},
+                    },
+                }
+            ],
+            0.003,
+        )
+        text = path.read_text()
+        assert "gdr_param vs oracle_binomial" in text
+        assert "gdr_select vs" not in text
+        assert "gdr_param.TVD=" in text
+        headline, _, rest = text.partition("Full table")
+        assert "gdr_select.TVD=" not in headline
+        assert "gdr_select" in rest  # still listed as an extra in the full table
 
 
 def test_slice_twin_indices_even_subset():

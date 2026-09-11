@@ -189,12 +189,12 @@ Span twins learned a map close to the physical oracle (~0.41), which is the *wro
 
 ### Shipped recipe (evidence)
 
-1. **`--twin-design adaptive` (new official default):** span on random, U(0.5,1) on optimized.
-2. Always report `gdr_param`.
-3. `gdr_damped` on random / leftover over-correction.
-4. `gdr_residual` as an extra on optimized **loss / thermal** (not the select default).
+1. **`--twin-design adaptive` (official twin mix):** span on random, U(0.5,1) on optimized.
+2. Always report `gdr_param` (official default on **both** random and optimized).
+3. `gdr_damped` on random / leftover over-correction (optional extra).
+4. `gdr_residual` as an extra on optimized **loss / thermal** (not the default).
 5. `readout_then_zne` whenever reporting ZNE under readout.
-6. `gdr_select`: `gdr_param` on optimized; holdout among `{safe, gdr, mid, damped}` on random.
+6. `gdr_select` is an ablation holdout extra, **not** the official recipe.
 
 Post-hoc adaptive hybrid (span+damped on random, default `gdr_param` on optimized): beats PR #6 `gdr_param` on **86/108**, beats raw on **107/108**, worse than raw on **1/108** (SNAP random comprehensive κτ=0.003 ideal, +0.003).
 
@@ -404,7 +404,7 @@ No method change. Adaptive / gated damped / optimized `gdr_param` / `n_train=40`
 python -u Error_mitigation/run_ablation.py --preset research_smoke
 ```
 
-ECD optimized loss κτ=0.003, `--twin-design adaptive` (→ PR #6 mix), 2048 shots, `n_train=40`, `n_rank2=10`, ideal + realistic, `{raw, gdr_param, gdr_damped, gdr_select}`. Cache key `ecd_optimized_loss_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0`. Cache hit (~24 s). Select keeps `gdr_param` on optimized:
+ECD optimized loss κτ=0.003, `--twin-design adaptive` (→ PR #6 mix), 2048 shots, `n_train=40`, `n_rank2=10`, ideal + realistic. Current smoke methods `{raw, gdr_param, gdr_damped}` (`gdr_select` dropped from the default). Cache key `ecd_optimized_loss_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0`. Cache hit (~24 s). Official `gdr_param` on optimized:
 
 | readout | raw | gdr_param | damped | select |
 |---------|----:|----------:|-------:|-------:|
@@ -413,7 +413,7 @@ ECD optimized loss κτ=0.003, `--twin-design adaptive` (→ PR #6 mix), 2048 sh
 
 ### Hard-cell figure (keep)
 
-`Error_mitigation/plot_hard_cells.py` writes `out_research/figures/hard_cells_adaptive.png` from the existing headline numbers (PR #6 `out/` vs adaptive hybrid; select error bars from the Phase 9 8×8192 bootstrap).
+`Error_mitigation/plot_hard_cells.py` writes `out_research/figures/hard_cells_adaptive.png` from the existing headline numbers (PR #6 `out/` vs adaptive hybrid; error bars from the Phase 9 8×8192 bootstrap). Official reported method is `gdr_param`.
 
 ### SNAP opt mild hybrid-ZNE (document only; `opt_default` cache)
 

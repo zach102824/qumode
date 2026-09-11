@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bar chart: PR #6 gdr_param vs adaptive select on headline cells."""
+"""Bar chart: PR #6 gdr_param vs adaptive twins on headline cells."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "Error_mitigation" / "out_research" / "figures"
 
 # Single-draw TVDs from PR #6 out/ and the adaptive hybrid (NOTEBOOK / adaptive_recipe.md).
-# Bootstrap σ on select where leftover_bootstrap ran (8×8192).
+# Bootstrap σ on adaptive recipe where leftover_bootstrap ran (8×8192).
 CELLS = [
     ("ECD rand loss 0.1", 0.298, 0.373, 0.203, 0.012),
     ("ECD rand comp. 0.1", 0.403, 0.539, 0.342, 0.013),
@@ -37,7 +37,7 @@ def main() -> int:
     fig, ax = plt.subplots(figsize=(8.2, 4.2))
     ax.bar(x - w, raw, w, label="raw", color="0.65")
     ax.bar(x, base, w, label="PR #6 gdr_param", color="#2980b9")
-    ax.bar(x + w, adapt, w, label="adaptive select", color="#2c3e50", yerr=yerr, capsize=3)
+    ax.bar(x + w, adapt, w, label="adaptive recipe", color="#2c3e50", yerr=yerr, capsize=3)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylabel("TVD (lower is better)")
@@ -47,7 +47,7 @@ def main() -> int:
     ax.text(
         0.0,
         -0.22,
-        "Select error bars: bootstrap σ from 8×8192 resamples (Phase 9).",
+        "Error bars: bootstrap σ from 8×8192 resamples (Phase 9). Official method is gdr_param.",
         transform=ax.transAxes,
         fontsize=7,
         color="0.35",
