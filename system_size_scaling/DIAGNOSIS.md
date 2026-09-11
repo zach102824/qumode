@@ -222,5 +222,15 @@ The 70-SPSA L=4→20 curve was this same under-training, made worse by the short
 
 ## Live ladder
 
-Sane. Do **not** sweep L=5…40 at a=0.2. Adopt `a = 0.2 * sqrt(37 / n_params)` and start n=8 at **L=4**: diagnosis already has **196/200 = 98% ≥ 90%**, so L*=4. Then n=9, 10, 11 from L=4 with the same scaled-a rule. Raise L only if an n misses 90% at L=4.
+Sane, and **finished**. With `a = 0.2 * sqrt(37 / n_params)` and 200 joint SPSA, every n hits ≥90% at **L=4** (do not raise L):
+
+| n | L* | k/200 | a |
+|---|----|------:|--:|
+| 7 | 4 (PR #14) | 186/200 | 0.200 (37 params) |
+| 8 | 4 | 196/200 | 0.145 |
+| 9 | 4 | 198/200 | 0.119 |
+| 10 | 4 | 196/200 | 0.119 |
+| 11 | 4 | 188/200 | 0.119 |
+
+n=9 C2 Fock aliasing did not block mode-finding (198/200). Noisy GDR-in-loop remains deferred.
 

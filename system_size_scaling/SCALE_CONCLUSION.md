@@ -14,9 +14,9 @@ Protocol tag: `200_joint_spsa_noiseless_a_scaled`.
 |---|----|-------|---------|----------|--------|
 | 7 | 4 | 186/200 | 0.930 | — | prior_data_pr14 |
 | 8 | 4 | 196/200 | 0.980 | 85.4 | hit_threshold |
-| 9 | 4 | 89/90 | 0.989 | 69.8 | hit_threshold |
-| 10 | — | — | — | — | not_started |
-| 11 | — | — | — | — | not_started |
+| 9 | 4 | 198/200 | 0.990 | 155.1 | hit_threshold |
+| 10 | 4 | 196/200 | 0.980 | 157.1 | hit_threshold |
+| 11 | 4 | 188/200 | 0.940 | 158.8 | hit_threshold |
 
 ## n=7 prior data (not re-run here)
 
@@ -36,15 +36,19 @@ This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the
 
 | L | k/N | success | wall (s) | SPSA |
 |---|-----|---------|----------|------|
-| 4 | 89/90 | 0.989 | 69.8 | 200 |
+| 4 | 198/200 | 0.990 | 155.1 | 200 |
 
 ### n=10
 
-Not started under the 200-SPSA protocol.
+| L | k/N | success | wall (s) | SPSA |
+|---|-----|---------|----------|------|
+| 4 | 196/200 | 0.980 | 157.1 | 200 |
 
 ### n=11
 
-Not started under the 200-SPSA protocol.
+| L | k/N | success | wall (s) | SPSA |
+|---|-----|---------|----------|------|
+| 4 | 188/200 | 0.940 | 158.8 | 200 |
 
 ## Superseded: 70-SPSA L=3…20 (not canonical)
 
@@ -57,11 +61,11 @@ Previous PR #15 cells used **70** joint SPSA and a hard L=20 cap. They never hit
 | 10 | 4 | 11/200 | L=4…20 done; never ≥90% |
 | 11 | 4 | 2/200 | L=4…10 on disk; cancelled |
 
-Why deeper L looked worse: not a unitarity/decoding bug (n=7 ECD matches production QuTiP; gates stay norm-preserving at L=20/40). At fixed 70 SPSA, extra layers add parameters that the budget cannot train — both ⟨H⟩ and p_ground degrade. n=7 L=4 was 168/200 at 70 SPSA vs **186/200 at 200 SPSA** in PR #14. This restart tests whether 200 joint SPSA plus uncapped L recovers ≥90% for n=8…11.
+Why deeper L looked worse: **not** a unitarity/decoding bug. Full write-up: `DIAGNOSIS.md`. Short version: production `a=0.2` is sized for n=7 L=4 (37 params). n=8 L=4 has 70 params; 70 SPSA + unscaled `a` cannot train them. 200 SPSA with `a = 0.2√(37/n_params)` hits ≥90% at **L=4** for n=8…11. Raising L at a fixed 200-step budget still collapses (n=8 L=8 is 84/200 even with scaled `a`).
 
 Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7 default-redo agent. This ladder is noiseless mode-finding; κ_φ does not enter the cost.
 
 ## Notes
 
-n=8 L*=4 at 196/200 (98%) with a=0.145. n=9 L=4 running.
+Live ladder complete under 200 joint SPSA with a=0.2*sqrt(37/n_params). Every n=8…11 hits ≥90% at L=4 (n=8 196/200, n=9 198/200, n=10 196/200, n=11 188/200). Do not raise L: diagnosis showed deeper L collapses at this SPSA budget. See DIAGNOSIS.md for the n=8 depth-collapse root cause.
 
