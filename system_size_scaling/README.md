@@ -77,8 +77,10 @@ python -m system_size_scaling.run_one_n --n 7 --L 3 --max-hamiltonians 1 --n-tri
 python -m pytest system_size_scaling/tests -q
 ```
 
-`--workers` defaults to 4. Results land in `results/n{N}_L{LL}.json` and
-`results/n{N}_summary.json`. `SCALE_CONCLUSION.md` is rewritten after each n.
+`--workers` defaults to 1 (in-process). A multi-process pool is slower here
+unless BLAS is pinned; use `--workers 1`. Results land in
+`results/n{N}_L{LL}.json` and `results/n{N}_summary.json`.
+`SCALE_CONCLUSION.md` is rewritten after each n.
 
 ## Protocol knobs
 

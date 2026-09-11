@@ -1,0 +1,116 @@
+{
+  "n": 7,
+  "L_star": null,
+  "k": 158,
+  "n_total": 200,
+  "success_prob": 0.79,
+  "success_fraction": "158/200",
+  "wall_s": 1689.244851782,
+  "status": "in_progress",
+  "curve": [
+    {
+      "L": 3,
+      "k": 158,
+      "n_total": 200,
+      "success_prob": 0.79,
+      "wall_s": 1689.244851782
+    }
+  ],
+  "embedding": {
+    "n_qubits": 7,
+    "dim": 128,
+    "hardware_dim": 2048,
+    "max_logical_bits": 11,
+    "dims": [
+      2,
+      8,
+      8
+    ],
+    "n_transmons": 1,
+    "n_cavities": 2,
+    "n_prep_params": 5,
+    "n_pairs": 2,
+    "ecd_pairs": [
+      {
+        "transmon_axis": 0,
+        "cavity_axis": 1
+      },
+      {
+        "transmon_axis": 0,
+        "cavity_axis": 2
+      }
+    ],
+    "modes": [
+      {
+        "name": "T0",
+        "kind": "transmon",
+        "dim": 2,
+        "n_bits": 1,
+        "axis": 0
+      },
+      {
+        "name": "C0",
+        "kind": "cavity",
+        "dim": 8,
+        "n_bits": 3,
+        "axis": 1
+      },
+      {
+        "name": "C1",
+        "kind": "cavity",
+        "dim": 8,
+        "n_bits": 3,
+        "axis": 2
+      }
+    ],
+    "bit_partition": [
+      {
+        "bit": 0,
+        "mode": "T0",
+        "label": "T0",
+        "kind": "transmon"
+      },
+      {
+        "bit": 1,
+        "mode": "C0",
+        "label": "C0[fock bit 2]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 2,
+        "mode": "C0",
+        "label": "C0[fock bit 1]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 3,
+        "mode": "C0",
+        "label": "C0[fock bit 0]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 4,
+        "mode": "C1",
+        "label": "C1[fock bit 2]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 5,
+        "mode": "C1",
+        "label": "C1[fock bit 1]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 6,
+        "mode": "C1",
+        "label": "C1[fock bit 0]",
+        "kind": "cavity"
+      }
+    ],
+    "subspace_of_2048": true
+  },
+  "idle_hardware_modes": [
+    "T1",
+    "C2"
+  ]
+}

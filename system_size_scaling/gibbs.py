@@ -240,6 +240,10 @@ def optimize_gibbs_adaptive(
         return sim.cost(z[n_prep:])
 
     def before_joint(k: int, z: np.ndarray) -> None:
+        # sampled_tail only refreshes on step 1 and every refresh_every thereafter.
+        k = int(k)
+        if k > 1 and (k - 1) % int(policy.refresh_every) != 0:
+            return
         z = np.asarray(z, dtype=float)
         sim.prep = project_prep(z[:n_prep], emb)
         probs = sim.probabilities(z[n_prep:])

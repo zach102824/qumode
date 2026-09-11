@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--n-hamiltonians", type=int, default=N_HAMILTONIANS)
     parser.add_argument("--search-trials", type=int, default=SEARCH_TRIALS)
     parser.add_argument("--outer-iter", type=int, default=OUTER_ITER)
-    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--l-start", type=int, default=L_START)
     parser.add_argument("--l-max", type=int, default=L_MAX)
     args = parser.parse_args(argv)

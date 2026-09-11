@@ -10,15 +10,33 @@ Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exac
 
 | n | L* | k/200 | success | wall (s) | status |
 |---|----|-------|---------|----------|--------|
-| 7 | — | — | — | — | Hamiltonians ready; sweep not started |
-| 8 | — | — | — | — | Hamiltonians ready; sweep not started |
-| 9 | — | — | — | — | Hamiltonians ready; sweep not started |
-| 10 | — | — | — | — | Hamiltonians ready; sweep not started |
-| 11 | — | — | — | — | Hamiltonians ready; sweep not started |
+| 7 | — | 158/200 | 0.790 | 1689.2 | in_progress |
+| 8 | — | — | — | — | not_started |
+| 9 | — | — | — | — | not_started |
+| 10 | — | — | — | — | not_started |
+| 11 | — | — | — | — | not_started |
 
-## Notes
+## Depth curves
 
-20 unique-planted 4-SAT instances per n are in `Hamiltonians/n{N}/` at clause
-density 18/7 (targets 18, 21, 23, 26, 28). n=7 ECD statevectors match
-production `qumode_vqe.circuit.prepare_state` to numerical precision.
-The L=3…20 bitstring ladder has not been run yet.
+### n=7
+
+| L | k/N | success | wall (s) |
+|---|-----|---------|----------|
+| 3 | 158/200 | 0.790 | 1689.2 |
+
+### n=8
+
+Not started.
+
+### n=9
+
+Not started.
+
+### n=10
+
+Not started.
+
+### n=11
+
+Not started.
+

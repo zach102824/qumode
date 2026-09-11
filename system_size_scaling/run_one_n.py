@@ -124,7 +124,7 @@ def run_depth(
     n_trials: int = N_TRIALS,
     max_hamiltonians: int | None = None,
     outer_iter: int = OUTER_ITER,
-    workers: int = 4,
+    workers: int = 1,
     resume: bool = True,
 ) -> dict:
     instances = _load_jobs(n, max_hamiltonians)
@@ -182,7 +182,15 @@ def run_depth(
                     flush=True,
                 )
         else:
-            with ProcessPoolExecutor(max_workers=workers) as pool:
+            import multiprocessing as mp
+
+            ctx = mp.get_context("spawn")
+            with ProcessPoolExecutor(
+                max_workers=workers,
+                mp_context=ctx,
+                initializer=_limit_blas,
+                initargs=(1,),
+            ) as pool:
                 futs = [pool.submit(_run_trial, job) for job in jobs]
                 done = 0
                 for fut in as_completed(futs):
@@ -285,7 +293,7 @@ def run_sweep(
     n_trials: int = N_TRIALS,
     max_hamiltonians: int | None = None,
     outer_iter: int = OUTER_ITER,
-    workers: int = 4,
+    workers: int = 1,
     no_sweep: bool = False,
 ) -> dict:
     n = int(n)
@@ -319,7 +327,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--n-trials", type=int, default=N_TRIALS)
     parser.add_argument("--max-hamiltonians", type=int, default=None)
     parser.add_argument("--outer-iter", type=int, default=OUTER_ITER)
-    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="1 = in-process (fast). >1 uses a spawn pool; BLAS is pinned to 1 thread.",
+    )
     parser.add_argument("--no-sweep", action="store_true", help="Run only --L, do not increment.")
     parser.add_argument("--no-resume", action="store_true")
     args = parser.parse_args(argv)
