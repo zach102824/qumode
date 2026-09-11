@@ -90,8 +90,8 @@ def circuit_noise(family: str, kappa_tau: float, dims: tuple[int, int, int] = (2
             dims=dims,
         )
     if name == "comprehensive":
-        # Loss + nth=0.01 + transmon T1/T2 + Kerr + 1% coherent control errors.
-        # Ancilla errors break phase covariance. Default timing is per ECD pair.
+        # Loss + nth=0.01 + κ_φ τ = 0.5 κτ + transmon T1/T2 + Kerr + 1% coherent
+        # control errors. Ancilla errors break phase covariance. Per ECD pair.
         return comprehensive_config(timing=TimingMode.PER_ECD_PAIR, kappa_tau=kt, dims=dims)
     raise ValueError(f"unknown circuit-noise family {family!r}")
 
@@ -170,7 +170,8 @@ def family_description(family: str) -> str:
             "κ_φ τ = 0.5 κτ. Phase-covariant; heating spoils η^k moment scaling."
         ),
         "comprehensive": (
-            "Device-like: Lindblad loss (nth=0.01), transmon T1/T2, cavity "
-            "self-Kerr, 1% ECD-amplitude and rotation errors. Not phase-covariant."
+            "Device-like: Lindblad loss (nth=0.01), cavity number-dephasing "
+            "κ_φ τ = 0.5 κτ, transmon T1/T2, cavity self-Kerr, 1% ECD-amplitude "
+            "and rotation errors. Not phase-covariant."
         ),
     }[str(family).lower()]

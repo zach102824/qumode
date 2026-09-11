@@ -99,6 +99,7 @@ def test_comprehensive_config_enables_all_device_channels():
     assert cfg.rotation_rel_error == pytest.approx(0.01)
     assert cfg.ecd_amp_rel_error == pytest.approx(0.01)
     assert cfg.kerr == pytest.approx(2.0 * np.pi * 500.0)
+    assert cfg.kappa_phi * cfg.tau_application == pytest.approx(0.5 * cfg.kappa_tau_used())
     assert not cfg.is_identity()
     cache = ChannelCache(cfg)
     assert cache.kraus_cav1 and cache.kraus_cav2 and cache.kraus_qubit
@@ -108,3 +109,9 @@ def test_comprehensive_config_enables_all_device_channels():
 def test_comprehensive_config_accepts_kappa_tau_override():
     cfg = comprehensive_config(kappa_tau=0.03)
     assert cfg.kappa_tau_used() == pytest.approx(0.03)
+    assert cfg.kappa_phi * cfg.tau_application == pytest.approx(0.5 * 0.03)
+
+
+def test_comprehensive_kappa_phi_can_be_overridden_to_zero():
+    cfg = comprehensive_config(kappa_tau=0.03, kappa_phi=0.0)
+    assert cfg.kappa_phi == pytest.approx(0.0)

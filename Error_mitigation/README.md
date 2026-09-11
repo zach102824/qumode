@@ -1,19 +1,30 @@
 # Gaussian Data Regression on a hybrid qumode
 
-## Status (2026-09-04, defaults frozen)
+## Status
 
-PR #6 baseline (`Error_mitigation/out/`, 108 cells @ 8192 shots / 40 twins) is **validated** — do **not** overwrite `out/` or `out_smoke/`. Research runs live in `out_research/`. Do **not** edit `src/` unless a tiny proven bug blocks you.
+PR #6 baseline (`Error_mitigation/out/`, 108 cells @ 8192 shots / 40 twins) is
+**validated** — do **not** overwrite `out/`. Research dumps
+(`out_research/`, `out_smoke/`, `out_four_sat/`, `out_four_sat_matched/`)
+are **not** kept in the repo.
+
+The **default noiseless + noisy-in-loop protocol** for n=7 4-SAT
+(ECD L4 / SNAP L3, GDR inside SPSA, `gdr_param` only) lives in
+[`docs/DEFAULT_PROTOCOL.md`](../docs/DEFAULT_PROTOCOL.md) and
+`scripts/run_default_protocol.py`. Main-code changes for that protocol
+are allowed. Frozen `out/` histogram semantics are unchanged except that
+**new** `comprehensive` simulations include cavity number-dephasing
+\(\kappa_\phi \tau_{\mathrm{app}} = 0.5\,\kappa\tau\).
 
 | item | status |
 |------|--------|
-| PR #6 smoke | **done** (`out_smoke/`, 4000 shots) |
-| PR #6 full | **done** (`out/`, 108 cells, product-state TVD max ~1e-15, wall ~64 min) |
-| PR #8 research | **done** on `cursor/gdr-improve-30h-v2-4f00` — official defaults **frozen** |
-| Official default | `--twin-design adaptive` + **`gdr_param`** (random and optimized) + `n_train=40`. Gated `gdr_damped` is an optional extra. |
-| Tests | 29 `test_error_mitigation` + full non-slow suite |
-| `src/` | **do not edit** |
+| PR #6 full | **done** (`out/`, 108 cells). Do not re-run. |
+| Official default | `--twin-design adaptive` + **`gdr_param`** (random and optimized) + `n_train=40`. |
+| Default VQE protocol | noiseless + noisy-in-loop, see `docs/DEFAULT_PROTOCOL.md` |
+| `src/` noise default | `comprehensive_config` now sets \(\kappa_\phi \tau = 0.5\,\kappa\tau\) |
 
-Do **not** re-run the full 108-cell baseline. Cheap loops: `run_ablation.py` (writes only under `out_research/`, reuses `out_research/cache/`). Scoreboard: `out_research/PAPER_SUMMARY.md`, `out_research/NOTEBOOK.md`, `out_research/adaptive_recipe.md`, `out_research/figures/hard_cells_adaptive.png`.
+Do **not** re-run the full 108-cell baseline. Ablation drivers still default
+to a local `out_research/` directory (gitignored). The default 4-SAT VQE
+protocol writes under `results/protocol/`.
 
 ### Shipped recipe (frozen)
 
@@ -46,41 +57,19 @@ python -u Error_mitigation/run_mitigation_experiment.py --preset smoke
 python -u Error_mitigation/run_mitigation_experiment.py --preset full --ansatz both
 ```
 
-CI-ish research smoke of the **shipped adaptive recipe** (writes only under `out_research/research_smoke/`; reuses `out_research/cache/`; does **not** exist on the official driver, which would overwrite `out/`):
+Ablation smoke still writes under a local gitignored `out_research/` directory:
 
 ```bash
 python -u Error_mitigation/run_ablation.py --preset research_smoke
 ```
 
-That slice is ECD **optimized** loss κτ=0.003, adaptive twins (→ PR #6 mix), 2048 shots, `n_train=40`, ideal + realistic readout, methods `{raw, gdr_param, gdr_damped}`.
+### PR #8 headlines (historical)
 
-### How to reproduce PR #8 headlines
+Do **not** re-run the 108-cell baseline and do **not** write to `out/`. The
+adaptive-twin research caches were wiped from the repo. Locked numbers:
 
-Do **not** re-run the 108-cell baseline and do **not** write to `out/`. The hybrid scoreboard is a fit-only stitch of two cached physics sets (8192 shots / 40 twins, H000):
-
-| circuit | twin design | cache glob under `out_research/cache/` | numbers from |
-|---------|-------------|----------------------------------------|--------------|
-| random | span (`nr10`) | `*_n40_span_nr10_lo0.25_hi1.35_x0.{npz,json}` | `out_research/phase3/` |
-| optimized | PR #6 default (`nr10`) | `*_n40_default_nr10_lo0.25_hi1.35_x0.{npz,json}` | `out_research/opt_default/` |
-
-Headline cells (same numbers in `PAPER_SUMMARY.md` / `adaptive_recipe.md` / `figures/hard_cells_adaptive.png`):
-
-| cell | cache key |
-|------|-----------|
-| ECD random loss κτ=0.1 | `ecd_random_loss_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0` |
-| ECD random comprehensive κτ=0.1 | `ecd_random_comprehensive_kt0.1_n40_span_nr10_lo0.25_hi1.35_x0` |
-| ECD opt comprehensive κτ=0.1 | `ecd_optimized_comprehensive_kt0.1_n40_default_nr10_lo0.25_hi1.35_x0` |
-| SNAP random comprehensive κτ=0.003 | `snap_random_comprehensive_kt0.003_n40_span_nr10_lo0.25_hi1.35_x0` |
-
-```bash
-# CI-ish adaptive-recipe slice (cache replay → out_research/research_smoke/)
-python -u Error_mitigation/run_ablation.py --preset research_smoke
-
-# Rebuild the four-cell figure from the locked numbers
-python -u Error_mitigation/plot_hard_cells.py
-```
-
-`research_smoke` reuses `ecd_optimized_loss_kt0.003_n40_default_nr10_lo0.25_hi1.35_x0` (not a headline cell; checks the default `gdr_param` path on optimized adaptive twins). Bootstrap ± on the figure is `out_research/leftover_bootstrap/`.
+Adaptive hybrid vs PR #6 `gdr_param`: **86/108** better, **108/108** beats raw,
+**0/108** worse than raw.
 
 Useful flags: `--ansatz ecd|snap|both`, `--instance 0`, `--outdir Error_mitigation/out`, `--shots`, `--n-train`, `--seed`, `--readout ideal|readout_realistic|readout_strong|all`, `--families`, `--kappa-tau`, `--params`, `--twin-design adaptive|span|default`.
 
@@ -105,7 +94,7 @@ Applied between layers by `HybridSimulator.density_matrix` (`src/qumode_vqe/nois
 |--------|------------|----------------|
 | `loss` | Paper amplitude-damping Kraus, one application per UER/SNAP layer. Pure photon loss, \(n_{\mathrm{th}}=0\). | Phase-covariant. Binomial unfolding should be exact **up to interleaving**. |
 | `loss_thermal_dephasing` | Lindblad cavity loss with \(n_{\mathrm{th}}=0.05\) and number dephasing \(\kappa_\phi \tau = 0.5\,\kappa\tau\). | Still phase-covariant. Factorial moments are **not** a pure \(\eta^k\) rescaling once there is heating. |
-| `comprehensive` | Lindblad loss (\(n_{\mathrm{th}}=0.01\)), transmon T1/T2, cavity self-Kerr, 1% ECD-amplitude and rotation errors. Per ECD/SNAP pair. | Ancilla errors break phase covariance. Tests whether a histogram-level map still transfers from Gaussian twins. |
+| `comprehensive` | Lindblad loss (\(n_{\mathrm{th}}=0.01\)), cavity number-dephasing \(\kappa_\phi \tau = 0.5\,\kappa\tau\), transmon T1/T2, cavity self-Kerr, 1% ECD-amplitude and rotation errors. Per ECD/SNAP pair. | Ancilla errors break phase covariance. Tests whether a histogram-level map still transfers from Gaussian twins. |
 
 Idle-time ZNE (`scale_noise`) multiplies \(\kappa\tau\), \(\kappa_\phi\), and \(1/T_1^{\mathrm{q}}\), \(1/T_2^{\mathrm{q}}\). It does **not** scale readout: stretching idles does not change the detector. That is the failure mode `zne_idle` is expected to show under `readout_*`.
 
@@ -172,7 +161,9 @@ Unfolding is Richardson–Lucy on the simplex; NNLS is stored as a `gdr_param` c
 - **Heating:** \(g_k^{\mathrm{noisy}}/g_k^{\mathrm{ideal}}\) vs \(\eta^k\) should fail for `loss_thermal_dephasing`.
 - **Identifiability:** loss \(n\to n-1\) and readout \(n\to n\pm 1\) look the same on a single circuit. Twins that span a range of \(\lvert\alpha\rvert^2\) break the degeneracy because loss scales with \(n\) and \(p_{nn}\) does not. Check fitted \(\eta\) vs true cumulative \(\eta\), and fitted \(p_{nn}\) vs the `MeasurementConfig`.
 - **`zne_idle` under readout:** circuit noise is scaled, the detector is not, so extrapolation is biased. Use `readout_then_zne`.
-- **Research scoreboard:** `Error_mitigation/out_research/NOTEBOOK.md`, `out_research/adaptive_recipe.md`, and `out_research/figures/hard_cells_adaptive.png`. Do not overwrite `out/`.
+- **Research scoreboard:** wiped from the repo with `out_research/`. Headline
+  adaptive-vs-PR #6 numbers remain in this README (86/108 better, 108/108
+  beats raw). New VQE numbers live in `results/protocol/CONCLUSION.md`.
 
 ## Caveats (known, not bugs)
 

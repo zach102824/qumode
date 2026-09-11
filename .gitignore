@@ -7,3 +7,8 @@ __pycache__/
 .mplconfig/
 dist/
 build/
+Error_mitigation/out_research/
+Error_mitigation/out_smoke/
+Error_mitigation/out_four_sat/
+Error_mitigation/out_four_sat_matched/
+

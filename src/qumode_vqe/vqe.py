@@ -30,11 +30,22 @@ from .hamiltonian import (
     DEFAULT_NFOCKS,
     EXACT_GROUND_ENERGY,
     TARGET_QNM,
+    bitstring_from_bits,
+    bits_from_qnm,
     diagonal_hybrid_hamiltonian,
+    ground_qnm_from_tensor,
     hybrid_energy_tensor,
     hybrid_hamiltonian,
 )
-from .measurement import MeasurementConfig, MeasurementResult, joint_probabilities, measure
+from .measurement import (
+    MeasurementConfig,
+    MeasurementResult,
+    decode_bitstring,
+    energy_from_histogram,
+    joint_probabilities,
+    measure,
+    most_likely_qnm,
+)
 from .noise import ChannelCache, LossModel, NoiseConfig, TimingMode
 from .params import (
     ParamLayout,
@@ -70,6 +81,61 @@ def gibbs_objective(
     emin = float(np.min(e))
     avg = float(np.dot(p, np.exp(-float(eta) * (e - emin))))
     return float(-np.log(max(avg, 1e-300)) + float(eta) * emin)
+
+
+def ground_prob(probs: np.ndarray, energy_tensor: np.ndarray) -> float:
+    """Born probability of the unique lowest-energy computational-basis state."""
+    gs = ground_qnm_from_tensor(energy_tensor)
+    p = np.asarray(probs, dtype=float)
+    return float(p[gs])
+
+
+def ground_bitstring_from_tensor(
+    energy_tensor: np.ndarray,
+    partition: tuple[int, int, int] = (1, 3, 3),
+) -> str:
+    gs = ground_qnm_from_tensor(energy_tensor)
+    return bitstring_from_bits(bits_from_qnm(*gs, partition))
+
+
+def step_metrics(
+    probs: np.ndarray,
+    energy_tensor: np.ndarray,
+    *,
+    step: int,
+    eta: float,
+    energy_physical: float | None = None,
+    cost: float | None = None,
+    partition: tuple[int, int, int] = (1, 3, 3),
+    extra: dict | None = None,
+) -> dict:
+    """One SPSA-iterate snapshot: Gibbs cost, ⟨H⟩, p(GS), mode, η."""
+    p = np.asarray(probs, dtype=float)
+    p = np.clip(p, 0.0, None)
+    total = float(p.sum())
+    if total > 0.0:
+        p = p / total
+    e = np.asarray(energy_tensor, dtype=float)
+    eta_f = float(eta)
+    cost_f = float(gibbs_objective(p, e, eta_f) if cost is None else cost)
+    ml = most_likely_qnm(p)
+    bits = decode_bitstring(*ml, partition=partition)
+    gs_bits = ground_bitstring_from_tensor(e, partition)
+    rec = {
+        "step": int(step),
+        "cost": cost_f,
+        "energy_physical": None if energy_physical is None else float(energy_physical),
+        "energy_hist": energy_from_histogram(p, e),
+        "p_gs": ground_prob(p, e),
+        "most_likely": [int(v) for v in ml],
+        "most_likely_bitstring": bits,
+        "ground_bitstring": gs_bits,
+        "success": bits == gs_bits,
+        "eta": eta_f,
+    }
+    if extra:
+        rec.update(extra)
+    return rec
 
 
 @dataclass
@@ -395,6 +461,7 @@ class AdaptiveGibbsResult:
     eta_history: list[dict] = field(default_factory=list)
     n_eta_clamps: int = 0
     n_eta_fallbacks: int = 0
+    step_trace: list[dict] = field(default_factory=list)
 
 
 def _history_record(sim: HybridSimulator, x: np.ndarray, iteration: int) -> dict:
@@ -670,6 +737,8 @@ def optimize_gibbs_adaptive(
     energy_tensor: np.ndarray | None = None,
     hamiltonian: qt.Qobj | None = None,
     ansatz: str = "ecd",
+    forward: Callable[[HybridSimulator, np.ndarray], dict] | None = None,
+    record_steps: bool = True,
 ) -> AdaptiveGibbsResult:
     """Joint prep+ansatz SPSA (default: 70 steps, prep never frozen).
 
@@ -690,6 +759,14 @@ def optimize_gibbs_adaptive(
     Gibbs η is always ``sampled_tail``: probability-weighted 5%/25% energy
     quantiles of the current histogram, EMA-smoothed, refreshed at the
     unperturbed iterate and held fixed for both SPSA probes of that step.
+
+    ``forward(sim, x)`` if given replaces the physical histogram used for
+    the Gibbs cost, η, p(GS), and the step log. It must return a dict with
+    ``probs`` and may include ``energy_physical``, ``eval``, and ``extra``.
+    The default protocol uses this for gdr_param-unfolded noisy histograms.
+
+    When ``record_steps`` is true, ``step_trace`` has one record for the
+    initial point (step 0) and one after every SPSA iterate.
     """
     rng = rng or np.random.default_rng()
     nfocks = (int(nfocks[0]), int(nfocks[1]))
@@ -705,10 +782,12 @@ def optimize_gibbs_adaptive(
             f"Expected {expected} {ansatz} ansatz parameters for ndepth={ndepth}, got {x0.size}."
         )
     ham_kw: dict = {}
+    target_qnm = None
     if energy_tensor is not None:
         tensor = np.asarray(energy_tensor, dtype=float)
         ham_kw["energy_tensor"] = tensor
         ham_kw["hamiltonian"] = hamiltonian if hamiltonian is not None else diagonal_hybrid_hamiltonian(tensor)
+        target_qnm = ground_qnm_from_tensor(tensor)
     elif hamiltonian is not None:
         ham_kw["hamiltonian"] = hamiltonian
     sim = HybridSimulator(
@@ -718,26 +797,81 @@ def optimize_gibbs_adaptive(
         measurement=measurement,
         layout=layout,
         cost_kind="gibbs",
-        target_qnm=None,
+        target_qnm=target_qnm,
         initial_state=prep_params_to_ket(prep0, nfocks),
         ansatz=ansatz,
         **ham_kw,
     )
     policy = SampledTailEta()
+    partition = sim.partition
+    step_trace: list[dict] = []
+    last_unperturbed: dict = {"probs": None}
 
     ansatz_bounds = _ansatz_bounds(sim)
     x0 = _clip_bounds(x0, ansatz_bounds)
     joint_bounds = list(prep_bounds(nfocks)) + ansatz_bounds
     total_steps = max(int(outer_iter) + int(spsa_iter), 1)
 
-    def current_probs(x_ansatz: np.ndarray) -> np.ndarray:
-        ev = sim.evaluate(x_ansatz)
-        return np.asarray(ev.measurement.physical_probs, dtype=float)
+    def _eval_ansatz(x_ansatz: np.ndarray, *, store: bool) -> tuple[np.ndarray, float, dict]:
+        x_ansatz = np.asarray(x_ansatz, dtype=float)
+        if forward is None:
+            ev = sim.evaluate(x_ansatz)
+            probs = np.asarray(ev.measurement.physical_probs, dtype=float)
+            energy_physical = float(ev.energy_physical)
+            extra = ev.as_dict()
+            extra["p_gs"] = ground_prob(probs, sim.energy_tensor)
+        else:
+            out = forward(sim, x_ansatz)
+            probs = np.asarray(out["probs"], dtype=float)
+            energy_physical = out.get("energy_physical")
+            if energy_physical is None:
+                energy_physical = energy_from_histogram(probs, sim.energy_tensor)
+            energy_physical = float(energy_physical)
+            extra = dict(out.get("eval") or {})
+            extra.update(dict(out.get("extra") or {}))
+            extra.setdefault("energy_physical", energy_physical)
+            extra.setdefault("p_gs", ground_prob(probs, sim.energy_tensor))
+            extra.setdefault(
+                "most_likely_bitstring",
+                decode_bitstring(*most_likely_qnm(probs), partition=partition),
+            )
+            extra.setdefault("most_likely", [int(v) for v in most_likely_qnm(probs)])
+        if store:
+            last_unperturbed["probs"] = probs
+        return probs, energy_physical, extra
 
-    init_probs = current_probs(x0)
-    st0 = policy.initialize(sim.energy_tensor, init_probs)
-    sim.gibbs_eta = float(st0.eta)
-    eta0 = float(st0.eta)
+    def _record(step: int, probs: np.ndarray, energy_physical: float, extra: dict) -> dict:
+        rec = step_metrics(
+            probs,
+            sim.energy_tensor,
+            step=step,
+            eta=float(policy.eta),
+            energy_physical=energy_physical,
+            partition=partition,
+            extra={k: v for k, v in extra.items() if k not in {"x", "probs"}},
+        )
+        if record_steps:
+            # Compact: do not keep full histograms or parameter vectors in the trace.
+            slim = {
+                key: rec[key]
+                for key in (
+                    "step",
+                    "cost",
+                    "energy_physical",
+                    "energy_hist",
+                    "p_gs",
+                    "most_likely_bitstring",
+                    "ground_bitstring",
+                    "success",
+                    "eta",
+                )
+                if key in rec
+            }
+            for key in ("p_gs_raw", "p_gs_mit", "p_gs_phys", "most_likely_bitstring_raw", "success_raw"):
+                if key in rec:
+                    slim[key] = rec[key]
+            step_trace.append(slim)
+        return rec
 
     def project_joint(z: np.ndarray) -> np.ndarray:
         z = np.asarray(z, dtype=float).copy()
@@ -747,18 +881,36 @@ def optimize_gibbs_adaptive(
     def joint_fun(z: np.ndarray) -> float:
         z = np.asarray(z, dtype=float)
         sim.initial_state = prep_params_to_ket(z[:N_PREP_PARAMS], nfocks)
-        return sim.cost(z[N_PREP_PARAMS:], objective="gibbs", gibbs_eta=float(policy.eta))
+        probs, _, _ = _eval_ansatz(z[N_PREP_PARAMS:], store=False)
+        return gibbs_objective(probs, sim.energy_tensor, float(policy.eta))
 
     def before_joint(k: int, z: np.ndarray) -> None:
         z = np.asarray(z, dtype=float)
         sim.initial_state = prep_params_to_ket(z[:N_PREP_PARAMS], nfocks)
-        probs = current_probs(z[N_PREP_PARAMS:])
+        probs = last_unperturbed["probs"]
+        if probs is None:
+            probs, _, _ = _eval_ansatz(z[N_PREP_PARAMS:], store=True)
         st = policy.maybe_update(k, total_steps, sim.energy_tensor, probs)
         sim.gibbs_eta = float(st.eta)
+
+    def on_joint_iterate(k: int, z: np.ndarray, last_fun: float) -> None:
+        del last_fun
+        z = np.asarray(z, dtype=float)
+        sim.initial_state = prep_params_to_ket(z[:N_PREP_PARAMS], nfocks)
+        probs, ephys, extra = _eval_ansatz(z[N_PREP_PARAMS:], store=True)
+        _record(int(k), probs, ephys, extra)
 
     z0 = np.concatenate([prep0, x0])
     joint_scale = np.ones(z0.size, dtype=float)
     joint_scale[:N_PREP_PARAMS] = float(prep_step_scale)
+
+    sim.initial_state = prep_params_to_ket(prep0, nfocks)
+    init_probs, init_ephys, init_extra = _eval_ansatz(x0, store=True)
+    st0 = policy.initialize(sim.energy_tensor, init_probs)
+    sim.gibbs_eta = float(st0.eta)
+    eta0 = float(st0.eta)
+    _record(0, init_probs, init_ephys, init_extra)
+
     if int(outer_iter) > 0:
         warm = run_spsa(
             joint_fun,
@@ -773,6 +925,7 @@ def optimize_gibbs_adaptive(
             alpha=alpha,
             gamma=gamma,
             on_before_step=before_joint,
+            on_iterate=on_joint_iterate,
             step_scale=joint_scale,
         )
         prep = project_prep_params(warm.x[:N_PREP_PARAMS], nfocks)
@@ -786,17 +939,29 @@ def optimize_gibbs_adaptive(
         nit_warmup = 0
 
     sim.initial_state = prep_params_to_ket(prep, nfocks)
-    fun_warmup = float(sim.cost(x_warmup, objective="gibbs", gibbs_eta=float(policy.eta)))
-    eval_warmup = sim.evaluate(x_warmup).as_dict()
+    probs_w, ephys_w, extra_w = _eval_ansatz(x_warmup, store=True)
+    fun_warmup = float(gibbs_objective(probs_w, sim.energy_tensor, float(policy.eta)))
+    eval_warmup = extra_w
+    eval_warmup["cost"] = fun_warmup
+    eval_warmup["energy_physical"] = ephys_w
+    eval_warmup["p_gs"] = ground_prob(probs_w, sim.energy_tensor)
     nfev_warmup = max(nfev_warmup, 1)
 
     def ansatz_fun(x: np.ndarray) -> float:
-        return sim.cost(x, objective="gibbs", gibbs_eta=float(policy.eta))
+        probs, _, _ = _eval_ansatz(x, store=False)
+        return gibbs_objective(probs, sim.energy_tensor, float(policy.eta))
 
     def before_ansatz(k: int, x: np.ndarray) -> None:
-        probs = current_probs(x)
+        probs = last_unperturbed["probs"]
+        if probs is None:
+            probs, _, _ = _eval_ansatz(x, store=True)
         st = policy.maybe_update(int(outer_iter) + k, total_steps, sim.energy_tensor, probs)
         sim.gibbs_eta = float(st.eta)
+
+    def on_ansatz_iterate(k: int, x: np.ndarray, last_fun: float) -> None:
+        del last_fun
+        probs, ephys, extra = _eval_ansatz(x, store=True)
+        _record(int(outer_iter) + int(k), probs, ephys, extra)
 
     if int(spsa_iter) > 0:
         opt = run_spsa(
@@ -811,18 +976,22 @@ def optimize_gibbs_adaptive(
             alpha=alpha,
             gamma=gamma,
             on_before_step=before_ansatz,
+            on_iterate=on_ansatz_iterate,
         )
         x_final = np.asarray(opt.x, dtype=float)
-        fun_final = float(opt.fun)
         nfev_ansatz = int(opt.nfev)
         nit = int(opt.nit)
     else:
         x_final = np.asarray(x_warmup, dtype=float)
-        fun_final = float(fun_warmup)
         nfev_ansatz = 0
         nit = 0
 
-    eval_final = sim.evaluate(x_final).as_dict()
+    probs_f, ephys_f, extra_f = _eval_ansatz(x_final, store=True)
+    fun_final = float(gibbs_objective(probs_f, sim.energy_tensor, float(policy.eta)))
+    eval_final = extra_f
+    eval_final["cost"] = fun_final
+    eval_final["energy_physical"] = ephys_f
+    eval_final["p_gs"] = ground_prob(probs_f, sim.energy_tensor)
     snap = policy.snapshot()
     return AdaptiveGibbsResult(
         prep=prep,
@@ -845,6 +1014,7 @@ def optimize_gibbs_adaptive(
         eta_history=list(snap["history"]),
         n_eta_clamps=int(snap["n_clamps"]),
         n_eta_fallbacks=int(snap["n_fallbacks"]),
+        step_trace=step_trace,
     )
 
 

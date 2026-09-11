@@ -379,29 +379,15 @@ def test_classify_opt_quality_default_thresholds():
     assert good["recipe"] == "optimized"
 
 
-def test_adaptive_recipe_headlines_on_disk():
-    recipe = (ROOT / "Error_mitigation" / "out_research" / "adaptive_recipe.md").read_text()
-    paper = (ROOT / "Error_mitigation" / "out_research" / "PAPER_SUMMARY.md").read_text()
-    notebook = (ROOT / "Error_mitigation" / "out_research" / "NOTEBOOK.md").read_text()
-    plot = (ROOT / "Error_mitigation" / "plot_hard_cells.py").read_text()
-    for text in (recipe, paper):
-        assert "beats PR #6 `gdr_param`" in text or "**86 / 108**" in text
-        assert "**86 / 108**" in text
-        assert "**108 / 108**" in text
-        assert "**0 / 108**" in text
-        assert "**0.203**" in text
-        assert "**0.342**" in text
-        assert "**0.0369**" in text
-        assert "**0.208 ± 0.012**" in text
-        assert "**0.314 ± 0.013**" in text
-        assert "**0.346 ± 0.008**" in text
-        assert "**0.036 ± 0.004**" in text
-    assert "near-" in paper.lower() or "H001" in paper
-    for token in ("0.203", "0.342", "0.343", "0.0369", "0.012", "0.013", "0.008", "0.004"):
-        assert token in plot
-    assert "**0.203**" in notebook
-    fig = ROOT / "Error_mitigation" / "out_research" / "figures" / "hard_cells_adaptive.png"
-    assert fig.is_file() and fig.stat().st_size > 1000
+def test_adaptive_recipe_headlines_in_readme():
+    readme = (ROOT / "Error_mitigation" / "README.md").read_text()
+    assert "gdr_param" in readme
+    assert "86/108" in readme or "86 / 108" in readme
+    protocol = ROOT / "docs" / "DEFAULT_PROTOCOL.md"
+    assert protocol.is_file()
+    text = protocol.read_text()
+    assert "gdr_param" in text
+    assert "kappa_phi" in text or "κ_φ" in text or "number-dephasing" in text
 
 
 def test_research_smoke_preset_stays_in_out_research():
@@ -441,12 +427,6 @@ def test_official_default_method_is_gdr_param():
     assert official_lines
     assert "gdr_param" in official_lines[0]
     assert "gdr_select" not in official_lines[0]
-    paper = (ROOT / "Error_mitigation" / "out_research" / "PAPER_SUMMARY.md").read_text()
-    assert "both** random and optimized" in paper or "both random and optimized" in paper.lower()
-    assert "not** the official recipe" in paper or "not the official recipe" in paper.lower()
-    recipe = (ROOT / "Error_mitigation" / "out_research" / "adaptive_recipe.md").read_text()
-    assert "gdr_param" in recipe
-    assert "ablation-only" in recipe.lower() or "not the official" in recipe.lower()
 
     import tempfile
 
@@ -592,21 +572,6 @@ def test_designed_twin_plan_grid_chebyshev():
 
 
 def test_round2_dropped_and_ban_list_on_disk():
-    dropped = ROOT / "Error_mitigation" / "out_research" / "round2" / "DROPPED.md"
-    text = dropped.read_text()
-    for token in (
-        "gdr_full",
-        "gdr_interleave",
-        "gdr_split",
-        "gdr_band",
-        "gdr_afterburn",
-        "gdr_blend",
-        "Energy-weighted",
-        "params=auto",
-        "Span twins",
-        "gdr_residual",
-    ):
-        assert token in text
     from Error_mitigation.run_ablation import CHEAP_METHODS, ROUND2_METHODS
 
     banned = {
@@ -622,27 +587,13 @@ def test_round2_dropped_and_ban_list_on_disk():
     assert banned.isdisjoint(CHEAP_METHODS)
 
 
-def test_round2_best_is_negative():
-    best = ROOT / "Error_mitigation" / "out_research" / "round2" / "BEST.md"
-    text = best.read_text()
-    assert "No beat of adaptive; recipe unchanged" in text
-    assert "0.3419" in text
-    assert "0.1012" in text
-    nb = ROOT / "Error_mitigation" / "out_research" / "round2" / "NOTEBOOK.md"
-    assert "Official defaults unchanged" in nb.read_text() or "Official defaults unchanged." in nb.read_text()
-    conclusion = ROOT / "Error_mitigation" / "out_research" / "round2" / "CONCLUSION.md"
-    ctext = conclusion.read_text()
-    assert "Adaptive is unbeaten" in ctext
-    assert "not a default" in ctext.lower() or "not the official default" in ctext
-    assert "0.343 is model error" in ctext
-    assert "Cross-H fails" in ctext
-    from Error_mitigation.run_round2 import HARD_CELLS
+def test_round2_cell_tables_exist():
+    from Error_mitigation.run_round2 import HARD_CELLS, SNAP_CELLS
 
     assert len(HARD_CELLS) == 8
-    for cell in HARD_CELLS:
-        path = Path(cell["cache"])
-        assert path.is_file(), path
-        assert path.suffix == ".npz"
+    assert len(SNAP_CELLS) == 3
+    for cell in SNAP_CELLS:
+        assert cell["readout"] == "readout_realistic"
 
 
 def test_top_energy_bins_and_joint_kind():
@@ -684,15 +635,6 @@ def test_eta_fisher_score_vacuum_zero():
     p2 = np.zeros((2, 8, 8))
     p2[0, 3, 3] = 1.0
     assert eta_fisher_score(p2) > 0.0
-
-
-def test_snap_opt_comprehensive_caches_exist():
-    from Error_mitigation.run_round2 import SNAP_CELLS
-
-    assert len(SNAP_CELLS) == 3
-    for cell in SNAP_CELLS:
-        assert Path(cell["cache"]).is_file()
-        assert cell["readout"] == "readout_realistic"
 
 
 def test_stage_b_methods_exclude_ban_list():
