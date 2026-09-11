@@ -35,6 +35,8 @@ def noiseless_table(payload: dict) -> dict:
                 "success_rate": n_s / max(n_h, 1),
                 "pick_trial": rec.get("pick_trial"),
                 "pick_success": rec.get("pick_success"),
+                "pick_fallback": rec.get("pick_fallback"),
+                "pick_rule": rec.get("pick_rule"),
                 "pick_cost": rec.get("pick_cost"),
                 "pick_energy_physical": rec.get("pick_energy_physical"),
                 "mean_energy_physical": float(sum(energies) / max(len(energies), 1)),
@@ -76,6 +78,42 @@ def _cell(records: list[dict], *, params: str, kt: float, method: str) -> dict |
     }
 
 
+def _kt_summary(rows: list[dict], *, params: str) -> dict:
+    summary = {}
+    for kt in KT:
+        wins = 0
+        n = 0
+        raw_gs = 0
+        sel_gs = 0
+        ideal_gs = 0
+        raw_tvds = []
+        sel_tvds = []
+        for row in rows:
+            cell = (row.get(params) or {}).get(str(kt)) or {}
+            raw = cell.get("raw") or {}
+            sel = cell.get("gdr_select") or {}
+            if raw.get("tvd") is None or sel.get("tvd") is None:
+                continue
+            n += 1
+            wins += int(bool(cell.get("select_beats_raw")))
+            raw_tvds.append(float(raw["tvd"]))
+            sel_tvds.append(float(sel["tvd"]))
+            raw_gs += int(bool(raw.get("success_gs")))
+            sel_gs += int(bool(sel.get("success_gs")))
+            if params == "optimized":
+                ideal_gs += int(bool(row.get("ideal_success_gs")))
+        summary[str(kt)] = {
+            "n": n,
+            "select_beats_raw": wins,
+            "mean_raw_tvd": sum(raw_tvds) / max(len(raw_tvds), 1) if raw_tvds else None,
+            "mean_select_tvd": sum(sel_tvds) / max(len(sel_tvds), 1) if sel_tvds else None,
+            "raw_gs_mode": raw_gs,
+            "select_gs_mode": sel_gs,
+            "ideal_gs_mode": ideal_gs if params == "optimized" else 0,
+        }
+    return summary
+
+
 def gdr_table(ansatz: str, ndepth: int, *, prefix: str = "") -> dict:
     rows = []
     missing = []
@@ -100,49 +138,31 @@ def gdr_table(ansatz: str, ndepth: int, *, prefix: str = "") -> dict:
             "pick_energy_physical": pick.get("energy_physical"),
             "ideal_success_gs": None,
             "by_kt": {},
+            "optimized": {},
+            "random": {},
         }
         for kt in KT:
-            raw = _cell(recs, params="optimized", kt=kt, method="raw")
-            sel = _cell(recs, params="optimized", kt=kt, method="gdr_select")
-            if raw and row["ideal_success_gs"] is None:
-                row["ideal_success_gs"] = raw.get("ideal_success_gs")
-            win = None
-            if raw and sel and raw.get("tvd") is not None and sel.get("tvd") is not None:
-                win = float(sel["tvd"]) < float(raw["tvd"]) - 1e-12
-            row["by_kt"][str(kt)] = {"raw": raw, "gdr_select": sel, "select_beats_raw": win}
+            for params in ("optimized", "random"):
+                raw = _cell(recs, params=params, kt=kt, method="raw")
+                sel = _cell(recs, params=params, kt=kt, method="gdr_select")
+                if params == "optimized" and raw and row["ideal_success_gs"] is None:
+                    row["ideal_success_gs"] = raw.get("ideal_success_gs")
+                win = None
+                if raw and sel and raw.get("tvd") is not None and sel.get("tvd") is not None:
+                    win = float(sel["tvd"]) < float(raw["tvd"]) - 1e-12
+                cell = {"raw": raw, "gdr_select": sel, "select_beats_raw": win}
+                row[params][str(kt)] = cell
+                if params == "optimized":
+                    row["by_kt"][str(kt)] = cell
         rows.append(row)
-    summary = {}
-    for kt in KT:
-        opt_wins = 0
-        opt_n = 0
-        raw_gs = 0
-        sel_gs = 0
-        ideal_gs = 0
-        raw_tvds = []
-        sel_tvds = []
-        for row in rows:
-            cell = row["by_kt"].get(str(kt)) or {}
-            raw = cell.get("raw") or {}
-            sel = cell.get("gdr_select") or {}
-            if raw.get("tvd") is None or sel.get("tvd") is None:
-                continue
-            opt_n += 1
-            opt_wins += int(bool(cell.get("select_beats_raw")))
-            raw_tvds.append(float(raw["tvd"]))
-            sel_tvds.append(float(sel["tvd"]))
-            raw_gs += int(bool(raw.get("success_gs")))
-            sel_gs += int(bool(sel.get("success_gs")))
-            ideal_gs += int(bool(row.get("ideal_success_gs")))
-        summary[str(kt)] = {
-            "n": opt_n,
-            "select_beats_raw": opt_wins,
-            "mean_raw_tvd": sum(raw_tvds) / max(len(raw_tvds), 1) if raw_tvds else None,
-            "mean_select_tvd": sum(sel_tvds) / max(len(sel_tvds), 1) if sel_tvds else None,
-            "raw_gs_mode": raw_gs,
-            "select_gs_mode": sel_gs,
-            "ideal_gs_mode": ideal_gs,
-        }
-    return {"ansatz": ansatz, "ndepth": ndepth, "missing": missing, "hamiltonians": rows, "summary": summary}
+    return {
+        "ansatz": ansatz,
+        "ndepth": ndepth,
+        "missing": missing,
+        "hamiltonians": rows,
+        "summary": _kt_summary(rows, params="optimized"),
+        "random_summary": _kt_summary(rows, params="random"),
+    }
 
 
 def main() -> int:
@@ -151,6 +171,8 @@ def main() -> int:
         ("ecd_L4", ROOT / "results" / "gibbs_four_sat_ecd_matched_n10.json", "ecd", 4, ""),
         ("snap_L2", ROOT / "results" / "gibbs_four_sat_snap_matched_n10_L2.json", "snap", 2, "l2_"),
         ("ecd_L3", ROOT / "results" / "gibbs_four_sat_ecd_matched_n10_L3.json", "ecd", 3, "l3_"),
+        ("snap_L1", ROOT / "results" / "gibbs_four_sat_snap_matched_n10_L1.json", "snap", 1, "l1_"),
+        ("ecd_L2", ROOT / "results" / "gibbs_four_sat_ecd_matched_n10_L2.json", "ecd", 2, "l2_"),
     )
     out = {
         "success_metric": "most_likely_bitstring == ground_bitstring (JSON success flag)",

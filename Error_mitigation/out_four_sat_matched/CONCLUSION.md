@@ -5,26 +5,29 @@ Fair SNAP vs ECD comparison on `four_sat_000` … `four_sat_019`.
 
 `most_likely_bitstring == ground_bitstring`.
 
-Same trial budget, same seeds, two matched depth pairs:
+Same trial budget, same seeds, three matched depth pairs:
 
-| | SNAP L3 | ECD L4 | SNAP L2 | ECD L3 |
-|---|---|---|---|---|
-| depth | **L3** | **L4** | **L2** | **L3** |
-| Hamiltonians | 20 | 20 | 20 | 20 |
-| trials / H | **10** | **10** | **10** | **10** |
-| overall trials | 200 | 200 | 200 | 200 |
-| `seed_base` | 4000 | 4000 | 4000 | 4000 |
-| SPSA | 200 joint | 200 joint | 200 joint | 200 joint |
-| prep start | vacuum | vacuum | vacuum | vacuum |
-| η | `sampled_tail` | `sampled_tail` | `sampled_tail` | `sampled_tail` |
+| | SNAP L3 | ECD L4 | SNAP L2 | ECD L3 | SNAP L1 | ECD L2 |
+|---|---|---|---|---|---|---|
+| depth | **L3** | **L4** | **L2** | **L3** | **L1** | **L2** |
+| Hamiltonians | 20 | 20 | 20 | 20 | 20 | 20 |
+| trials / H | **10** | **10** | **10** | **10** | **10** | **10** |
+| overall trials | 200 | 200 | 200 | 200 | 200 | 200 |
+| `seed_base` | 4000 | 4000 | 4000 | 4000 | 4000 | 4000 |
+| SPSA | 200 joint | 200 joint | 200 joint | 200 joint | 200 joint | 200 joint |
+| prep start | vacuum | vacuum | vacuum | vacuum | vacuum | vacuum |
+| η | `sampled_tail` | `sampled_tail` | `sampled_tail` | `sampled_tail` | `sampled_tail` | `sampled_tail` |
 
 No ECD extra near-miss / seed-5000 runs. Official GDR defaults are
 unchanged. `params=auto` is not shipped. `Error_mitigation/out/` and
 `Error_mitigation/out_four_sat/` were not written.
 
 GDR circuit params: `--gibbs-pick success_then_cost` loads, for each H,
-the **lowest Gibbs cost among successful trials** (every H had ≥1
-success on both pairs). That is the fleet pick used for reporting
+the **lowest Gibbs cost among successful trials**. If a Hamiltonian has
+zero noiseless successes, the pick falls back to lowest Gibbs cost among
+all 10 trials (`pick_rule=cost_fallback`, `pick_fallback=true` in
+`by_hamiltonian`). Every H had ≥1 success on all three pairs, so the
+fallback was not used. That is the fleet pick used for reporting
 mode-finding, not lowest ⟨H⟩. Pick metadata is in each
 `optimized_params_*_hXXX_nd*.json` (`gibbs_trial`, `success`, `cost`).
 
@@ -34,6 +37,7 @@ Headline noiseless success (bitstring equality, not energy):
 |---|---|---|
 | L3 vs L4 | **193/200 (96.5%)** | **186/200 (93.0%)** |
 | L2 vs L3 | **177/200 (88.5%)** | **162/200 (81.0%)** |
+| L1 vs L2 | **79/200 (39.5%)** | **123/200 (61.5%)** |
 
 ---
 
@@ -312,21 +316,83 @@ SNAP L2 random select vs raw wins: **20/20**, **20/20**, **15/20** at
 0.003 / 0.03 / 0.1. ECD L3 random: **19/20**, **20/20**, **20/20**.
 Random circuits do not have GS mode (0/20), as expected.
 
-Machine-readable scoreboard (both pairs):
+---
+
+## SNAP L1 vs ECD L2
+
+Same protocol as the deeper pairs: 20 H × 10 trials, `seed_base=4000`,
+200 joint SPSA, vacuum, `sampled_tail` η, exact matched budget, no ECD
+extra near-miss runs. GDR is adaptive + `success_then_cost` on **all
+20 H**, comprehensive + readout_realistic, κτ ∈ {0.003, 0.03, 0.1},
+8192 shots.
+
+JSON: `results/gibbs_four_sat_snap_matched_n10_L1.json`,
+`results/gibbs_four_sat_ecd_matched_n10_L2.json`.
+GDR dirs: `snap_l1_hXXX_s8192/`, `ecd_l2_hXXX_s8192/` (prefixed so they
+do not overwrite SNAP L2 / ECD L3 files).
+
+### 1. Noiseless success %
+
+| ansatz | depth | success | success % | mean ⟨H⟩ (footnote only) |
+|--------|------:|--------:|----------:|-------------------------:|
+| SNAP | L1 | **79/200** | **39.5%** | 0.951 |
+| ECD | L2 | **123/200** | **61.5%** | 0.948 |
+
+This is the first matched pair where **ECD leads mode-finding** (22
+points). SNAP L1 is a single D–SNAP–D–SNAP layer (18+5 params); ECD L2
+has two R–ECD layers (16+5 params, 8 primitive gates). Mean ⟨H⟩ is
+almost the same (~0.95); the gap is which bitstring is most likely, not
+energy. Every Hamiltonian still has ≥1 success (SNAP L1 min 2/10 on
+H002 / H012 / H013; ECD L2 min 1/10 on H019), so `success_then_cost`
+needed no cost fallback.
+
+#### Per-H success (optional)
+
+| H | SNAP L1 | ECD L2 | SNAP pick ⟨H⟩ | ECD pick ⟨H⟩ |
+|--:|--------:|-------:|--------------:|-------------:|
+| 000 | 4/10 | 10/10 | 1.227 | 0.931 |
+| 001 | 8/10 | 5/10 | 0.664 | 0.660 |
+| 002 | 2/10 | 8/10 | 0.885 | 0.493 |
+| 003 | 3/10 | 7/10 | 0.787 | 0.845 |
+| 004 | 3/10 | 5/10 | 0.730 | 0.999 |
+| 005 | 5/10 | 6/10 | 0.894 | 0.914 |
+| 006 | 3/10 | 5/10 | 1.031 | 1.089 |
+| 007 | 4/10 | 6/10 | 0.981 | 0.877 |
+| 008 | 4/10 | 5/10 | 0.854 | 0.773 |
+| 009 | 3/10 | 7/10 | 0.935 | 0.947 |
+| 010 | 3/10 | 6/10 | 0.828 | 0.729 |
+| 011 | 8/10 | 4/10 | 0.756 | 0.767 |
+| 012 | 2/10 | 7/10 | 0.853 | 0.888 |
+| 013 | 2/10 | 5/10 | 0.798 | 0.814 |
+| 014 | 3/10 | 6/10 | 1.051 | 1.070 |
+| 015 | 4/10 | 9/10 | 0.920 | 0.892 |
+| 016 | 3/10 | 8/10 | 0.643 | 0.203 |
+| 017 | 4/10 | 6/10 | 0.788 | 0.857 |
+| 018 | 7/10 | 7/10 | 0.497 | 0.650 |
+| 019 | 4/10 | 1/10 | 0.715 | 0.576 |
+
+### 2. Adaptive GDR (all 20 H, both ansatzes)
+
+Same noise / twin / shot settings as the deeper pairs. Smoke first on
+H000 (`snap_l1_h000_smoke`, `ecd_l2_h000_smoke`; 4000 shots / 12 twins),
+then 8192 on all 20. Results pending in this revision; filled after the
+`--suite l1l2` fleet finishes.
+
+Machine-readable scoreboard (all three pairs):
 `Error_mitigation/out_four_sat_matched/scoreboard.json`
-(keys `snap_L3`, `ecd_L4`, `snap_L2`, `ecd_L3`; `snap`/`ecd` aliases
-remain the L3/L4 pair).
+(keys `snap_L3`, `ecd_L4`, `snap_L2`, `ecd_L3`, `snap_L1`, `ecd_L2`;
+`snap`/`ecd` aliases remain the L3/L4 pair).
 
 ---
 
 ## Energy bar was not used
 
-- Noiseless headlines are **193/200 vs 186/200** (L3/L4) and
-  **177/200 vs 162/200** (L2/L3) bitstring successes, not
-  `⟨H⟩ − E0 ≤ 0.5`.
-- GDR ran on **all 20 H** for both pairs, including high-⟨H⟩ ECD picks
-  (L4 H000 ⟨H⟩=0.758; L3 H000 ⟨H⟩=0.954) which a near-E0 filter would
-  skip.
+- Noiseless headlines are **193/200 vs 186/200** (L3/L4),
+  **177/200 vs 162/200** (L2/L3), and **79/200 vs 123/200** (L1/L2)
+  bitstring successes, not `⟨H⟩ − E0 ≤ 0.5`.
+- GDR ran on **all 20 H** for every pair, including high-⟨H⟩ ECD picks
+  (L4 H000 ⟨H⟩=0.758; L3 H000 ⟨H⟩=0.954; L2 H000 ⟨H⟩=0.931) which a
+  near-E0 filter would skip.
 - ⟨H⟩ is logged only as a footnote / pick diagnostic.
 
 ## Exact commands
@@ -356,6 +422,15 @@ python3 scripts/Gibbs_and_adaptive_optim_SNAP.py --four-sat \
 python3 scripts/Gibbs_and_adaptive_optim_ECD.py --four-sat \
   --n-trials 10 --ndepths 3 --seed-base 4000 --workers 4 \
   --output results/gibbs_four_sat_ecd_matched_n10_L3.json
+
+# SNAP L1 / ECD L2
+python3 scripts/Gibbs_and_adaptive_optim_SNAP.py --four-sat \
+  --n-trials 10 --ndepths 1 --seed-base 4000 --workers 4 \
+  --output results/gibbs_four_sat_snap_matched_n10_L1.json
+
+python3 scripts/Gibbs_and_adaptive_optim_ECD.py --four-sat \
+  --n-trials 10 --ndepths 2 --seed-base 4000 --workers 4 \
+  --output results/gibbs_four_sat_ecd_matched_n10_L2.json
 ```
 
 ### Noisy adaptive GDR
@@ -383,10 +458,17 @@ python3 -u Error_mitigation/run_mitigation_experiment.py \
 # ECD L3: --ansatz ecd --ndepth 3 \
 #   --gibbs-json results/gibbs_four_sat_ecd_matched_n10_L3.json \
 #   --outdir .../ecd_l3_hNNN_s8192
+# SNAP L1: --ansatz snap --ndepth 1 \
+#   --gibbs-json results/gibbs_four_sat_snap_matched_n10_L1.json \
+#   --outdir .../snap_l1_hNNN_s8192
+# ECD L2: --ansatz ecd --ndepth 2 \
+#   --gibbs-json results/gibbs_four_sat_ecd_matched_n10_L2.json \
+#   --outdir .../ecd_l2_hNNN_s8192
 # Smoke: --preset smoke --shots 4000 --n-train 12 --outdir .../${tag}_h000_smoke
 
 python3 -u Error_mitigation/out_four_sat_matched/run_gdr_8192.py --suite l3l4
 python3 -u Error_mitigation/out_four_sat_matched/run_gdr_8192.py --suite l2l3
+python3 -u Error_mitigation/out_four_sat_matched/run_gdr_8192.py --suite l1l2
 python3 Error_mitigation/out_four_sat_matched/build_scoreboard.py
 ```
 
@@ -397,7 +479,8 @@ python3 Error_mitigation/out_four_sat_matched/build_scoreboard.py
 
 - JSON `success` is explicitly `most_likely_bitstring == ground_bitstring`.
 - Gibbs payload `by_hamiltonian` records per-H success and the
-  success-then-cost pick.
+  success-then-cost pick (`pick_rule`, `pick_fallback` when no trial
+  found the ground bitstring).
 - `--gibbs-pick {energy,success_then_cost}` on the mitigation runner
   (default `energy`, official path unchanged).
 - `compare_histograms` reports `success_gs` / `success_gs_ideal` (mode

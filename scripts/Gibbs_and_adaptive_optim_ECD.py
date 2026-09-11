@@ -405,6 +405,8 @@ def _summarize_by_hamiltonian(recs: list[dict]) -> dict:
             "pick_trial": int(pick["trial"]),
             "pick_cost": float(pick["cost"]),
             "pick_success": bool(pick.get("success")),
+            "pick_fallback": bool(n_success == 0),
+            "pick_rule": "success_then_cost" if n_success else "cost_fallback",
             "pick_energy_physical": float(pick["energy_physical"]),
             "pick_most_likely_bitstring": str(pick.get("most_likely_bitstring", "")),
             "mean_energy_physical": float(np.mean(energies)) if energies else float("nan"),

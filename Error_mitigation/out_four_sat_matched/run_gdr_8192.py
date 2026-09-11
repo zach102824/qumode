@@ -2,7 +2,8 @@
 """Run matched 4-SAT GDR @8192 (2-wide).
 
 Default queue is SNAP L3 + ECD L4 into the original ``{ansatz}_hXXX_s8192``
-dirs. Pass ``--suite l2l3`` for SNAP L2 + ECD L3 into ``{ansatz}_l{d}_hXXX_*``.
+dirs. Pass ``--suite l2l3`` for SNAP L2 + ECD L3, or ``--suite l1l2`` for
+SNAP L1 + ECD L2, into ``{ansatz}_l{d}_hXXX_*``.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ MAX_WORKERS = 2
 SUITES = {
     "l3l4": (("snap", 3, "gibbs_four_sat_snap_matched_n10.json", ""), ("ecd", 4, "gibbs_four_sat_ecd_matched_n10.json", "")),
     "l2l3": (("snap", 2, "gibbs_four_sat_snap_matched_n10_L2.json", "l2_"), ("ecd", 3, "gibbs_four_sat_ecd_matched_n10_L3.json", "l3_")),
+    "l1l2": (("snap", 1, "gibbs_four_sat_snap_matched_n10_L1.json", "l1_"), ("ecd", 2, "gibbs_four_sat_ecd_matched_n10_L2.json", "l2_")),
 }
 
 
