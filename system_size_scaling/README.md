@@ -2,7 +2,8 @@
 
 Noiseless Gibbs **ECD only** bitstring success vs system size `n=7…11`.
 All code and results for this study live in this folder. Upstream
-`src/`, `scripts/`, `Hamiltonians/`, and `Error_mitigation/` are not edited.
+`src/`, `scripts/`, `Hamiltonians/`, and `Error_mitigation/` are not edited
+except when pulling already-merged default-protocol fixes from `main`.
 
 ## Question
 
@@ -14,7 +15,22 @@ At fixed clause density ≈ `18/7 ≈ 2.57`, how does ECD depth `L` needed for
 Success = `most_likely_bitstring == ground_bitstring`.
 Each `(n, L)` cell is **20 Hamiltonians × 10 trials = 200**.
 Cost is Gibbs `-ln⟨e^{-ηE}⟩` with production `sampled_tail` η.
-No SNAP. No GDR. No noise.
+No SNAP. No GDR. No noise (κ_φ is irrelevant for this noiseless ladder).
+
+## Canonical protocol (this restart)
+
+| item | value |
+|------|-------|
+| trials | 10 / Hamiltonian, 20 H |
+| L sweep | n≥8: start at 4, +1 until ≥90% or **soft cap L=40** (not a hard stop at 20) |
+| SPSA | joint **200**, `a=0.2, c=0.15, A=10, α=0.602, γ=0.101` |
+| η | `sampled_tail` (5%/25% quantiles, EMA, no known `E_min`) |
+| prep init | vacuum |
+| ham seed | `27700 + 100 n` |
+| trial seed | `41000 + 1000 n + 10 hid + trial` |
+
+The previous 70-SPSA L=3…20 cells are **superseded**. They live in
+`results_70spsa_superseded/` and are ignored by resume / `SCALE_CONCLUSION.md`.
 
 ## Hardware embedding
 
@@ -45,7 +61,7 @@ simulated tensor.
 ECD layer: one `ECD(β) R(θ, φ)` pair on every live transmon–cavity edge,
 cavity-major then transmon. For `n=7` that is exactly the production UER
 order (T0–C0, then T0–C1). `L` such layers. Prep is a product
-`⊗ Ry(θ_i)|0⟩ ⊗ |α_j⟩`, jointly SPSA-optimized from vacuum (70 steps,
+`⊗ Ry(θ_i)|0⟩ ⊗ |α_j⟩`, jointly SPSA-optimized from vacuum (200 steps,
 production gains).
 
 ## Hamiltonians
@@ -65,7 +81,7 @@ From the repo root:
 python -m system_size_scaling.generate_hamiltonians --n 8
 python -m system_size_scaling.generate_hamiltonians --all
 
-# one n: start at L=4, increment until ≥90% or L=20
+# one n: start at L=4, increment until ≥90% or L=40
 python -m system_size_scaling.run_one_n --n 8
 
 # live ladder n=8 → 11 (generates missing Hamiltonians)
@@ -81,16 +97,5 @@ python -m pytest system_size_scaling/tests -q
 `--workers` defaults to 1 (in-process). A multi-process pool is slower here
 unless BLAS is pinned; use `--workers 1`. Results land in
 `results/n{N}_L{LL}.json` and `results/n{N}_summary.json`.
-`SCALE_CONCLUSION.md` is rewritten after each n.
-
-## Protocol knobs
-
-| item | value |
-|------|-------|
-| trials | 10 / Hamiltonian, 20 H |
-| L sweep | n≥8: 4 … 20, stop at ≥ 90%; n=7 not re-run |
-| SPSA | joint 70, `a=0.2, c=0.15, A=10, α=0.602, γ=0.101` |
-| η | `sampled_tail` (5%/25% quantiles, EMA, no known `E_min`) |
-| prep init | vacuum |
-| ham seed | `27700 + 100 n` |
-| trial seed | `41000 + 1000 n + 10 hid + trial` |
+`SCALE_CONCLUSION.md` is rewritten after each depth.
+Resume skips a cell only if it is complete **and** `outer_iter=200`.

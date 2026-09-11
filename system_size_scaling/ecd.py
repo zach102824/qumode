@@ -82,7 +82,8 @@ def apply_ecd(
     lead = x.shape[:-2]
     x = x.reshape(-1, 2, L)
     d_plus = displace_matrix(L, 0.5 * complex(beta))
-    d_minus = displace_matrix(L, -0.5 * complex(beta))
+    # Truncated generator is anti-Hermitian, so D(-α) = D(α)†.
+    d_minus = d_plus.conj().T
     y = np.empty_like(x)
     y[:, 1, :] = x[:, 0, :] @ d_plus.T
     y[:, 0, :] = x[:, 1, :] @ d_minus.T

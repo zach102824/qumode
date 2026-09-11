@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Depth sweep for one n: ECD L=4…20 until bitstring success ≥ 90%."""
+"""Depth sweep for one n: ECD L=4…40 until bitstring success ≥ 90%.
+
+Canonical protocol: 200 joint SPSA, vacuum prep, sampled_tail η, noiseless.
+Old 70-SPSA cells in results_70spsa_superseded/ are not resumed.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +12,6 @@ import json
 import os
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from pathlib import Path
 
 import numpy as np
 
@@ -19,6 +22,7 @@ from .config import (
     N_TRIALS,
     OUTER_ITER,
     PREP_STEP_SCALE,
+    PROTOCOL_TAG,
     SPSA_A,
     SPSA_A_STAB,
     SPSA_ALPHA,
@@ -26,6 +30,7 @@ from .config import (
     SPSA_GAMMA,
     SUCCESS_THRESHOLD,
     ham_dir,
+    is_canonical_cell,
     results_path,
     summary_path,
     trial_seed,
@@ -117,6 +122,61 @@ def _run_trial(job: dict) -> dict:
     }
 
 
+def _protocol_block(outer_iter: int) -> dict:
+    return {
+        "tag": PROTOCOL_TAG,
+        "ansatz": "ecd",
+        "objective": "gibbs",
+        "eta": "sampled_tail",
+        "noise": None,
+        "snap": False,
+        "gdr": False,
+        "success": "most_likely_bitstring == ground_bitstring",
+        "spsa": {
+            "a": SPSA_A,
+            "c": SPSA_C,
+            "A": SPSA_A_STAB,
+            "alpha": SPSA_ALPHA,
+            "gamma": SPSA_GAMMA,
+            "outer_iter": int(outer_iter),
+            "prep_step_scale": PREP_STEP_SCALE,
+            "prep_init": "vacuum",
+        },
+    }
+
+
+def _payload(
+    n: int,
+    depth: int,
+    trials: list[dict],
+    *,
+    instances: list[dict],
+    n_trials: int,
+    outer_iter: int,
+    emb,
+    wall_s: float,
+) -> dict:
+    trials = sorted(trials, key=lambda r: (int(r["hamiltonian_id"]), int(r["trial"])))
+    k = int(sum(bool(r["success"]) for r in trials))
+    ntot = len(trials)
+    return {
+        "n": n,
+        "L": int(depth),
+        "k": k,
+        "n_total": ntot,
+        "success_fraction": f"{k}/{ntot}",
+        "success_prob": k / max(ntot, 1),
+        "wall_s": wall_s,
+        "n_hamiltonians": len(instances),
+        "n_trials_per_h": int(n_trials),
+        "outer_iter": int(outer_iter),
+        "embedding": emb.as_dict(),
+        "idle_hardware_modes": hardware_idle_modes(n),
+        "protocol": _protocol_block(outer_iter),
+        "trials": trials,
+    }
+
+
 def run_depth(
     n: int,
     depth: int,
@@ -134,14 +194,23 @@ def run_depth(
     expected = len(instances) * int(n_trials)
     if resume and out_path.exists():
         prev = json.loads(out_path.read_text(encoding="utf-8"))
-        for rec in prev.get("trials", []):
-            existing[(int(rec["hamiltonian_id"]), int(rec["trial"]))] = rec
-        if len(existing) >= expected:
+        if not is_canonical_cell(prev, outer_iter=outer_iter):
             print(
-                f"=== n={n}  L={depth}  skip complete {len(existing)}/{expected}  → {out_path} ===",
+                f"=== n={n}  L={depth}  ignore non-canonical "
+                f"outer_iter={prev.get('outer_iter')} tag={(prev.get('protocol') or {}).get('tag')} "
+                f"(need {outer_iter} / {PROTOCOL_TAG}) ===",
                 flush=True,
             )
-            return prev
+        else:
+            for rec in prev.get("trials", []):
+                existing[(int(rec["hamiltonian_id"]), int(rec["trial"]))] = rec
+            if len(existing) >= expected:
+                print(
+                    f"=== n={n}  L={depth}  skip complete {len(existing)}/{expected}  "
+                    f"outer_iter={prev.get('outer_iter')}  → {out_path} ===",
+                    flush=True,
+                )
+                return prev
 
     jobs = []
     for inst in instances:
@@ -172,22 +241,40 @@ def run_depth(
     print(
         f"=== n={n}  L={depth}  {len(instances)} H × {n_trials} trials  "
         f"todo={len(jobs)} cached={len(existing)}  dim={emb.dim}  "
-        f"pairs={emb.n_pairs}  workers={workers} ===",
+        f"pairs={emb.n_pairs}  workers={workers}  SPSA={outer_iter} ===",
         flush=True,
     )
+
+    def _commit(extra_wall: float = 0.0) -> dict:
+        wall = time.perf_counter() - t0 + extra_wall
+        payload = _payload(
+            n,
+            depth,
+            trials,
+            instances=instances,
+            n_trials=n_trials,
+            outer_iter=outer_iter,
+            emb=emb,
+            wall_s=wall,
+        )
+        write_json(out_path, payload)
+        return payload
+
     if jobs:
         workers = max(1, min(int(workers), len(jobs)))
         if workers == 1:
-            for job in jobs:
+            for i, job in enumerate(jobs, start=1):
                 rec = _run_trial(job)
                 trials.append(rec)
                 print(
-                    f"  H{rec['hamiltonian_id']} t{rec['trial']}: "
+                    f"  [{i}/{len(jobs)}] H{rec['hamiltonian_id']} t{rec['trial']}: "
                     f"{'HIT' if rec['success'] else 'miss'}  "
                     f"{rec['most_likely_bitstring']} vs {rec['ground_bitstring']}  "
                     f"cost={rec['gibbs_cost']:.3f}  {rec['elapsed_s']:.2f}s",
                     flush=True,
                 )
+                if i == len(jobs) or i % 10 == 0:
+                    _commit()
         else:
             import multiprocessing as mp
 
@@ -211,48 +298,13 @@ def run_depth(
                         f"cost={rec['gibbs_cost']:.3f}  {rec['elapsed_s']:.2f}s",
                         flush=True,
                     )
+                    if done == len(jobs) or done % 10 == 0:
+                        _commit()
 
-    trials.sort(key=lambda r: (int(r["hamiltonian_id"]), int(r["trial"])))
-    k = int(sum(bool(r["success"]) for r in trials))
-    ntot = len(trials)
-    wall = time.perf_counter() - t0
-    payload = {
-        "n": n,
-        "L": int(depth),
-        "k": k,
-        "n_total": ntot,
-        "success_fraction": f"{k}/{ntot}",
-        "success_prob": k / max(ntot, 1),
-        "wall_s": wall,
-        "n_hamiltonians": len(instances),
-        "n_trials_per_h": int(n_trials),
-        "outer_iter": int(outer_iter),
-        "embedding": emb.as_dict(),
-        "idle_hardware_modes": hardware_idle_modes(n),
-        "protocol": {
-            "ansatz": "ecd",
-            "objective": "gibbs",
-            "eta": "sampled_tail",
-            "noise": None,
-            "snap": False,
-            "gdr": False,
-            "success": "most_likely_bitstring == ground_bitstring",
-            "spsa": {
-                "a": SPSA_A,
-                "c": SPSA_C,
-                "A": SPSA_A_STAB,
-                "alpha": SPSA_ALPHA,
-                "gamma": SPSA_GAMMA,
-                "outer_iter": int(outer_iter),
-                "prep_step_scale": PREP_STEP_SCALE,
-                "prep_init": "vacuum",
-            },
-        },
-        "trials": trials,
-    }
-    write_json(out_path, payload)
+    payload = _commit()
     print(
-        f"n={n} L={depth}: {k}/{ntot} = {payload['success_prob']:.3f}  wall={wall:.1f}s  → {out_path}",
+        f"n={n} L={depth}: {payload['k']}/{payload['n_total']} = {payload['success_prob']:.3f}  "
+        f"wall={payload['wall_s']:.1f}s  SPSA={outer_iter}  → {out_path}",
         flush=True,
     )
     return payload
@@ -263,9 +315,13 @@ def summarize_n(n: int, curve: list[dict], wall_s: float) -> dict:
     hit = next((c for c in curve if float(c["success_prob"]) >= SUCCESS_THRESHOLD), None)
     best = max(curve, key=lambda r: (float(r["success_prob"]), -int(r["L"]))) if curve else None
     chosen = hit or best
-    status = "hit_threshold" if hit is not None else (
-        "capped_L20_below_threshold" if curve and int(curve[-1]["L"]) >= L_MAX else "in_progress"
-    )
+    last_l = int(curve[-1]["L"]) if curve else 0
+    if hit is not None:
+        status = "hit_threshold"
+    elif curve and last_l >= L_MAX:
+        status = "capped_L40_below_threshold"
+    else:
+        status = "in_progress"
     summary = {
         "n": int(n),
         "L_star": None if hit is None else int(hit["L"]),
@@ -275,6 +331,9 @@ def summarize_n(n: int, curve: list[dict], wall_s: float) -> dict:
         "success_fraction": "0/0" if chosen is None else f"{int(chosen['k'])}/{int(chosen['n_total'])}",
         "wall_s": float(wall_s),
         "status": status,
+        "outer_iter": OUTER_ITER,
+        "protocol_tag": PROTOCOL_TAG,
+        "l_max": L_MAX,
         "curve": [
             {
                 "L": int(c["L"]),
@@ -282,6 +341,7 @@ def summarize_n(n: int, curve: list[dict], wall_s: float) -> dict:
                 "n_total": int(c["n_total"]),
                 "success_prob": float(c["success_prob"]),
                 "wall_s": float(c.get("wall_s", 0.0)),
+                "outer_iter": int(c.get("outer_iter", OUTER_ITER)),
             }
             for c in curve
         ],
@@ -318,8 +378,16 @@ def run_sweep(
             workers=workers,
         )
         curve.append(rec)
+        write_conclusion(f"Live: n={n} L={depth} → {rec['success_fraction']} ({PROTOCOL_TAG}).")
         if float(rec["success_prob"]) >= SUCCESS_THRESHOLD:
             print(f"n={n}: L*={depth} hits ≥{SUCCESS_THRESHOLD:.0%}", flush=True)
+            break
+        if depth >= int(l_max):
+            print(
+                f"n={n}: still below {SUCCESS_THRESHOLD:.0%} at soft cap L={depth}. "
+                f"Stopping this n (do not silently treat L=20 as a hard cap).",
+                flush=True,
+            )
             break
         if not no_sweep:
             print(f"n={n} L={depth} below threshold; trying L={depth + 1}", flush=True)

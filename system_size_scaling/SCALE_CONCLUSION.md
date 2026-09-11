@@ -5,105 +5,59 @@ Success = `most_likely_bitstring == ground_bitstring`.
 Each live cell is **20 Hamiltonians × 10 trials = 200**.
 Cost = Gibbs `-ln⟨e^{-ηE}⟩` with `sampled_tail` η.
 Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exact fill).
-Live ladder is **n=8…11 starting at L=4** (increment until ≥90% or L=20).
+Live ladder is **n=8…11 starting at L=4**, **200 joint SPSA**, increment L until ≥90% or soft cap **L=40** (not a hard stop at 20).
+Protocol tag: `200_joint_spsa_noiseless`.
 
-## Summary table
+## Summary table (canonical, 200 joint SPSA)
 
 | n | L* | k/200 | success | wall (s) | status |
 |---|----|-------|---------|----------|--------|
 | 7 | 4 | 186/200 | 0.930 | — | prior_data_pr14 |
-| 8 | — | 39/200 | 0.195 | 2390.6 | capped_L20_below_threshold |
-| 9 | — | 51/200 | 0.255 | 3980.7 | capped_L20_below_threshold |
-| 10 | — | 11/200 | 0.055 | 3736.3 | capped_L20_below_threshold |
-| 11 | — | 2/200 | 0.010 | 948.1 | in_progress |
+| 8 | — | — | — | — | not_started |
+| 9 | — | — | — | — | not_started |
+| 10 | — | — | — | — | not_started |
+| 11 | — | — | — | — | not_started |
 
 ## n=7 prior data (not re-run here)
 
 Official L* comes from [PR #14](https://github.com/zach102824/qumode/pull/14) noiseless ECD **L4: 186/200 = 93%** (20 H × 10 trials, **200** joint SPSA, vacuum, `sampled_tail` η, production 1q+2cav / original `four_sat` fleet).
 
-This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the scoreboard L*. n=7 L=4…20 cells in `results/` are leftover from an earlier mis-scoped sweep and are not used in the table.
+This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the scoreboard L*.
 
-## Depth curves (live ladder, L≥4)
+## Depth curves (live ladder, 200 joint SPSA, L≥4)
 
 ### n=8
 
-| L | k/N | success | wall (s) |
-|---|-----|---------|----------|
-| 4 | 39/200 | 0.195 | 49.1 |
-| 5 | 12/200 | 0.060 | 59.8 |
-| 6 | 3/200 | 0.015 | 70.5 |
-| 7 | 3/200 | 0.015 | 81.0 |
-| 8 | 1/200 | 0.005 | 96.4 |
-| 9 | 1/200 | 0.005 | 109.2 |
-| 10 | 2/200 | 0.010 | 116.1 |
-| 11 | 2/200 | 0.010 | 125.8 |
-| 12 | 3/200 | 0.015 | 136.8 |
-| 13 | 2/200 | 0.010 | 151.6 |
-| 14 | 0/200 | 0.000 | 166.1 |
-| 15 | 1/200 | 0.005 | 176.8 |
-| 16 | 0/200 | 0.000 | 188.8 |
-| 17 | 1/200 | 0.005 | 200.5 |
-| 18 | 1/200 | 0.005 | 208.6 |
-| 19 | 0/200 | 0.000 | 219.5 |
-| 20 | 1/200 | 0.005 | 234.0 |
+Not started under the 200-SPSA protocol.
 
 ### n=9
 
-| L | k/N | success | wall (s) |
-|---|-----|---------|----------|
-| 4 | 51/200 | 0.255 | 82.4 |
-| 5 | 24/200 | 0.120 | 100.9 |
-| 6 | 8/200 | 0.040 | 123.2 |
-| 7 | 2/200 | 0.010 | 143.5 |
-| 8 | 5/200 | 0.025 | 163.9 |
-| 9 | 1/200 | 0.005 | 182.9 |
-| 10 | 1/200 | 0.005 | 201.5 |
-| 11 | 0/200 | 0.000 | 218.5 |
-| 12 | 3/200 | 0.015 | 240.5 |
-| 13 | 0/200 | 0.000 | 247.6 |
-| 14 | 2/200 | 0.010 | 268.4 |
-| 15 | 0/200 | 0.000 | 288.8 |
-| 16 | 0/200 | 0.000 | 307.7 |
-| 17 | 0/200 | 0.000 | 326.1 |
-| 18 | 1/200 | 0.005 | 349.1 |
-| 19 | 0/200 | 0.000 | 354.4 |
-| 20 | 0/200 | 0.000 | 381.3 |
+Not started under the 200-SPSA protocol.
 
 ### n=10
 
-| L | k/N | success | wall (s) |
-|---|-----|---------|----------|
-| 4 | 11/200 | 0.055 | 79.2 |
-| 5 | 4/200 | 0.020 | 96.6 |
-| 6 | 3/200 | 0.015 | 114.3 |
-| 7 | 0/200 | 0.000 | 131.7 |
-| 8 | 1/200 | 0.005 | 149.3 |
-| 9 | 0/200 | 0.000 | 166.7 |
-| 10 | 0/200 | 0.000 | 183.8 |
-| 11 | 0/200 | 0.000 | 201.0 |
-| 12 | 0/200 | 0.000 | 218.6 |
-| 13 | 0/200 | 0.000 | 235.7 |
-| 14 | 0/200 | 0.000 | 254.1 |
-| 15 | 1/200 | 0.005 | 272.4 |
-| 16 | 0/200 | 0.000 | 289.2 |
-| 17 | 0/200 | 0.000 | 306.3 |
-| 18 | 1/200 | 0.005 | 328.3 |
-| 19 | 0/200 | 0.000 | 345.8 |
-| 20 | 0/200 | 0.000 | 363.5 |
+Not started under the 200-SPSA protocol.
 
 ### n=11
 
-| L | k/N | success | wall (s) |
-|---|-----|---------|----------|
-| 4 | 2/200 | 0.010 | 80.0 |
-| 5 | 0/200 | 0.000 | 98.2 |
-| 6 | 0/200 | 0.000 | 123.3 |
-| 7 | 0/200 | 0.000 | 134.5 |
-| 8 | 0/200 | 0.000 | 151.8 |
-| 9 | 0/200 | 0.000 | 169.4 |
-| 10 | 0/200 | 0.000 | 190.9 |
+Not started under the 200-SPSA protocol.
+
+## Superseded: 70-SPSA L=3…20 (not canonical)
+
+Previous PR #15 cells used **70** joint SPSA and a hard L=20 cap. They never hit 90% for n=8–10; deeper L was systematically worse. Those JSON files are kept under `results_70spsa_superseded/` and **must not** be mixed into the live scoreboard.
+
+| n | best L≥4 (70 SPSA) | k/200 | note |
+|---|--------------------|-------|------|
+| 8 | 4 | 39/200 | L=4…20 done; never ≥90% |
+| 9 | 4 | 51/200 | L=4…20 done; never ≥90% |
+| 10 | 4 | 11/200 | L=4…20 done; never ≥90% |
+| 11 | 4 | 2/200 | L=4…10 on disk; cancelled |
+
+Why deeper L looked worse: not a unitarity/decoding bug (n=7 ECD matches production QuTiP; gates stay norm-preserving at L=20/40). At fixed 70 SPSA, extra layers add parameters that the budget cannot train — both ⟨H⟩ and p_ground degrade. n=7 L=4 was 168/200 at 70 SPSA vs **186/200 at 200 SPSA** in PR #14. This restart tests whether 200 joint SPSA plus uncapped L recovers ≥90% for n=8…11.
+
+Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7 default-redo agent. This ladder is noiseless mode-finding; κ_φ does not enter the cost.
 
 ## Notes
 
-Protocol: n=7 is PR #14 prior data (L*=4, 186/200 = 93%). Live ladder is n=8…11 starting at L=4 (L=3 is not scored). n=8, 9, 10 L=4…20 are complete and never hit 90% (best L=4: n=8 39/200, n=9 51/200, n=10 11/200). n=11 L≥4 through L=10 on disk (best L=4 2/200); L=11…20 running.
+Restart: canonical protocol is 200 joint SPSA, L=4…40 soft cap. 70-SPSA cells moved to results_70spsa_superseded/. Live n=8…11 not started.
 

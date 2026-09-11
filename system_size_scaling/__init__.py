@@ -6,6 +6,7 @@ from .config import (
     L_START,
     N_HAMILTONIANS,
     N_TRIALS,
+    OUTER_ITER,
     SUCCESS_THRESHOLD,
 )
 
@@ -15,5 +16,6 @@ __all__ = [
     "L_START",
     "N_HAMILTONIANS",
     "N_TRIALS",
+    "OUTER_ITER",
     "SUCCESS_THRESHOLD",
 ]

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""n=8 → 9 → 10 → 11 depth-sweep ladder (L starts at 4). n=7 is prior PR #14 data."""
+"""n=8 → 9 → 10 → 11 depth-sweep ladder (L starts at 4, 200 joint SPSA).
+
+n=7 is prior PR #14 data. Soft cap L=40 (not a hard stop at 20).
+"""
 
 from __future__ import annotations
 
@@ -36,7 +39,10 @@ def main(argv: list[str] | None = None) -> int:
     ns = [n for n in LADDER_NS if int(args.from_n) <= n <= int(args.to_n)]
     if not ns:
         parser.error("empty n range")
-    write_conclusion("Ladder started; cells fill as each n finishes.")
+    write_conclusion(
+        f"Ladder started under {args.outer_iter}-SPSA protocol; "
+        f"n={ns[0]}…{ns[-1]}, L={args.l_start}…{args.l_max}."
+    )
     for n in ns:
         ensure_hamiltonians(n, args.n_hamiltonians, args.search_trials)
         summary = run_sweep(
@@ -53,6 +59,12 @@ def main(argv: list[str] | None = None) -> int:
             f"{summary.get('success_fraction')}  status={summary.get('status')}",
             flush=True,
         )
+        if summary.get("status") == "capped_L40_below_threshold":
+            print(
+                f"SOFT CAP: n={n} never reached 90% through L={args.l_max}. "
+                "Recorded and stopping this n as requested.",
+                flush=True,
+            )
     write_conclusion("Ladder command completed for the requested n range.")
     return 0
 

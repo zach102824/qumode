@@ -8,7 +8,21 @@ from pathlib import Path
 
 import numpy as np
 
-from .config import L_START, LADDER_NS, PRIOR_N7, RESULTS_ROOT, ROOT, SUCCESS_THRESHOLD, results_path, summary_path
+from .config import (
+    L_MAX,
+    L_START,
+    LADDER_NS,
+    OUTER_ITER,
+    PRIOR_N7,
+    PROTOCOL_TAG,
+    RESULTS_ROOT,
+    ROOT,
+    SUCCESS_THRESHOLD,
+    SUPERSEDED_70_SPSA,
+    is_canonical_cell,
+    results_path,
+    summary_path,
+)
 
 
 def json_ready(obj):
@@ -39,10 +53,13 @@ def load_depth_result(n: int, depth: int) -> dict | None:
     path = results_path(n, depth)
     if not path.exists():
         return None
-    return read_json(path)
+    rec = read_json(path)
+    if not is_canonical_cell(rec):
+        return None
+    return rec
 
 
-def curve_from_disk(n: int, l_min: int = L_START, l_max: int = 20) -> list[dict]:
+def curve_from_disk(n: int, l_min: int = L_START, l_max: int = L_MAX) -> list[dict]:
     curve = []
     for depth in range(int(l_min), int(l_max) + 1):
         rec = load_depth_result(n, depth)
@@ -55,6 +72,7 @@ def curve_from_disk(n: int, l_min: int = L_START, l_max: int = 20) -> list[dict]
                 "n_total": int(rec["n_total"]),
                 "success_prob": float(rec["success_prob"]),
                 "wall_s": float(rec.get("wall_s", 0.0)),
+                "outer_iter": int(rec.get("outer_iter", OUTER_ITER)),
             }
         )
     return curve
@@ -71,14 +89,15 @@ def row_from_curve(n: int, curve: list[dict]) -> dict:
             "wall_s": 0.0,
             "curve": [],
             "status": "not_started",
+            "outer_iter": OUTER_ITER,
         }
     best = max(curve, key=lambda r: (r["success_prob"], -r["L"]))
     hit = next((c for c in curve if c["success_prob"] >= SUCCESS_THRESHOLD), None)
     last_l = int(curve[-1]["L"])
     if hit is not None:
         status = "hit_threshold"
-    elif last_l >= 20:
-        status = "capped_L20_below_threshold"
+    elif last_l >= L_MAX:
+        status = "capped_L40_below_threshold"
     else:
         status = "in_progress"
     chosen = hit or best
@@ -91,6 +110,7 @@ def row_from_curve(n: int, curve: list[dict]) -> dict:
         "wall_s": float(sum(c["wall_s"] for c in curve)),
         "curve": curve,
         "status": status,
+        "outer_iter": OUTER_ITER,
     }
 
 
@@ -121,9 +141,11 @@ def write_conclusion(status_note: str = "") -> Path:
         "Each live cell is **20 Hamiltonians × 10 trials = 200**.",
         "Cost = Gibbs `-ln⟨e^{-ηE}⟩` with `sampled_tail` η.",
         "Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exact fill).",
-        "Live ladder is **n=8…11 starting at L=4** (increment until ≥90% or L=20).",
+        f"Live ladder is **n=8…11 starting at L=4**, **{OUTER_ITER} joint SPSA**, "
+        f"increment L until ≥90% or soft cap **L={L_MAX}** (not a hard stop at 20).",
+        f"Protocol tag: `{PROTOCOL_TAG}`.",
         "",
-        "## Summary table",
+        "## Summary table (canonical, 200 joint SPSA)",
         "",
         "| n | L* | k/200 | success | wall (s) | status |",
         "|---|----|-------|---------|----------|--------|",
@@ -161,10 +183,9 @@ def write_conclusion(status_note: str = "") -> Path:
             "vacuum, `sampled_tail` η, production 1q+2cav / original `four_sat` fleet).",
             "",
             "This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** "
-            "the scoreboard L*. n=7 L=4…20 cells in `results/` are leftover from an "
-            "earlier mis-scoped sweep and are not used in the table.",
+            "the scoreboard L*.",
             "",
-            "## Depth curves (live ladder, L≥4)",
+            "## Depth curves (live ladder, 200 joint SPSA, L≥4)",
             "",
         ]
     )
@@ -176,21 +197,57 @@ def write_conclusion(status_note: str = "") -> Path:
         lines.append("")
         curve = [c for c in row.get("curve", []) if int(c["L"]) >= L_START]
         if not curve:
-            lines.append("Not started.")
+            lines.append("Not started under the 200-SPSA protocol.")
             lines.append("")
             continue
-        lines.append("| L | k/N | success | wall (s) |")
-        lines.append("|---|-----|---------|----------|")
+        lines.append("| L | k/N | success | wall (s) | SPSA |")
+        lines.append("|---|-----|---------|----------|------|")
         for c in curve:
+            spsa = int(c.get("outer_iter", OUTER_ITER))
             lines.append(
                 f"| {int(c['L'])} | {int(c['k'])}/{int(c['n_total'])} | "
-                f"{float(c['success_prob']):.3f} | {float(c.get('wall_s', 0.0)):.1f} |"
+                f"{float(c['success_prob']):.3f} | {float(c.get('wall_s', 0.0)):.1f} | {spsa} |"
             )
         lines.append("")
 
+    lines.extend(
+        [
+            "## Superseded: 70-SPSA L=3…20 (not canonical)",
+            "",
+            "Previous PR #15 cells used **70** joint SPSA and a hard L=20 cap. "
+            "They never hit 90% for n=8–10; deeper L was systematically worse. "
+            "Those JSON files are kept under `results_70spsa_superseded/` and "
+            "**must not** be mixed into the live scoreboard.",
+            "",
+            "| n | best L≥4 (70 SPSA) | k/200 | note |",
+            "|---|--------------------|-------|------|",
+        ]
+    )
+    for n, rec in SUPERSEDED_70_SPSA.items():
+        lines.append(
+            f"| {n} | {rec['best_L']} | {rec['k']}/{rec['n_total']} | {rec['note']} |"
+        )
+    lines.extend(
+        [
+            "",
+            "Why deeper L looked worse: not a unitarity/decoding bug (n=7 ECD "
+            "matches production QuTiP; gates stay norm-preserving at L=20/40). "
+            "At fixed 70 SPSA, extra layers add parameters that the budget cannot "
+            "train — both ⟨H⟩ and p_ground degrade. n=7 L=4 was 168/200 at 70 SPSA "
+            "vs **186/200 at 200 SPSA** in PR #14. This restart tests whether 200 "
+            "joint SPSA plus uncapped L recovers ≥90% for n=8…11.",
+            "",
+            "Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the "
+            "n=7 default-redo agent. This ladder is noiseless mode-finding; κ_φ does "
+            "not enter the cost.",
+            "",
+        ]
+    )
+
     note = status_note.rstrip() if status_note else (
-        "Protocol: n=7 is PR #14 prior data (L*=4, 186/200 = 93%). "
-        "Live ladder is n=8…11 starting at L=4 (L=3 is not scored)."
+        f"Protocol: n=7 is PR #14 prior data (L*=4, 186/200 = 93%). "
+        f"Live ladder is n=8…11 starting at L=4 with {OUTER_ITER} joint SPSA "
+        f"(L=3 is not scored; L={L_MAX} is a soft cap)."
     )
     lines.extend(["## Notes", "", note, ""])
 

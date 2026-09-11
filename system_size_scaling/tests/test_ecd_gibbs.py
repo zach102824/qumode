@@ -25,6 +25,24 @@ def test_rotation_and_displace_are_unitary():
     assert np.allclose(d.conj().T @ d, np.eye(8), atol=1e-10)
 
 
+def test_negative_displace_is_adjoint():
+    d = displace_matrix(8, 0.7 - 0.3j)
+    dneg = displace_matrix(8, -(0.7 - 0.3j))
+    assert np.allclose(dneg, d.conj().T, atol=1e-12)
+
+
+def test_deep_ansatz_preserves_norm():
+    from system_size_scaling.ecd import apply_ecd_ansatz, prep_to_ket
+
+    emb = embedding_for_n(8)
+    rng = np.random.default_rng(7)
+    psi0 = prep_to_ket(vacuum_prep(emb), emb)
+    for depth in (20, 40):
+        x = random_ecd_parameters(depth, emb.n_pairs, rng)
+        out = apply_ecd_ansatz(psi0, x, emb, depth)
+        assert abs(np.linalg.norm(out) - 1.0) < 1e-10
+
+
 def test_ecd_preserves_norm():
     emb = embedding_for_n(7)
     rng = np.random.default_rng(0)
