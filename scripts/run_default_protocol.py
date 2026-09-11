@@ -238,7 +238,8 @@ def _run_pool(jobs: list[dict], workers: int, fn, kind: str) -> list[dict]:
 def _write_json(path: Path, payload: dict) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(_json_ready(payload), indent=2) + "\n", encoding="utf-8")
+    # Compact: 200 trials × 201-step traces are tens of MB with indent=2.
+    path.write_text(json.dumps(_json_ready(payload), separators=(",", ":")) + "\n", encoding="utf-8")
     print(f"Wrote {path}", flush=True)
     return path
 
@@ -611,6 +612,10 @@ def write_conclusion(args: argparse.Namespace) -> Path:
         "python -u scripts/run_default_protocol.py noiseless --ansatz snap --workers 4",
         "python -u scripts/run_default_protocol.py noisy --ansatz ecd --kappa-tau 0.003 --workers 4",
         "python -u scripts/run_default_protocol.py noisy --ansatz snap --kappa-tau 0.003 --workers 4",
+        "python -u scripts/run_default_protocol.py noisy --ansatz ecd --kappa-tau 0.03 --workers 4",
+        "python -u scripts/run_default_protocol.py noisy --ansatz snap --kappa-tau 0.03 --workers 4",
+        "python -u scripts/run_default_protocol.py noisy --ansatz ecd --kappa-tau 0.1 --workers 4",
+        "python -u scripts/run_default_protocol.py noisy --ansatz snap --kappa-tau 0.1 --workers 4",
         "python -u scripts/run_default_protocol.py plots",
         "python -u scripts/run_default_protocol.py conclude",
         "```",
