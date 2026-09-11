@@ -1,0 +1,402 @@
+[
+  {
+    "file": "four_sat_000.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 71,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "101111011",
+    "greedy_basin": 13,
+    "n_local_minima": 342,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_001.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 62,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "110111110",
+    "greedy_basin": 10,
+    "n_local_minima": 318,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_002.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 75,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111111010",
+    "greedy_basin": 10,
+    "n_local_minima": 333,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_003.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 49,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "110011000",
+    "greedy_basin": 10,
+    "n_local_minima": 326,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_004.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 81,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 5,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "110111101",
+    "greedy_basin": 12,
+    "n_local_minima": 315,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_005.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 53,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111111100",
+    "greedy_basin": 10,
+    "n_local_minima": 316,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_006.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 71,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "110111000",
+    "greedy_basin": 10,
+    "n_local_minima": 327,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_007.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 80,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111110101",
+    "greedy_basin": 13,
+    "n_local_minima": 310,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_008.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 66,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111110110",
+    "greedy_basin": 10,
+    "n_local_minima": 327,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_009.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 72,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "110101110",
+    "greedy_basin": 11,
+    "n_local_minima": 325,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_010.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 76,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111110100",
+    "greedy_basin": 10,
+    "n_local_minima": 323,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_011.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 25,
+    "n_pauli_terms": 75,
+    "identity": 1.5625,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111111000",
+    "greedy_basin": 10,
+    "n_local_minima": 256,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_012.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 77,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "110111101",
+    "greedy_basin": 10,
+    "n_local_minima": 333,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_013.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 78,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111100110",
+    "greedy_basin": 12,
+    "n_local_minima": 320,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_014.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 69,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "110111110",
+    "greedy_basin": 12,
+    "n_local_minima": 323,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_015.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 64,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "110101110",
+    "greedy_basin": 11,
+    "n_local_minima": 328,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_016.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 71,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 3,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111010110",
+    "greedy_basin": 13,
+    "n_local_minima": 307,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_017.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 65,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111011000",
+    "greedy_basin": 10,
+    "n_local_minima": 307,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_018.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 71,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111111001",
+    "greedy_basin": 10,
+    "n_local_minima": 335,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  },
+  {
+    "file": "four_sat_019.npz",
+    "num_spins": 9,
+    "clause_width": 4,
+    "num_clauses": 23,
+    "n_pauli_terms": 69,
+    "identity": 1.4375,
+    "energy_min": 0,
+    "energy_max": 4,
+    "gap": 1,
+    "n_ground": 1,
+    "ground_bitstring": "111011011",
+    "greedy_basin": 11,
+    "n_local_minima": 311,
+    "clause_window": [
+      17,
+      23,
+      31
+    ]
+  }
+]

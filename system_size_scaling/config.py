@@ -1,0 +1,76 @@
+"""Protocol constants for the isolated ECD system-size ladder."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+HAM_ROOT = ROOT / "Hamiltonians"
+RESULTS_ROOT = ROOT / "results"
+
+# Production n=7 4-SAT used ~18 clauses / 7 variables.
+CLAUSE_DENSITY = 18 / 7
+CLAUSE_WIDTH = 4
+N_HAMILTONIANS = 20
+N_TRIALS = 10
+SEARCH_TRIALS = 4000
+
+# Depth sweep: start L=3, increment to L=20 or until success ≥ 90%.
+L_START = 3
+L_MAX = 20
+SUCCESS_THRESHOLD = 0.90
+
+# Hardware target: 2 transmons × 3 cavities × 8 levels = 2048.
+N_TRANSMONS = 2
+N_CAVITIES = 3
+FOCK_CUTOFF = 8
+HARDWARE_DIM = 2 * 2 * 8 * 8 * 8  # 2048
+MAX_LOGICAL_BITS = N_TRANSMONS + N_CAVITIES * 3  # 11
+
+# Distinct from production four_sat.py (seed 11000) and size-sweep ham seeds.
+HAM_SEED_BASE = 27700
+
+# Joint SPSA — same gains as production optimize_gibbs_adaptive / ECD script.
+OUTER_ITER = 70
+SPSA_A = 0.2
+SPSA_C = 0.15
+SPSA_A_STAB = 10.0
+SPSA_ALPHA = 0.602
+SPSA_GAMMA = 0.101
+PREP_STEP_SCALE = 1.0
+SEED_BASE = 41000
+
+# Clause-count band around density × n (uniqueness loop, not the old 12–20 lock).
+CLAUSE_BAND_BELOW = 6
+CLAUSE_BAND_ABOVE = 8
+
+LADDER_NS = (7, 8, 9, 10, 11)
+
+
+def clause_window(n: int) -> tuple[int, int, int]:
+    """Return (min_clauses, target_clauses, max_clauses) at density 18/7."""
+    n = int(n)
+    target = int(round(n * CLAUSE_DENSITY))
+    lo = max(n, target - CLAUSE_BAND_BELOW)
+    hi = max(target + CLAUSE_BAND_ABOVE, lo + 1)
+    return lo, target, hi
+
+
+def ham_seed(n: int) -> int:
+    return int(HAM_SEED_BASE) + 100 * int(n)
+
+
+def trial_seed(n: int, hid: int, trial: int) -> int:
+    return int(SEED_BASE) + 1000 * int(n) + 10 * int(hid) + int(trial)
+
+
+def ham_dir(n: int) -> Path:
+    return HAM_ROOT / f"n{int(n)}"
+
+
+def results_path(n: int, depth: int) -> Path:
+    return RESULTS_ROOT / f"n{int(n)}_L{int(depth):02d}.json"
+
+
+def summary_path(n: int) -> Path:
+    return RESULTS_ROOT / f"n{int(n)}_summary.json"
