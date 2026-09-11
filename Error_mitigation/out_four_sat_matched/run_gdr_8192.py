@@ -37,20 +37,31 @@ def log(msg: str) -> None:
             fh.write(line + "\n")
 
 
-def run_one(ansatz: str, hid: int, ndepth: int, gibbs_name: str, prefix: str) -> tuple[str, int, int, float]:
-    tag = f"{ansatz}_{prefix}h{hid:03d}_s8192"
+def run_one(
+    ansatz: str,
+    hid: int,
+    ndepth: int,
+    gibbs_name: str,
+    prefix: str,
+    *,
+    smoke: bool = False,
+) -> tuple[str, int, int, float]:
+    tag = f"{ansatz}_{prefix}h{hid:03d}_{'smoke' if smoke else 's8192'}"
     outdir = OUT / tag
     results = outdir / "results.json"
     if results.is_file():
         log(f"SKIP existing {outdir.relative_to(ROOT)}")
         return ansatz, hid, 0, 0.0
     gibbs = ROOT / "results" / gibbs_name
+    shots = "4000" if smoke else "8192"
+    n_train = "12" if smoke else "40"
+    preset = "smoke" if smoke else "full"
     cmd = [
         sys.executable,
         "-u",
         str(ROOT / "Error_mitigation" / "run_mitigation_experiment.py"),
         "--preset",
-        "full",
+        preset,
         "--family",
         "four_sat",
         "--instance",
@@ -72,15 +83,15 @@ def run_one(ansatz: str, hid: int, ndepth: int, gibbs_name: str, prefix: str) ->
         "--twin-design",
         "adaptive",
         "--shots",
-        "8192",
+        shots,
         "--n-train",
-        "40",
+        n_train,
         "--params",
         "both",
         "--outdir",
         str(outdir),
     ]
-    log(f"START {ansatz} H{hid} nd={ndepth} s8192 shots=8192 n_train=40")
+    log(f"START {ansatz} H{hid} nd={ndepth} {'smoke' if smoke else 's8192'} shots={shots} n_train={n_train}")
     t0 = time.time()
     env = dict(**{k: v for k, v in __import__("os").environ.items()})
     env["PYTHONPATH"] = str(ROOT / "src")
@@ -91,29 +102,39 @@ def run_one(ansatz: str, hid: int, ndepth: int, gibbs_name: str, prefix: str) ->
     env["MPLCONFIGDIR"] = "/tmp/mpl"
     proc = subprocess.run(cmd, cwd=ROOT, env=env)
     elapsed = time.time() - t0
+    label = "smoke" if smoke else "s8192"
     if proc.returncode != 0:
-        log(f"FAIL {ansatz} H{hid} s8192 rc={proc.returncode} {elapsed:.1f}s")
+        log(f"FAIL {ansatz} H{hid} {label} rc={proc.returncode} {elapsed:.1f}s")
     else:
-        log(f"DONE {ansatz} H{hid} s8192 {elapsed:.1f}s")
+        log(f"DONE {ansatz} H{hid} {label} {elapsed:.1f}s")
     return ansatz, hid, int(proc.returncode), elapsed
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", choices=tuple(SUITES), default="l3l4")
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="H000 smoke only (4000 shots / 12 twins) into {ansatz}_l{d}_h000_smoke.",
+    )
     args = parser.parse_args()
     spec = SUITES[args.suite]
-    jobs = [(ansatz, hid, nd, gibbs, prefix) for ansatz, nd, gibbs, prefix in spec for hid in range(20)]
+    if args.smoke:
+        jobs = [(ansatz, 0, nd, gibbs, prefix) for ansatz, nd, gibbs, prefix in spec]
+    else:
+        jobs = [(ansatz, hid, nd, gibbs, prefix) for ansatz, nd, gibbs, prefix in spec for hid in range(20)]
     Path("/tmp/mpl").mkdir(parents=True, exist_ok=True)
-    log(f"GDR 8192 suite={args.suite} queue {len(jobs)} jobs workers={MAX_WORKERS}")
+    label = "smoke" if args.smoke else "8192"
+    log(f"GDR {label} suite={args.suite} queue {len(jobs)} jobs workers={MAX_WORKERS}")
     rc = 0
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
-        futs = [pool.submit(run_one, a, h, d, g, p) for a, h, d, g, p in jobs]
+        futs = [pool.submit(run_one, a, h, d, g, p, smoke=args.smoke) for a, h, d, g, p in jobs]
         for fut in as_completed(futs):
             _ansatz, _hid, code, _elapsed = fut.result()
             if code != 0:
                 rc = code
-    log(f"GDR 8192 suite={args.suite} finished rc={rc}")
+    log(f"GDR {label} suite={args.suite} finished rc={rc}")
     return rc
 
 

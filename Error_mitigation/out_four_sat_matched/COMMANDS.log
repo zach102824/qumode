@@ -172,3 +172,9 @@
 2026-09-10T15:17:47Z DONE ecd H17 s8192 217.7s
 2026-09-10T15:18:44Z DONE ecd H19 s8192 149.6s
 2026-09-10T15:18:44Z GDR 8192 suite=l2l3 finished rc=0
+2026-09-11T01:02:39Z GDR smoke suite=l1l2 queue 2 jobs workers=2
+2026-09-11T01:02:39Z START snap H0 nd=1 smoke shots=4000 n_train=12
+2026-09-11T01:02:39Z START ecd H0 nd=2 smoke shots=4000 n_train=12
+2026-09-11T01:03:14Z DONE snap H0 smoke 34.5s
+2026-09-11T01:03:21Z DONE ecd H0 smoke 42.0s
+2026-09-11T01:03:21Z GDR smoke suite=l1l2 finished rc=0
