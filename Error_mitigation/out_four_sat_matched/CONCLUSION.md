@@ -374,9 +374,88 @@ needed no cost fallback.
 ### 2. Adaptive GDR (all 20 H, both ansatzes)
 
 Same noise / twin / shot settings as the deeper pairs. Smoke first on
-H000 (`snap_l1_h000_smoke`, `ecd_l2_h000_smoke`; 4000 shots / 12 twins),
-then 8192 on all 20. Results pending in this revision; filled after the
-`--suite l1l2` fleet finishes.
+H000 (`snap_l1_h000_smoke`, `ecd_l2_h000_smoke`; 4000 shots / 12 twins).
+
+**Ideal optimized circuit has GS mode on 20/20 H for both SNAP L1 and
+ECD L2.** Mode-finding on the ideal picked state is again not the GDR
+bottleneck, even though noiseless fleet success is much lower than the
+deeper pairs.
+
+#### SNAP L1 optimized — raw → `gdr_select` TVD
+
+Wins vs raw: **20/20** at κτ=0.003, **20/20** at 0.03, **19/20** at 0.1.
+Mean TVD: 0.094→0.031, 0.267→0.065, 0.467→0.228.
+
+GS mode after mitigation:
+**20/20**, **20/20**, **20/20** select vs raw **20/20**, **20/20**, **9/20**.
+
+| H | pick ⟨H⟩ | κτ=0.003 | κτ=0.03 | κτ=0.1 |
+|--:|---------:|----------|---------|--------|
+| 000 | 1.227 | 0.088 → 0.040 | 0.195 → 0.083 | 0.339 → 0.155 |
+| 001 | 0.664 | 0.122 → 0.028 | 0.367 → 0.053 | 0.582 → 0.211 |
+| 002 | 0.885 | 0.097 → 0.025 | 0.307 → 0.071 | 0.549 → 0.284 |
+| 003 | 0.787 | 0.111 → 0.035 | 0.292 → 0.070 | 0.510 → 0.290 |
+| 004 | 0.730 | 0.126 → 0.024 | 0.396 → 0.075 | 0.616 → 0.342 |
+| 005 | 0.894 | 0.090 → 0.030 | 0.242 → 0.054 | 0.455 → 0.090 |
+| 006 | 1.031 | 0.071 → 0.037 | 0.133 → 0.070 | 0.236 → 0.184 |
+| 007 | 0.981 | 0.076 → 0.030 | 0.174 → 0.056 | 0.353 → 0.179 |
+| 008 | 0.854 | 0.041 → 0.027 | 0.211 → 0.051 | 0.426 → 0.113 |
+| 009 | 0.935 | 0.066 → 0.038 | 0.131 → 0.094 | 0.226 → 0.305 † |
+| 010 | 0.828 | 0.102 → 0.023 | 0.315 → 0.064 | 0.541 → 0.412 |
+| 011 | 0.756 | 0.070 → 0.028 | 0.263 → 0.045 | 0.535 → 0.126 |
+| 012 | 0.853 | 0.094 → 0.034 | 0.233 → 0.062 | 0.407 → 0.206 |
+| 013 | 0.798 | 0.072 → 0.030 | 0.278 → 0.035 | 0.498 → 0.252 |
+| 014 | 1.051 | 0.096 → 0.034 | 0.210 → 0.076 | 0.364 → 0.249 |
+| 015 | 0.920 | 0.085 → 0.031 | 0.180 → 0.068 | 0.316 → 0.180 |
+| 016 | 0.643 | 0.111 → 0.032 | 0.373 → 0.046 | 0.643 → 0.222 |
+| 017 | 0.788 | 0.104 → 0.030 | 0.316 → 0.062 | 0.541 → 0.359 |
+| 018 | 0.497 | 0.131 → 0.025 | 0.391 → 0.061 | 0.642 → 0.215 |
+| 019 | 0.715 | 0.120 → 0.035 | 0.332 → 0.098 | 0.566 → 0.188 |
+
+† = select does **not** beat raw. SNAP L1 opt κτ=0.1 loss: H009 only.
+
+#### ECD L2 optimized — raw → `gdr_select` TVD
+
+Wins vs raw: **20/20** at 0.003, **20/20** at 0.03, **18/20** at 0.1.
+Mean TVD: 0.103→0.050, 0.303→0.114, 0.519→0.381.
+
+GS mode after mitigation: **20/20**, **20/20**, **10/20** select vs raw
+**19/20**, **17/20**, **3/20**.
+
+Ideal GS mode remains 20/20 even on high-⟨H⟩ ECD L2 picks (e.g. H000
+⟨H⟩=0.931, H006 1.089). GDR at κτ=0.1 is mixed; again **not** gated by
+a near-E0 cut.
+
+| H | pick ⟨H⟩ | κτ=0.003 | κτ=0.03 | κτ=0.1 |
+|--:|---------:|----------|---------|--------|
+| 000 | 0.931 | 0.075 → 0.046 | 0.166 → 0.053 | 0.340 → 0.149 |
+| 001 | 0.660 | 0.125 → 0.055 | 0.333 → 0.106 | 0.582 → 0.366 |
+| 002 | 0.493 | 0.176 → 0.052 | 0.546 → 0.202 | 0.749 → 0.718 |
+| 003 | 0.845 | 0.089 → 0.058 | 0.236 → 0.149 | 0.425 → 0.305 |
+| 004 | 0.999 | 0.110 → 0.041 | 0.431 → 0.105 | 0.745 → 0.446 |
+| 005 | 0.914 | 0.079 → 0.062 | 0.261 → 0.202 | 0.521 → 0.390 |
+| 006 | 1.089 | 0.082 → 0.041 | 0.285 → 0.099 | 0.507 → 0.354 |
+| 007 | 0.877 | 0.097 → 0.063 | 0.325 → 0.170 | 0.539 → 0.434 |
+| 008 | 0.773 | 0.088 → 0.048 | 0.238 → 0.190 | 0.433 → 0.423 |
+| 009 | 0.947 | 0.070 → 0.066 | 0.113 → 0.055 | 0.262 → 0.129 |
+| 010 | 0.729 | 0.103 → 0.025 | 0.334 → 0.078 | 0.643 → 0.193 |
+| 011 | 0.767 | 0.096 → 0.049 | 0.346 → 0.118 | 0.578 → 0.507 |
+| 012 | 0.888 | 0.056 → 0.047 | 0.129 → 0.066 | 0.296 → 0.183 |
+| 013 | 0.814 | 0.071 → 0.048 | 0.283 → 0.089 | 0.514 → 0.257 |
+| 014 | 1.070 | 0.081 → 0.059 | 0.158 → 0.075 | 0.285 → 0.191 |
+| 015 | 0.892 | 0.089 → 0.054 | 0.176 → 0.149 | 0.301 → 0.363 † |
+| 016 | 0.203 | 0.193 → 0.036 | 0.581 → 0.080 | 0.793 → 0.766 |
+| 017 | 0.857 | 0.101 → 0.046 | 0.350 → 0.074 | 0.619 → 0.201 |
+| 018 | 0.650 | 0.144 → 0.067 | 0.400 → 0.095 | 0.679 → 0.606 |
+| 019 | 0.576 | 0.133 → 0.043 | 0.367 → 0.124 | 0.572 → 0.640 † |
+
+κτ=0.1 losses: H015, H019.
+
+#### Random circuits (same adaptive recipe)
+
+SNAP L1 random select vs raw wins: **20/20**, **19/20**, **20/20** at
+0.003 / 0.03 / 0.1. ECD L2 random: **20/20**, **19/20**, **20/20**.
+Random circuits do not have GS mode (0/20), as expected.
 
 Machine-readable scoreboard (all three pairs):
 `Error_mitigation/out_four_sat_matched/scoreboard.json`
@@ -468,6 +547,7 @@ python3 -u Error_mitigation/run_mitigation_experiment.py \
 
 python3 -u Error_mitigation/out_four_sat_matched/run_gdr_8192.py --suite l3l4
 python3 -u Error_mitigation/out_four_sat_matched/run_gdr_8192.py --suite l2l3
+python3 -u Error_mitigation/out_four_sat_matched/run_gdr_8192.py --suite l1l2 --smoke
 python3 -u Error_mitigation/out_four_sat_matched/run_gdr_8192.py --suite l1l2
 python3 Error_mitigation/out_four_sat_matched/build_scoreboard.py
 ```
