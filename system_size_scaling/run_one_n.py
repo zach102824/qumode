@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Depth sweep for one n: ECD L=4…40 until bitstring success ≥ 90%.
 
-Canonical protocol: 200 joint SPSA, vacuum prep, sampled_tail η, noiseless.
+Canonical protocol: 200 joint SPSA with a scaled as 0.2*sqrt(37/n_params),
+vacuum prep, sampled_tail η, noiseless. See DIAGNOSIS.md.
 Old 70-SPSA cells in results_70spsa_superseded/ are not resumed.
 """
 
@@ -31,7 +32,9 @@ from .config import (
     SUCCESS_THRESHOLD,
     ham_dir,
     is_canonical_cell,
+    n_joint_params,
     results_path,
+    spsa_a_scaled,
     summary_path,
     trial_seed,
 )
@@ -119,10 +122,11 @@ def _run_trial(job: dict) -> dict:
         "n_eta_fallbacks": int(result.n_eta_fallbacks),
         "elapsed_s": float(elapsed),
         "file": inst["file"],
+        "spsa_a": float(job["spsa_a"]),
     }
 
 
-def _protocol_block(outer_iter: int) -> dict:
+def _protocol_block(outer_iter: int, *, a: float, n_params: int) -> dict:
     return {
         "tag": PROTOCOL_TAG,
         "ansatz": "ecd",
@@ -133,7 +137,10 @@ def _protocol_block(outer_iter: int) -> dict:
         "gdr": False,
         "success": "most_likely_bitstring == ground_bitstring",
         "spsa": {
-            "a": SPSA_A,
+            "a": float(a),
+            "a_ref": SPSA_A,
+            "a_mode": "scaled_sqrt_n7_L4",
+            "n_params": int(n_params),
             "c": SPSA_C,
             "A": SPSA_A_STAB,
             "alpha": SPSA_ALPHA,
@@ -172,7 +179,11 @@ def _payload(
         "outer_iter": int(outer_iter),
         "embedding": emb.as_dict(),
         "idle_hardware_modes": hardware_idle_modes(n),
-        "protocol": _protocol_block(outer_iter),
+        "protocol": _protocol_block(
+            outer_iter,
+            a=float(trials[0]["spsa_a"]) if trials and "spsa_a" in trials[0] else spsa_a_scaled(n_joint_params(emb.n_prep_params, depth, emb.n_pairs)),
+            n_params=n_joint_params(emb.n_prep_params, depth, emb.n_pairs),
+        ),
         "trials": trials,
     }
 
@@ -227,7 +238,7 @@ def run_depth(
                     "path": inst["path"],
                     "seed": trial_seed(n, hid, t),
                     "outer_iter": int(outer_iter),
-                    "spsa_a": SPSA_A,
+                    "spsa_a": spsa_a_scaled(n_joint_params(emb.n_prep_params, int(depth), emb.n_pairs)),
                     "spsa_c": SPSA_C,
                     "spsa_A": SPSA_A_STAB,
                     "spsa_alpha": SPSA_ALPHA,
@@ -241,7 +252,8 @@ def run_depth(
     print(
         f"=== n={n}  L={depth}  {len(instances)} H × {n_trials} trials  "
         f"todo={len(jobs)} cached={len(existing)}  dim={emb.dim}  "
-        f"pairs={emb.n_pairs}  workers={workers}  SPSA={outer_iter} ===",
+        f"pairs={emb.n_pairs}  workers={workers}  SPSA={outer_iter}  "
+        f"a={spsa_a_scaled(n_joint_params(emb.n_prep_params, int(depth), emb.n_pairs)):.4f} ===",
         flush=True,
     )
 

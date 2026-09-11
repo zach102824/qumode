@@ -26,7 +26,7 @@ SUCCESS_THRESHOLD = 0.90
 
 # Canonical optimizer budget — PR #14 / new default (not the superseded 70).
 OUTER_ITER = 200
-PROTOCOL_TAG = "200_joint_spsa_noiseless"
+PROTOCOL_TAG = "200_joint_spsa_noiseless_a_scaled"
 
 # Official n=7 scoreboard row — PR #14 noiseless ECD L4 (200 joint SPSA),
 # not this folder's n=7 L-sweep. Do not regenerate n=7 for the table.

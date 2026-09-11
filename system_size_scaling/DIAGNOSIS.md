@@ -75,11 +75,152 @@ Uniform 1/2^n for n=8 is 0.003906.
 | 8 | 6/2000 | 0.00300 | 0.00386 | 0.00391 |
 | 12 | 4/2000 | 0.00200 | 0.00404 | 0.00391 |
 
+## 3. Controlled n=8 study (200 joint SPSA)
+
+### default_a (outer_iter=200)
+
+| L | k/N | success | mean p(GS) | max p(GS) | mean ⟨H⟩ | mean\|β\| | a | n_params |
+|---|-----|---------|------------|-----------|----------|-----------|---|----------|
+| 4 | 164/200 | 0.820 | 0.1475 | 0.5187 | 1.148 | 1.963 | 0.2000 | 70 |
+| 8 | 8/200 | 0.040 | 0.0079 | 0.0306 | 1.313 | 2.098 | 0.2000 | 134 |
+| 12 | 1/200 | 0.005 | 0.0064 | 0.0261 | 1.312 | 2.089 | 0.2000 | 198 |
+
+Mean H0 traces p(GS) vs step at L=4:
+
+| step | mean p(GS) | mean ⟨H⟩ |
+|------|------------|----------|
+| 0 | 0.0012 | 1.355 |
+| 1 | 0.0012 | 1.355 |
+| 6 | 0.0038 | 1.327 |
+| 11 | 0.0022 | 1.312 |
+| 16 | 0.0038 | 1.360 |
+| 21 | 0.0081 | 1.314 |
+| 26 | 0.0043 | 1.283 |
+| 31 | 0.0040 | 1.281 |
+| 36 | 0.0130 | 1.321 |
+| 41 | 0.0053 | 1.354 |
+| 46 | 0.0039 | 1.345 |
+| 51 | 0.0037 | 1.292 |
+| 196 | 0.1901 | 1.041 |
+
+Mean H0 traces p(GS) vs step at L=8:
+
+| step | mean p(GS) | mean ⟨H⟩ |
+|------|------------|----------|
+| 0 | 0.0049 | 1.311 |
+| 1 | 0.0049 | 1.311 |
+| 6 | 0.0025 | 1.337 |
+| 11 | 0.0014 | 1.323 |
+| 16 | 0.0032 | 1.293 |
+| 21 | 0.0041 | 1.332 |
+| 26 | 0.0059 | 1.275 |
+| 31 | 0.0053 | 1.296 |
+| 36 | 0.0040 | 1.306 |
+| 41 | 0.0079 | 1.303 |
+| 46 | 0.0092 | 1.346 |
+| 51 | 0.0039 | 1.362 |
+| 196 | 0.0058 | 1.294 |
+
+Mean H0 traces p(GS) vs step at L=12:
+
+| step | mean p(GS) | mean ⟨H⟩ |
+|------|------------|----------|
+| 0 | 0.0025 | 1.327 |
+| 1 | 0.0025 | 1.327 |
+| 6 | 0.0035 | 1.341 |
+| 11 | 0.0045 | 1.343 |
+| 16 | 0.0043 | 1.320 |
+| 21 | 0.0030 | 1.301 |
+| 26 | 0.0053 | 1.308 |
+| 31 | 0.0034 | 1.298 |
+| 36 | 0.0024 | 1.333 |
+| 41 | 0.0025 | 1.350 |
+| 46 | 0.0060 | 1.296 |
+| 51 | 0.0038 | 1.304 |
+| 196 | 0.0119 | 1.303 |
+
+### scaled_a (outer_iter=200)
+
+| L | k/N | success | mean p(GS) | max p(GS) | mean ⟨H⟩ | mean\|β\| | a | n_params |
+|---|-----|---------|------------|-----------|----------|-----------|---|----------|
+| 4 | 196/200 | 0.980 | 0.1965 | 0.6891 | 1.077 | 1.672 | 0.1454 | 70 |
+| 8 | 84/200 | 0.420 | 0.0322 | 0.3242 | 1.281 | 1.651 | 0.1051 | 134 |
+| 12 | 24/200 | 0.120 | 0.0112 | 0.0441 | 1.305 | 1.610 | 0.0865 | 198 |
+
+Mean H0 traces p(GS) vs step at L=4:
+
+| step | mean p(GS) | mean ⟨H⟩ |
+|------|------------|----------|
+| 0 | 0.0012 | 1.355 |
+| 1 | 0.0012 | 1.355 |
+| 6 | 0.0038 | 1.360 |
+| 11 | 0.0130 | 1.361 |
+| 16 | 0.0090 | 1.306 |
+| 21 | 0.0049 | 1.356 |
+| 26 | 0.0111 | 1.287 |
+| 31 | 0.0044 | 1.322 |
+| 36 | 0.0115 | 1.252 |
+| 41 | 0.0145 | 1.250 |
+| 46 | 0.0330 | 1.261 |
+| 51 | 0.0313 | 1.310 |
+| 196 | 0.2409 | 1.041 |
+
+Mean H0 traces p(GS) vs step at L=8:
+
+| step | mean p(GS) | mean ⟨H⟩ |
+|------|------------|----------|
+| 0 | 0.0049 | 1.311 |
+| 1 | 0.0049 | 1.311 |
+| 6 | 0.0062 | 1.309 |
+| 11 | 0.0056 | 1.292 |
+| 16 | 0.0110 | 1.310 |
+| 21 | 0.0098 | 1.366 |
+| 26 | 0.0162 | 1.274 |
+| 31 | 0.0103 | 1.270 |
+| 36 | 0.0127 | 1.274 |
+| 41 | 0.0086 | 1.305 |
+| 46 | 0.0054 | 1.341 |
+| 51 | 0.0075 | 1.336 |
+| 196 | 0.0212 | 1.245 |
+
+Mean H0 traces p(GS) vs step at L=12:
+
+| step | mean p(GS) | mean ⟨H⟩ |
+|------|------------|----------|
+| 0 | 0.0025 | 1.327 |
+| 1 | 0.0025 | 1.327 |
+| 6 | 0.0066 | 1.295 |
+| 11 | 0.0046 | 1.304 |
+| 16 | 0.0135 | 1.255 |
+| 21 | 0.0097 | 1.276 |
+| 26 | 0.0064 | 1.293 |
+| 31 | 0.0082 | 1.313 |
+| 36 | 0.0087 | 1.327 |
+| 41 | 0.0076 | 1.355 |
+| 46 | 0.0054 | 1.323 |
+| 51 | 0.0095 | 1.386 |
+| 196 | 0.0079 | 1.270 |
+
 ## Root cause
 
-Embedding is not the bug: n=8 planted bitstrings encode→decode, hybrid ground energy is unique, and dim=256=2^8. n=7 decode matches production `bits_from_qnm`. n=7 L=4 ECD statevector matches production QuTiP to numerical precision. Random-init success (L=4 0.0020, L=8 0.0030, L=12 0.0020) is order-1/2^n (0.0039), so argmax is not stuck on a single garbage label.
+**Not a circuit / decode bug.** n=8 planted encode→decode is exact, hybrid ground is unique, n=7 ECD matches production QuTiP (fidelity 1.0), and random-init success is ~1/256.
+
+**Two stacked optimizer failures, both about parameter count:**
+
+1. **70 SPSA was far too few** for n=8 L=4 (70 joint params vs production 37). Same seeds at 200 SPSA / a=0.2 jump **39/200 → 164/200**. H0 traces: p(GS) 0.001 → 0.19 over 200 steps (the optimizer is still climbing at the budget).
+2. **Production `a=0.2` is too large once n_params > 37.** SPSA RMS step grows ~√d. Scaling `a ← 0.2 × √(37 / n_params)` at 200 steps:
+
+| L | n_params | a=0.2 | scaled a | scaled k/200 |
+|---|----------|------:|----------:|-------------:|
+| 4 | 70 | 164/200 (82%) | 0.145 | **196/200 (98%)** |
+| 8 | 134 | 8/200 (4%) | 0.105 | 84/200 (42%) |
+| 12 | 198 | 1/200 (0.5%) | 0.086 | 24/200 (12%) |
+
+Deeper L still loses even with scaled `a` (H0 traces at L=8/12 never leave p(GS)~0.01). Extra layers add parameters that a **fixed** 200-step budget cannot train. Blindly raising L toward 40 with default `a=0.2` would reproduce the old collapse.
+
+The 70-SPSA L=4→20 curve was this same under-training, made worse by the short budget. n=7 showed the identical shape (L4 168/200 → L12 6/200 at 70 steps) despite a correct circuit.
 
 ## Live ladder
 
-Controlled study not finished; do not start the live L-sweep yet.
+Sane. Do **not** sweep L=5…40 at a=0.2. Adopt `a = 0.2 * sqrt(37 / n_params)` and start n=8 at **L=4**: diagnosis already has **196/200 = 98% ≥ 90%**, so L*=4. Then n=9, 10, 11 from L=4 with the same scaled-a rule. Raise L only if an n misses 90% at L=4.
 

@@ -23,7 +23,7 @@ No SNAP. No GDR. No noise (κ_φ is irrelevant for this noiseless ladder).
 |------|-------|
 | trials | 10 / Hamiltonian, 20 H |
 | L sweep | n≥8: start at 4, +1 until ≥90% or **soft cap L=40** (not a hard stop at 20) |
-| SPSA | joint **200**, `a=0.2, c=0.15, A=10, α=0.602, γ=0.101` |
+| SPSA | joint **200**, `a = 0.2 × √(37 / n_params)` (production `a=0.2` is the n=7 L=4 reference), `c=0.15, A=10, α=0.602, γ=0.101` |
 | η | `sampled_tail` (5%/25% quantiles, EMA, no known `E_min`) |
 | prep init | vacuum |
 | ham seed | `27700 + 100 n` |

@@ -5,8 +5,8 @@ Success = `most_likely_bitstring == ground_bitstring`.
 Each live cell is **20 Hamiltonians × 10 trials = 200**.
 Cost = Gibbs `-ln⟨e^{-ηE}⟩` with `sampled_tail` η.
 Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exact fill).
-Live ladder is **n=8…11 starting at L=4**, **200 joint SPSA**, increment L until ≥90% or soft cap **L=40** (not a hard stop at 20).
-Protocol tag: `200_joint_spsa_noiseless`.
+Live ladder is **n=8…11 starting at L=4**, **200 joint SPSA**, `a = 0.2 × √(37 / n_params)`, increment L until ≥90% or soft cap **L=40** (not a hard stop at 20).
+Protocol tag: `200_joint_spsa_noiseless_a_scaled`.
 
 ## Summary table (canonical, 200 joint SPSA)
 
@@ -59,5 +59,5 @@ Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7
 
 ## Notes
 
-Diagnosis in progress (see DIAGNOSIS.md). Live 200-SPSA L-sweep is paused until n=8 L=4/8/12 controlled study finishes.
+unit-test rebuild
 

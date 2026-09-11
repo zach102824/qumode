@@ -142,6 +142,7 @@ def write_conclusion(status_note: str = "") -> Path:
         "Cost = Gibbs `-ln⟨e^{-ηE}⟩` with `sampled_tail` η.",
         "Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exact fill).",
         f"Live ladder is **n=8…11 starting at L=4**, **{OUTER_ITER} joint SPSA**, "
+        f"`a = 0.2 × √(37 / n_params)`, "
         f"increment L until ≥90% or soft cap **L={L_MAX}** (not a hard stop at 20).",
         f"Protocol tag: `{PROTOCOL_TAG}`.",
         "",

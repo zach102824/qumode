@@ -16,7 +16,7 @@ def test_canonical_protocol_constants():
     assert OUTER_ITER == 200
     assert L_START == 4
     assert L_MAX == 40
-    assert PROTOCOL_TAG == "200_joint_spsa_noiseless"
+    assert PROTOCOL_TAG == "200_joint_spsa_noiseless_a_scaled"
 
 
 def test_spsa_a_scaled_matches_n7_at_ref():
