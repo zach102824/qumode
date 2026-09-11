@@ -47,8 +47,10 @@ def test_row_from_curve_soft_cap_is_l40():
 
 
 def test_write_conclusion_marks_superseded_70(tmp_path, monkeypatch):
-    del tmp_path, monkeypatch
-    path = write_conclusion("unit-test rebuild")
+    import system_size_scaling.io_util as io_util
+
+    monkeypatch.setattr(io_util, "ROOT", tmp_path)
+    path = io_util.write_conclusion("unit-test rebuild")
     text = path.read_text(encoding="utf-8")
     assert "200 joint SPSA" in text
     assert "Superseded: 70-SPSA" in text
