@@ -11,7 +11,7 @@ Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exac
 | n | L* | k/200 | success | wall (s) | status |
 |---|----|-------|---------|----------|--------|
 | 7 | — | 168/200 | 0.840 | 2848.6 | capped_L20_below_threshold |
-| 8 | — | — | — | — | not_started |
+| 8 | — | 109/200 | 0.545 | 2429.4 | capped_L20_below_threshold |
 | 9 | — | — | — | — | not_started |
 | 10 | — | — | — | — | not_started |
 | 11 | — | — | — | — | not_started |
@@ -43,7 +43,26 @@ Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exac
 
 ### n=8
 
-Not started.
+| L | k/N | success | wall (s) |
+|---|-----|---------|----------|
+| 3 | 109/200 | 0.545 | 38.4 |
+| 4 | 39/200 | 0.195 | 49.1 |
+| 5 | 12/200 | 0.060 | 59.8 |
+| 6 | 3/200 | 0.015 | 70.5 |
+| 7 | 3/200 | 0.015 | 81.0 |
+| 8 | 1/200 | 0.005 | 96.4 |
+| 9 | 1/200 | 0.005 | 109.2 |
+| 10 | 2/200 | 0.010 | 116.1 |
+| 11 | 2/200 | 0.010 | 125.8 |
+| 12 | 3/200 | 0.015 | 136.8 |
+| 13 | 2/200 | 0.010 | 151.6 |
+| 14 | 0/200 | 0.000 | 166.1 |
+| 15 | 1/200 | 0.005 | 176.8 |
+| 16 | 0/200 | 0.000 | 188.8 |
+| 17 | 1/200 | 0.005 | 200.5 |
+| 18 | 1/200 | 0.005 | 208.6 |
+| 19 | 0/200 | 0.000 | 219.5 |
+| 20 | 1/200 | 0.005 | 234.0 |
 
 ### n=9
 
@@ -59,5 +78,7 @@ Not started.
 
 ## Notes
 
-n=7 finished the L=3…20 protocol and never hit 90%. Best cell is L=4 at 168/200 (84%). With a fixed 70-step joint SPSA budget, deeper random ECD ansatze collapse (L≥10 is ≤8%). L* is undefined (cap).
+n=7: never hit 90%. Best L=4 at 168/200 (84%); deeper L collapses with 70-step SPSA.
+n=8: never hit 90%. Best L=3 at 109/200 (54.5%); L≥5 is ≤6%.
+L* is undefined at both sizes (cap L=20). n=9…11 next.
 
