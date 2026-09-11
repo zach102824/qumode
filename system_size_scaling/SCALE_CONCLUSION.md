@@ -13,8 +13,8 @@ Protocol tag: `200_joint_spsa_noiseless_a_scaled`.
 | n | L* | k/200 | success | wall (s) | status |
 |---|----|-------|---------|----------|--------|
 | 7 | 4 | 186/200 | 0.930 | — | prior_data_pr14 |
-| 8 | — | — | — | — | not_started |
-| 9 | — | — | — | — | not_started |
+| 8 | 4 | 196/200 | 0.980 | 85.4 | hit_threshold |
+| 9 | 4 | 89/90 | 0.989 | 69.8 | hit_threshold |
 | 10 | — | — | — | — | not_started |
 | 11 | — | — | — | — | not_started |
 
@@ -28,11 +28,15 @@ This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the
 
 ### n=8
 
-Not started under the 200-SPSA protocol.
+| L | k/N | success | wall (s) | SPSA |
+|---|-----|---------|----------|------|
+| 4 | 196/200 | 0.980 | 85.4 | 200 |
 
 ### n=9
 
-Not started under the 200-SPSA protocol.
+| L | k/N | success | wall (s) | SPSA |
+|---|-----|---------|----------|------|
+| 4 | 89/90 | 0.989 | 69.8 | 200 |
 
 ### n=10
 
@@ -59,5 +63,5 @@ Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7
 
 ## Notes
 
-unit-test rebuild
+n=8 L*=4 at 196/200 (98%) with a=0.145. n=9 L=4 running.
 
