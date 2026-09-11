@@ -42,6 +42,8 @@ def compare_histograms(
     gq, gn, gm = (int(v) for v in ground_qnm)
     pgs_ideal = float(p_id[gq, gn, gm])
     gibbs_ideal = float(gibbs_objective(p_id, energy_tensor, gibbs_eta))
+    ml_ideal = tuple(int(v) for v in np.unravel_index(int(np.argmax(p_id)), p_id.shape))
+    gs = (gq, gn, gm)
     out: dict = {
         "tvd": None,
         "hellinger": None,
@@ -55,12 +57,17 @@ def compare_histograms(
         "gibbs_mit": None,
         "dGibbs": None,
         "has_histogram": p_mit is not None,
+        "most_likely_ideal": list(ml_ideal),
+        "success_gs_ideal": ml_ideal == gs,
+        "most_likely_mit": None,
+        "success_gs": None,
     }
     if p_mit is not None:
         p = _as_prob(p_mit)
         e_mit = energy_from_histogram(p, energy_tensor) if energy_mit is None else float(energy_mit)
         pgs = float(p[gq, gn, gm])
         g_mit = float(gibbs_objective(p, energy_tensor, gibbs_eta))
+        ml_mit = tuple(int(v) for v in np.unravel_index(int(np.argmax(p)), p.shape))
         out.update(
             {
                 "tvd": total_variation(p, p_id),
@@ -71,6 +78,8 @@ def compare_histograms(
                 "dPgs": abs(pgs - pgs_ideal),
                 "gibbs_mit": g_mit,
                 "dGibbs": abs(g_mit - gibbs_ideal),
+                "most_likely_mit": list(ml_mit),
+                "success_gs": ml_mit == gs,
             }
         )
         return out

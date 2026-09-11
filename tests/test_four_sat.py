@@ -129,6 +129,7 @@ def test_four_sat_gibbs_script_smoke(tmp_path):
     assert rec["hamiltonian_id"] == 0
     assert rec["n_ansatz_params"] == 8
     assert rec["n_params"] == 8 + N_PREP_PARAMS
+    assert rec["success"] == (rec["most_likely_bitstring"] == rec["ground_bitstring"])
     assert Path(tmp_path / "gibbs_four_sat_ecd.json").is_file()
 
     snap_payload = mod.run_saved_hamiltonian_suite(
@@ -198,6 +199,19 @@ def test_mitigation_runner_loads_four_sat_and_gibbs_json(tmp_path):
     assert trial["energy_physical"] == 0.2
     assert trial["x"][0] == 0.2
 
+    payload["trials"][0]["success"] = True
+    payload["trials"][0]["cost"] = 0.31
+    payload["trials"][1]["success"] = False
+    payload["trials"][1]["cost"] = 0.05
+    path.write_text(json.dumps(payload))
+    energy_pick = load_gibbs_trial(path, 0, "ecd", 2, pick="energy")
+    assert energy_pick["energy_physical"] == 0.2
+    mode_pick = load_gibbs_trial(path, 0, "ecd", 2, pick="success_then_cost")
+    assert mode_pick["energy_physical"] == 0.4
+    assert mode_pick["x"][0] == 0.1
+    args_pick = parse_args(["--family", "four_sat", "--gibbs-pick", "success_then_cost"])
+    assert args_pick.gibbs_pick == "success_then_cost"
+
 
 def test_snap_twins_accept_non_vacuum_gibbs_prep():
     """Analytic vacuum tracker is skipped; GDR still uses statevector histograms."""
@@ -220,3 +234,23 @@ def test_snap_twins_accept_non_vacuum_gibbs_prep():
     assert len(twins) == 2
     assert all(tw.p_ideal is not None for tw in twins)
     assert all(float(tw.p_ideal.sum()) == pytest.approx(1.0, abs=1e-8) for tw in twins)
+
+
+def test_compare_histograms_reports_gs_mode():
+    from Error_mitigation.metrics import compare_histograms
+
+    inst = load_four_sat_instances(HAM_DIR, max_hamiltonians=1)[0]
+    tensor = np.asarray(inst["energy_tensor"], dtype=float)
+    ground = tuple(int(v) for v in inst["ground_qnm"])
+    p_ideal = np.zeros_like(tensor, dtype=float)
+    p_ideal[ground] = 1.0
+    p_wrong = np.zeros_like(tensor, dtype=float)
+    other = (1 - ground[0], 0, 0)
+    p_wrong[other] = 1.0
+    hit = compare_histograms(p_ideal, p_ideal, tensor, ground)
+    miss = compare_histograms(p_wrong, p_ideal, tensor, ground)
+    assert hit["success_gs_ideal"] is True
+    assert hit["success_gs"] is True
+    assert miss["success_gs_ideal"] is True
+    assert miss["success_gs"] is False
+    assert miss["most_likely_mit"] == list(other)
