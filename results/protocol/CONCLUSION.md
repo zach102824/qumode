@@ -15,7 +15,9 @@ Mitigation: **gdr_param only**, M policy B (fit once per (H, κτ, ansatz), reus
 
 ## Noisy-in-loop (gdr_param, policy B)
 
-_No noisy-in-loop JSONs written yet._
+| ansatz | depth | κτ | mit k/N | raw k/N | mean ⟨H⟩ | file |
+|--------|------:|---:|--------:|--------:|---------:|------|
+| ecd | L4 | 0.003 | 186/200 | 186/200 | 0.880 | `gibbs_four_sat_ecd_l4_noisy_kt0.003.json` |
 
 ## Commands
 
