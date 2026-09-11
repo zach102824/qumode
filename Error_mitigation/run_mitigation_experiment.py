@@ -6,6 +6,9 @@ the hybrid simulator. Readout confusion is applied only to the final
 |q, n, m> histogram. Gaussian twins of the target ECD/SNAP circuit are
 used to fit a histogram transfer map, which is then inverted.
 
+The official / default reported method is ``gdr_param`` for both random
+and optimized circuits. ``gdr_select`` is an optional ablation extra.
+
 Usage
 -----
     python Error_mitigation/run_mitigation_experiment.py --preset smoke
@@ -65,6 +68,7 @@ from Error_mitigation.mitigation import (
     oracle_kernels,
     oracle_residual,
     params_to_kernels,
+    PRIMARY_METHOD,
     readout_then_zne,
     run_readout_only,
     safe_histogram,
@@ -132,12 +136,12 @@ HIST_METHODS = (
     "gdr_residual",
     "gdr_afterburn",
     "gdr_blend",
-    "gdr_select",
+    "gdr_select",  # ablation extra; not PRIMARY_METHOD
     "gdr_full",
     "zne_idle",
     "readout_then_zne",
 )
-BAR_METHODS = ("raw", "readout_only", "gdr_param", "gdr_select", "oracle_binomial", "readout_then_zne")
+BAR_METHODS = ("raw", "readout_only", "gdr_param", "gdr_damped", "oracle_binomial", "readout_then_zne")
 METHOD_COLORS = {
     "ideal": "black",
     "raw": "0.55",
@@ -420,16 +424,16 @@ def _fmt(val, digits=4):
 def write_summary_txt(path: Path, records: list[dict], headline_kt: float) -> None:
     lines = [
         "Gaussian Data Regression on mixed p-spin (hybrid ECD / SNAP)",
-        "Methods: raw, readout_only, oracle_binomial, gdr_param, gdr_damped, gdr_mid, "
-        "gdr_residual, gdr_afterburn, gdr_blend, gdr_select, gdr_full, scalar_cdr, "
-        "zne_idle, readout_then_zne",
+        "Methods: raw, readout_only, oracle_binomial, gdr_param (default), gdr_damped, "
+        "gdr_mid, gdr_residual, gdr_afterburn, gdr_blend, gdr_select (ablation), "
+        "gdr_full, scalar_cdr, zne_idle, readout_then_zne",
         "",
         "Headline at κτ = "
         + str(headline_kt)
-        + "  (readout_only vs gdr_param vs gdr_select vs oracle_binomial)",
+        + f"  (readout_only vs {PRIMARY_METHOD} vs oracle_binomial)",
         "",
     ]
-    head_methods = ("raw", "readout_only", "oracle_binomial", "gdr_param", "gdr_select")
+    head_methods = ("raw", "readout_only", "oracle_binomial", PRIMARY_METHOD)
     for rec in records:
         if abs(float(rec["kappa_tau"]) - float(headline_kt)) > 1e-12:
             continue
@@ -597,6 +601,7 @@ def mitigate_target(
         mix = damp_histogram(unfold(q_twin_obs[int(i)], cq, c1, c2), p_safe_twins[int(i)], alpha_sel)
         d_tvds.append(total_variation(mix, p_twin_ideal[int(i)]))
     cand.append(("gdr_damped", float(np.mean(d_tvds))))
+    # Ablation extra: holdout selector. Official reported method is PRIMARY_METHOD.
     chosen, extra = select_research_method(
         cand,
         residual_hops=float(info_r.get("hops", 0.0)),
@@ -834,10 +839,11 @@ def run(args: argparse.Namespace) -> dict:
                         }
                         records.append(rec)
                         tvd_raw = metrics["raw"]["tvd"]
-                        tvd_gdr = (metrics.get("gdr_param") or {}).get("tvd")
+                        tvd_gdr = (metrics.get(PRIMARY_METHOD) or {}).get("tvd")
                         print(
                             f"    {ro:<20}  raw TVD={tvd_raw:.4f}  "
-                            f"gdr={_fmt(tvd_gdr)}  oracle={_fmt((metrics.get('oracle_binomial') or {}).get('tvd'))}"
+                            f"{PRIMARY_METHOD}={_fmt(tvd_gdr)}  "
+                            f"oracle={_fmt((metrics.get('oracle_binomial') or {}).get('tvd'))}"
                         )
                         hists = {name: blob["hist"] for name, blob in mitigated.items() if blob.get("hist") is not None}
                         plot_rows.setdefault((family, ro), []).append(
@@ -886,6 +892,7 @@ def run(args: argparse.Namespace) -> dict:
         "kappa_tau": list(kappas),
         "readout_levels": list(readout_levels),
         "methods": list(HIST_METHODS) + ["scalar_cdr"],
+        "primary_method": PRIMARY_METHOD,
         "twin_design": getattr(args, "twin_design", "span"),
         "poisson_tvd_max": None if not poisson_tvds else float(max(poisson_tvds)),
         "poisson_tvd_mean": None if not poisson_tvds else float(np.mean(poisson_tvds)),
