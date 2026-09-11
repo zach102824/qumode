@@ -1,0 +1,211 @@
+{
+  "n": 11,
+  "L_star": null,
+  "k": 2,
+  "n_total": 200,
+  "success_prob": 0.01,
+  "wall_s": 948.0943077610009,
+  "curve": [
+    {
+      "L": 4,
+      "k": 2,
+      "n_total": 200,
+      "success_prob": 0.01,
+      "wall_s": 80.04922486000032
+    },
+    {
+      "L": 5,
+      "k": 0,
+      "n_total": 200,
+      "success_prob": 0.0,
+      "wall_s": 98.17872472899944
+    },
+    {
+      "L": 6,
+      "k": 0,
+      "n_total": 200,
+      "success_prob": 0.0,
+      "wall_s": 123.27675479199934
+    },
+    {
+      "L": 7,
+      "k": 0,
+      "n_total": 200,
+      "success_prob": 0.0,
+      "wall_s": 134.52016000700132
+    },
+    {
+      "L": 8,
+      "k": 0,
+      "n_total": 200,
+      "success_prob": 0.0,
+      "wall_s": 151.76133991300048
+    },
+    {
+      "L": 9,
+      "k": 0,
+      "n_total": 200,
+      "success_prob": 0.0,
+      "wall_s": 169.390447365
+    },
+    {
+      "L": 10,
+      "k": 0,
+      "n_total": 200,
+      "success_prob": 0.0,
+      "wall_s": 190.91765609499998
+    }
+  ],
+  "status": "in_progress",
+  "embedding": {
+    "n_qubits": 11,
+    "dim": 2048,
+    "hardware_dim": 2048,
+    "max_logical_bits": 11,
+    "dims": [
+      2,
+      2,
+      8,
+      8,
+      8
+    ],
+    "n_transmons": 2,
+    "n_cavities": 3,
+    "n_prep_params": 8,
+    "n_pairs": 6,
+    "ecd_pairs": [
+      {
+        "transmon_axis": 0,
+        "cavity_axis": 2
+      },
+      {
+        "transmon_axis": 1,
+        "cavity_axis": 2
+      },
+      {
+        "transmon_axis": 0,
+        "cavity_axis": 3
+      },
+      {
+        "transmon_axis": 1,
+        "cavity_axis": 3
+      },
+      {
+        "transmon_axis": 0,
+        "cavity_axis": 4
+      },
+      {
+        "transmon_axis": 1,
+        "cavity_axis": 4
+      }
+    ],
+    "modes": [
+      {
+        "name": "T0",
+        "kind": "transmon",
+        "dim": 2,
+        "n_bits": 1,
+        "axis": 0
+      },
+      {
+        "name": "T1",
+        "kind": "transmon",
+        "dim": 2,
+        "n_bits": 1,
+        "axis": 1
+      },
+      {
+        "name": "C0",
+        "kind": "cavity",
+        "dim": 8,
+        "n_bits": 3,
+        "axis": 2
+      },
+      {
+        "name": "C1",
+        "kind": "cavity",
+        "dim": 8,
+        "n_bits": 3,
+        "axis": 3
+      },
+      {
+        "name": "C2",
+        "kind": "cavity",
+        "dim": 8,
+        "n_bits": 3,
+        "axis": 4
+      }
+    ],
+    "bit_partition": [
+      {
+        "bit": 0,
+        "mode": "T0",
+        "label": "T0",
+        "kind": "transmon"
+      },
+      {
+        "bit": 1,
+        "mode": "T1",
+        "label": "T1",
+        "kind": "transmon"
+      },
+      {
+        "bit": 2,
+        "mode": "C0",
+        "label": "C0[fock bit 2]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 3,
+        "mode": "C0",
+        "label": "C0[fock bit 1]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 4,
+        "mode": "C0",
+        "label": "C0[fock bit 0]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 5,
+        "mode": "C1",
+        "label": "C1[fock bit 2]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 6,
+        "mode": "C1",
+        "label": "C1[fock bit 1]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 7,
+        "mode": "C1",
+        "label": "C1[fock bit 0]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 8,
+        "mode": "C2",
+        "label": "C2[fock bit 2]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 9,
+        "mode": "C2",
+        "label": "C2[fock bit 1]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 10,
+        "mode": "C2",
+        "label": "C2[fock bit 0]",
+        "kind": "cavity"
+      }
+    ],
+    "subspace_of_2048": false
+  },
+  "idle_hardware_modes": [],
+  "success_fraction": "2/200"
+}

@@ -1,0 +1,235 @@
+{
+  "n": 7,
+  "L_star": null,
+  "k": 168,
+  "n_total": 200,
+  "success_prob": 0.84,
+  "success_fraction": "168/200",
+  "wall_s": 2848.586480654999,
+  "status": "capped_L20_below_threshold",
+  "curve": [
+    {
+      "L": 3,
+      "k": 158,
+      "n_total": 200,
+      "success_prob": 0.79,
+      "wall_s": 1689.244851782
+    },
+    {
+      "L": 4,
+      "k": 168,
+      "n_total": 200,
+      "success_prob": 0.84,
+      "wall_s": 27.233600842000214
+    },
+    {
+      "L": 5,
+      "k": 156,
+      "n_total": 200,
+      "success_prob": 0.78,
+      "wall_s": 31.303002975000254
+    },
+    {
+      "L": 6,
+      "k": 100,
+      "n_total": 200,
+      "success_prob": 0.5,
+      "wall_s": 36.624252772999625
+    },
+    {
+      "L": 7,
+      "k": 76,
+      "n_total": 200,
+      "success_prob": 0.38,
+      "wall_s": 42.03009447099976
+    },
+    {
+      "L": 8,
+      "k": 53,
+      "n_total": 200,
+      "success_prob": 0.265,
+      "wall_s": 47.26442089500006
+    },
+    {
+      "L": 9,
+      "k": 28,
+      "n_total": 200,
+      "success_prob": 0.14,
+      "wall_s": 52.17924573499977
+    },
+    {
+      "L": 10,
+      "k": 16,
+      "n_total": 200,
+      "success_prob": 0.08,
+      "wall_s": 57.28072426899962
+    },
+    {
+      "L": 11,
+      "k": 10,
+      "n_total": 200,
+      "success_prob": 0.05,
+      "wall_s": 63.01893345899998
+    },
+    {
+      "L": 12,
+      "k": 6,
+      "n_total": 200,
+      "success_prob": 0.03,
+      "wall_s": 67.85936846999994
+    },
+    {
+      "L": 13,
+      "k": 7,
+      "n_total": 200,
+      "success_prob": 0.035,
+      "wall_s": 72.65554469299968
+    },
+    {
+      "L": 14,
+      "k": 4,
+      "n_total": 200,
+      "success_prob": 0.02,
+      "wall_s": 77.79117292599994
+    },
+    {
+      "L": 15,
+      "k": 3,
+      "n_total": 200,
+      "success_prob": 0.015,
+      "wall_s": 83.3684943129997
+    },
+    {
+      "L": 16,
+      "k": 5,
+      "n_total": 200,
+      "success_prob": 0.025,
+      "wall_s": 87.98864248600012
+    },
+    {
+      "L": 17,
+      "k": 2,
+      "n_total": 200,
+      "success_prob": 0.01,
+      "wall_s": 93.10502870400023
+    },
+    {
+      "L": 18,
+      "k": 2,
+      "n_total": 200,
+      "success_prob": 0.01,
+      "wall_s": 99.0638097179999
+    },
+    {
+      "L": 19,
+      "k": 1,
+      "n_total": 200,
+      "success_prob": 0.005,
+      "wall_s": 107.00053814800003
+    },
+    {
+      "L": 20,
+      "k": 3,
+      "n_total": 200,
+      "success_prob": 0.015,
+      "wall_s": 113.5747539959998
+    }
+  ],
+  "embedding": {
+    "n_qubits": 7,
+    "dim": 128,
+    "hardware_dim": 2048,
+    "max_logical_bits": 11,
+    "dims": [
+      2,
+      8,
+      8
+    ],
+    "n_transmons": 1,
+    "n_cavities": 2,
+    "n_prep_params": 5,
+    "n_pairs": 2,
+    "ecd_pairs": [
+      {
+        "transmon_axis": 0,
+        "cavity_axis": 1
+      },
+      {
+        "transmon_axis": 0,
+        "cavity_axis": 2
+      }
+    ],
+    "modes": [
+      {
+        "name": "T0",
+        "kind": "transmon",
+        "dim": 2,
+        "n_bits": 1,
+        "axis": 0
+      },
+      {
+        "name": "C0",
+        "kind": "cavity",
+        "dim": 8,
+        "n_bits": 3,
+        "axis": 1
+      },
+      {
+        "name": "C1",
+        "kind": "cavity",
+        "dim": 8,
+        "n_bits": 3,
+        "axis": 2
+      }
+    ],
+    "bit_partition": [
+      {
+        "bit": 0,
+        "mode": "T0",
+        "label": "T0",
+        "kind": "transmon"
+      },
+      {
+        "bit": 1,
+        "mode": "C0",
+        "label": "C0[fock bit 2]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 2,
+        "mode": "C0",
+        "label": "C0[fock bit 1]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 3,
+        "mode": "C0",
+        "label": "C0[fock bit 0]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 4,
+        "mode": "C1",
+        "label": "C1[fock bit 2]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 5,
+        "mode": "C1",
+        "label": "C1[fock bit 1]",
+        "kind": "cavity"
+      },
+      {
+        "bit": 6,
+        "mode": "C1",
+        "label": "C1[fock bit 0]",
+        "kind": "cavity"
+      }
+    ],
+    "subspace_of_2048": true
+  },
+  "idle_hardware_modes": [
+    "T1",
+    "C2"
+  ]
+}
