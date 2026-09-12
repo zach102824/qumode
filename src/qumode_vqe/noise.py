@@ -179,6 +179,8 @@ def comprehensive_config(
     Includes, after each ECD–rotation pair:
 
     * Lindblad cavity photon loss with thermal occupation ``nth_cav=0.01``
+    * cavity number-dephasing ``κ_φ τ_app = 0.5 κτ`` (same factor as
+      ``loss_thermal_dephasing``; override with ``kappa_phi=...``)
     * transmon amplitude and phase damping (T1 = 50 µs, T2 = 30 µs)
     * cavity self-Kerr (500 Hz)
     * 1% static ECD-amplitude and qubit-rotation errors
@@ -193,8 +195,16 @@ def comprehensive_config(
     }
     if kappa_tau is not None:
         extras["kappa_tau"] = float(kappa_tau)
+    user_phi = "kappa_phi" in kwargs
     extras.update(kwargs)
-    return realistic_lindblad_config(timing, **extras)
+    cfg = realistic_lindblad_config(timing, **extras)
+    # Default cavity number-dephasing matches loss_thermal_dephasing:
+    # κ_φ τ_app = 0.5 κτ, so κ_φ = 0.5 κτ / τ_application.
+    if not user_phi:
+        tau = cfg.tau_application
+        kt = cfg.kappa_tau_used()
+        cfg = replace(cfg, kappa_phi=(0.5 * kt / tau) if tau > 0.0 else 0.0)
+    return cfg
 
 
 def noise_as_dict(cfg: NoiseConfig) -> dict:

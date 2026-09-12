@@ -259,6 +259,17 @@ def test_optimize_gibbs_adaptive_uses_sampled_tail():
     assert rec.eta_policy == "sampled_tail"
     assert rec.eta > 0
     assert rec.eta_history
+    # step 0 plus one joint iterate plus one ansatz-only iterate
+    assert len(rec.step_trace) == 3
+    assert rec.step_trace[0]["step"] == 0
+    assert rec.step_trace[-1]["step"] == 2
+    for snap in rec.step_trace:
+        assert "cost" in snap
+        assert "energy_physical" in snap
+        assert "p_gs" in snap
+        assert "most_likely_bitstring" in snap
+        assert "eta" in snap
+    assert rec.eval_final.get("p_gs") is not None
 
 
 def test_spsa_step_scale_zero_freezes_coordinate():
