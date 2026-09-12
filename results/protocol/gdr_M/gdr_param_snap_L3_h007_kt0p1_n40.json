@@ -1,0 +1,62 @@
+{
+  "ansatz": "snap",
+  "ndepth": 3,
+  "hamiltonian_id": 7,
+  "kappa_tau": 0.1,
+  "n_train": 40,
+  "n_shots": 8192,
+  "seed": 4000,
+  "m_policy": "B",
+  "method": "gdr_param",
+  "family": "comprehensive",
+  "readout": "readout_realistic",
+  "theta": [
+    0.7425431355105744,
+    0.8020117632287723,
+    0.1308784533522493,
+    0.0,
+    0.3,
+    0.07384281775232293,
+    0.0,
+    0.010003790824673993,
+    0.03,
+    0.0,
+    9.745144111342145e-06
+  ],
+  "fit": {
+    "success": true,
+    "nll": 996435.2515853919,
+    "nfev": 696,
+    "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+    "fitted": {
+      "eta1": 0.7425431355105744,
+      "eta2": 0.8020117632287723,
+      "nth1": 0.1308784533522493,
+      "nth2": 0.0,
+      "p_down": 0.3,
+      "p_up": 0.07384281775232293,
+      "eps": 0.0,
+      "p01": 0.010003790824673993,
+      "p10": 0.03,
+      "p_nn1": 0.0,
+      "p_nn2": 9.745144111342145e-06
+    },
+    "true_eta": 0.5488116360940264,
+    "true_nth": 0.01,
+    "true_p01": 0.01,
+    "true_p10": 0.03,
+    "true_p_nn": 0.03,
+    "d_eta1": 0.193731499416548,
+    "d_eta2": 0.25320012713474593,
+    "d_p01": 3.7908246739923324e-06,
+    "d_p10": 0.0,
+    "d_p_nn1": 0.03,
+    "d_p_nn2": 0.029990254855888656
+  },
+  "noise": {
+    "kappa_tau_used": 0.1,
+    "kappa_phi": 76923.07692307692,
+    "kappa_phi_tau": 0.05
+  },
+  "from_cache": false
+}
