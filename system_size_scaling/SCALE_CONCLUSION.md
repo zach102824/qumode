@@ -18,7 +18,7 @@ Protocol tag: `200_joint_spsa_noiseless_a_scaled`. Full n=12+ table: `HIGHER_N.m
 | 9 | 4 | 198/200 | 0.990 | 155.1 | hit_threshold |
 | 10 | 4 | 196/200 | 0.980 | 157.1 | hit_threshold |
 | 11 | 4 | 188/200 | 0.940 | 158.8 | hit_threshold |
-| 12 | — | 145/200 | 0.725 | 540.2 | in_progress |
+| 12 | — | 145/200 | 0.725 | 829.8 | in_progress |
 | 13 | — | — | — | — | not_started |
 | 14 | — | — | — | — | not_started |
 | 15 | — | — | — | — | not_started |
@@ -60,7 +60,7 @@ This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the
 | L | k/N | success | wall (s) | SPSA |
 |---|-----|---------|----------|------|
 | 4 | 145/200 | 0.725 | 489.0 | 200 |
-| 5 | 18/30 | 0.600 | 51.2 | 200 |
+| 5 | 100/200 | 0.500 | 340.8 | 200 |
 
 ### n=13
 
@@ -91,5 +91,5 @@ Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7
 
 ## Notes
 
-n=12 L=4: 145/200 (72.5%) below 90%; L=5 full 200-trial sweep running. Deeper L at 200 SPSA may collapse as on n=8.
+n=12 L=4 145/200 (72.5%); L=5 100/200 (50%) collapsed. Remaining L=6…12 will be 5H×4 scouts, not full 200.
 
