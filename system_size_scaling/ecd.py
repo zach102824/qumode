@@ -231,11 +231,13 @@ def hybrid_energy_tensor(
 ) -> np.ndarray:
     """Diagonal hybrid energies: each Fock occupation decodes to an n-bit energy."""
     logical = np.asarray(logical_energies, dtype=float).reshape(1 << emb.n_qubits)
-    tensor = np.empty(emb.dims, dtype=float)
-    for idx in np.ndindex(emb.dims):
-        bits = emb.decode_occupations(idx)
-        acc = 0
-        for b in bits:
-            acc = (acc << 1) | int(b)
-        tensor[idx] = logical[acc]
-    return tensor
+    grids = np.meshgrid(*[np.arange(d, dtype=np.int64) for d in emb.dims], indexing="ij")
+    acc = np.zeros(emb.dims, dtype=np.int64)
+    for grid, mode in zip(grids, emb.modes, strict=True):
+        if mode.kind == "transmon":
+            if mode.n_bits:
+                acc = (acc << 1) | (grid & 1)
+            continue
+        for k in range(mode.n_bits - 1, -1, -1):
+            acc = (acc << 1) | ((grid >> k) & 1)
+    return logical[acc]

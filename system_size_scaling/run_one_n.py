@@ -14,6 +14,29 @@ import os
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+
+def _limit_blas(n: int = 1) -> None:
+    """Pin BLAS/OpenMP *before* numpy is imported, and again in workers."""
+    n_s = str(int(n))
+    for key in (
+        "OMP_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS",
+        "NUMEXPR_NUM_THREADS",
+        "VECLIB_MAXIMUM_THREADS",
+        "QUTIP_NUM_PROCESSES",
+    ):
+        os.environ[key] = n_s
+    try:
+        from threadpoolctl import threadpool_limits
+
+        threadpool_limits(int(n))
+    except Exception:
+        pass
+
+
+_limit_blas(1)
+
 import numpy as np
 
 from .config import (
@@ -45,22 +68,6 @@ from .embedding import embedding_for_n, hardware_idle_modes
 from .four_sat import load_instance
 from .gibbs import optimize_gibbs_adaptive
 from .io_util import merged_curve, write_conclusion, write_json
-
-
-def _limit_blas(n: int = 1) -> None:
-    n_s = str(int(n))
-    for key in (
-        "OMP_NUM_THREADS",
-        "MKL_NUM_THREADS",
-        "OPENBLAS_NUM_THREADS",
-        "NUMEXPR_NUM_THREADS",
-        "VECLIB_MAXIMUM_THREADS",
-        "QUTIP_NUM_PROCESSES",
-    ):
-        os.environ[key] = n_s
-
-
-_limit_blas(1)
 
 
 def _load_jobs(n: int, max_hamiltonians: int | None) -> list[dict]:
