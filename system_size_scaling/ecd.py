@@ -1,7 +1,9 @@
-"""Noiseless multi-mode ECD via local gates (no full 2048×2048 unitaries).
+"""Noiseless multi-mode ECD via local gates (no full dim×dim unitaries).
 
-One pair is ``ECD(β) R(θ, φ)`` on a chosen (transmon, cavity), matching
-production ``ecd_rotation_pair``. A layer applies every active transmon–cavity
+Statevector stays local-gate: never materialize a 2048^2 or 32768^2 dense matrix.
+
+One pair is ``ECD(beta) R(theta, phi)`` on a chosen (transmon, cavity), matching
+production ``ecd_rotation_pair``. A layer applies every active transmon-cavity
 pair, cavity-major then transmon (so n=7 reproduces the 1q+2cav UER order).
 """
 
@@ -229,11 +231,13 @@ def hybrid_energy_tensor(
 ) -> np.ndarray:
     """Diagonal hybrid energies: each Fock occupation decodes to an n-bit energy."""
     logical = np.asarray(logical_energies, dtype=float).reshape(1 << emb.n_qubits)
-    tensor = np.empty(emb.dims, dtype=float)
-    for idx in np.ndindex(emb.dims):
-        bits = emb.decode_occupations(idx)
-        acc = 0
-        for b in bits:
-            acc = (acc << 1) | int(b)
-        tensor[idx] = logical[acc]
-    return tensor
+    grids = np.meshgrid(*[np.arange(d, dtype=np.int64) for d in emb.dims], indexing="ij")
+    acc = np.zeros(emb.dims, dtype=np.int64)
+    for grid, mode in zip(grids, emb.modes, strict=True):
+        if mode.kind == "transmon":
+            if mode.n_bits:
+                acc = (acc << 1) | (grid & 1)
+            continue
+        for k in range(mode.n_bits - 1, -1, -1):
+            acc = (acc << 1) | ((grid >> k) & 1)
+    return logical[acc]

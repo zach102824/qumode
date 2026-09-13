@@ -1,4 +1,4 @@
-"""Isolated ECD system-size scaling study (n=7…11, noiseless Gibbs)."""
+"""Isolated ECD system-size scaling study (n=7…15+, noiseless Gibbs)."""
 
 from .config import (
     CLAUSE_DENSITY,

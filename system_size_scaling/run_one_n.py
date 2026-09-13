@@ -14,10 +14,34 @@ import os
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+
+def _limit_blas(n: int = 1) -> None:
+    """Pin BLAS/OpenMP *before* numpy is imported, and again in workers."""
+    n_s = str(int(n))
+    for key in (
+        "OMP_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS",
+        "NUMEXPR_NUM_THREADS",
+        "VECLIB_MAXIMUM_THREADS",
+        "QUTIP_NUM_PROCESSES",
+    ):
+        os.environ[key] = n_s
+    try:
+        from threadpoolctl import threadpool_limits
+
+        threadpool_limits(int(n))
+    except Exception:
+        pass
+
+
+_limit_blas(1)
+
 import numpy as np
 
 from .config import (
     L_MAX,
+    L_MAX_HIGHER,
     L_START,
     N_HAMILTONIANS,
     N_TRIALS,
@@ -34,6 +58,7 @@ from .config import (
     is_canonical_cell,
     n_joint_params,
     results_path,
+    soft_cap_for_n,
     spsa_a_scaled,
     summary_path,
     trial_seed,
@@ -42,23 +67,7 @@ from .ecd import hybrid_energy_tensor, random_ecd_parameters, vacuum_prep
 from .embedding import embedding_for_n, hardware_idle_modes
 from .four_sat import load_instance
 from .gibbs import optimize_gibbs_adaptive
-from .io_util import write_conclusion, write_json
-
-
-def _limit_blas(n: int = 1) -> None:
-    n_s = str(int(n))
-    for key in (
-        "OMP_NUM_THREADS",
-        "MKL_NUM_THREADS",
-        "OPENBLAS_NUM_THREADS",
-        "NUMEXPR_NUM_THREADS",
-        "VECLIB_MAXIMUM_THREADS",
-        "QUTIP_NUM_PROCESSES",
-    ):
-        os.environ[key] = n_s
-
-
-_limit_blas(1)
+from .io_util import merged_curve, write_conclusion, write_json
 
 
 def _load_jobs(n: int, max_hamiltonians: int | None) -> list[dict]:
@@ -71,6 +80,17 @@ def _load_jobs(n: int, max_hamiltonians: int | None) -> list[dict]:
     return [load_instance(p) for p in paths]
 
 
+_ENERGY_CACHE: dict[str, np.ndarray] = {}
+
+
+def _energy_tensor(path: str, emb, logical_energies: np.ndarray) -> np.ndarray:
+    cached = _ENERGY_CACHE.get(path)
+    if cached is None:
+        cached = hybrid_energy_tensor(emb, logical_energies)
+        _ENERGY_CACHE[path] = cached
+    return cached
+
+
 def _run_trial(job: dict) -> dict:
     _limit_blas(1)
     n = int(job["n"])
@@ -79,7 +99,7 @@ def _run_trial(job: dict) -> dict:
     ndepth = int(job["L"])
     inst = load_instance(job["path"])
     emb = embedding_for_n(n)
-    energy = hybrid_energy_tensor(emb, inst["logical_energies"])
+    energy = _energy_tensor(job["path"], emb, inst["logical_energies"])
     rng = np.random.default_rng(int(job["seed"]))
     x0 = random_ecd_parameters(ndepth, emb.n_pairs, rng)
     t0 = time.perf_counter()
@@ -166,6 +186,8 @@ def _payload(
     trials = sorted(trials, key=lambda r: (int(r["hamiltonian_id"]), int(r["trial"])))
     k = int(sum(bool(r["success"]) for r in trials))
     ntot = len(trials)
+    pgs = [float(r["p_ground"]) for r in trials if "p_ground" in r]
+    n_params = n_joint_params(emb.n_prep_params, depth, emb.n_pairs)
     return {
         "n": n,
         "L": int(depth),
@@ -173,16 +195,21 @@ def _payload(
         "n_total": ntot,
         "success_fraction": f"{k}/{ntot}",
         "success_prob": k / max(ntot, 1),
+        "mean_p_ground": float(np.mean(pgs)) if pgs else None,
         "wall_s": wall_s,
         "n_hamiltonians": len(instances),
         "n_trials_per_h": int(n_trials),
+        "scout": ntot > 0 and ntot < int(N_HAMILTONIANS) * int(N_TRIALS),
         "outer_iter": int(outer_iter),
         "embedding": emb.as_dict(),
         "idle_hardware_modes": hardware_idle_modes(n),
+        "n_params": n_params,
+        "dim": emb.dim,
+        "n_pairs": emb.n_pairs,
         "protocol": _protocol_block(
             outer_iter,
-            a=float(trials[0]["spsa_a"]) if trials and "spsa_a" in trials[0] else spsa_a_scaled(n_joint_params(emb.n_prep_params, depth, emb.n_pairs)),
-            n_params=n_joint_params(emb.n_prep_params, depth, emb.n_pairs),
+            a=float(trials[0]["spsa_a"]) if trials and "spsa_a" in trials[0] else spsa_a_scaled(n_params),
+            n_params=n_params,
         ),
         "trials": trials,
     }
@@ -323,15 +350,17 @@ def run_depth(
 
 
 def summarize_n(n: int, curve: list[dict], wall_s: float) -> dict:
+    curve = merged_curve(n, extra=curve)
     curve = [c for c in curve if int(c["L"]) >= L_START]
     hit = next((c for c in curve if float(c["success_prob"]) >= SUCCESS_THRESHOLD), None)
     best = max(curve, key=lambda r: (float(r["success_prob"]), -int(r["L"]))) if curve else None
     chosen = hit or best
     last_l = int(curve[-1]["L"]) if curve else 0
+    cap = soft_cap_for_n(n)
     if hit is not None:
         status = "hit_threshold"
-    elif curve and last_l >= L_MAX:
-        status = "capped_L40_below_threshold"
+    elif curve and last_l >= cap:
+        status = f"capped_L{cap}_below_threshold"
     else:
         status = "in_progress"
     summary = {
@@ -345,7 +374,7 @@ def summarize_n(n: int, curve: list[dict], wall_s: float) -> dict:
         "status": status,
         "outer_iter": OUTER_ITER,
         "protocol_tag": PROTOCOL_TAG,
-        "l_max": L_MAX,
+        "l_max": soft_cap_for_n(n),
         "curve": [
             {
                 "L": int(c["L"]),
@@ -411,9 +440,19 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--n", type=int, required=True)
     parser.add_argument("--L", type=int, default=L_START, dest="depth")
-    parser.add_argument("--l-max", type=int, default=L_MAX)
+    parser.add_argument(
+        "--l-max",
+        type=int,
+        default=None,
+        help=f"Soft L cap (default {L_MAX_HIGHER} for n≥12, {L_MAX} for n<12).",
+    )
     parser.add_argument("--n-trials", type=int, default=N_TRIALS)
     parser.add_argument("--max-hamiltonians", type=int, default=None)
+    parser.add_argument(
+        "--scout",
+        action="store_true",
+        help="5 Hamiltonians × 4 trials before committing to a full 20×10 cell.",
+    )
     parser.add_argument("--outer-iter", type=int, default=OUTER_ITER)
     parser.add_argument(
         "--workers",
@@ -424,6 +463,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-sweep", action="store_true", help="Run only --L, do not increment.")
     parser.add_argument("--no-resume", action="store_true")
     args = parser.parse_args(argv)
+    if args.scout:
+        if args.max_hamiltonians is None:
+            args.max_hamiltonians = 5
+        if args.n_trials == N_TRIALS:
+            args.n_trials = 4
+    if args.l_max is None:
+        args.l_max = soft_cap_for_n(args.n)
     if args.no_resume:
         path = results_path(args.n, args.depth)
         if path.exists():

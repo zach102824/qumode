@@ -6,20 +6,20 @@ from __future__ import annotations
 import argparse
 import json
 
-from .config import LADDER_NS, N_HAMILTONIANS, SEARCH_TRIALS, clause_window, ham_dir, ham_seed
+from .config import HIGHER_NS, N_HAMILTONIANS, SEARCH_TRIALS, clause_window, ham_dir, ham_seed
 from .four_sat import generate_dataset
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--n", type=int, default=None, help="Single n in 7…11.")
-    parser.add_argument("--all", action="store_true", help="Generate n=8…11 (live ladder).")
+    parser.add_argument("--n", type=int, default=None, help="Single n in 7…19.")
+    parser.add_argument("--all", action="store_true", help="Generate n=12…15 (this PR). Does not touch n=7…11.")
     parser.add_argument("--n-hamiltonians", type=int, default=N_HAMILTONIANS)
     parser.add_argument("--search-trials", type=int, default=SEARCH_TRIALS)
     parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args(argv)
     if args.all:
-        ns = list(LADDER_NS)
+        ns = list(HIGHER_NS)
     elif args.n is not None:
         ns = [int(args.n)]
     else:

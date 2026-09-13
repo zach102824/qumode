@@ -9,18 +9,24 @@ from pathlib import Path
 import numpy as np
 
 from .config import (
+    FINISHED_LADDER_NS,
+    HIGHER_NS,
     L_MAX,
+    L_MAX_HIGHER,
     L_START,
-    LADDER_NS,
     OUTER_ITER,
     PRIOR_N7,
     PROTOCOL_TAG,
     RESULTS_ROOT,
     ROOT,
+    SCOREBOARD_NS,
     SUCCESS_THRESHOLD,
     SUPERSEDED_70_SPSA,
     is_canonical_cell,
+    n_params_for,
     results_path,
+    soft_cap_for_n,
+    spsa_a_scaled,
     summary_path,
 )
 
@@ -79,6 +85,7 @@ def curve_from_disk(n: int, l_min: int = L_START, l_max: int = L_MAX) -> list[di
 
 
 def row_from_curve(n: int, curve: list[dict]) -> dict:
+    cap = soft_cap_for_n(n)
     if not curve:
         return {
             "n": n,
@@ -96,8 +103,8 @@ def row_from_curve(n: int, curve: list[dict]) -> dict:
     last_l = int(curve[-1]["L"])
     if hit is not None:
         status = "hit_threshold"
-    elif last_l >= L_MAX:
-        status = "capped_L40_below_threshold"
+    elif last_l >= cap:
+        status = f"capped_L{cap}_below_threshold"
     else:
         status = "in_progress"
     chosen = hit or best
@@ -114,24 +121,267 @@ def row_from_curve(n: int, curve: list[dict]) -> dict:
     }
 
 
-def write_conclusion(status_note: str = "") -> Path:
-    """Rebuild SCALE_CONCLUSION.md. n=7 is prior PR #14 data, not this sweep."""
+def merged_curve(n: int, extra: list[dict] | None = None) -> list[dict]:
+    """Union of canonical cells on disk (and optional in-memory rows), by L."""
+    by_l: dict[int, dict] = {}
+    for c in curve_from_disk(n):
+        by_l[int(c["L"])] = dict(c)
+    for c in extra or []:
+        if int(c.get("L", 0)) < L_START:
+            continue
+        by_l[int(c["L"])] = {
+            "L": int(c["L"]),
+            "k": int(c["k"]),
+            "n_total": int(c["n_total"]),
+            "success_prob": float(c["success_prob"]),
+            "wall_s": float(c.get("wall_s", 0.0)),
+            "outer_iter": int(c.get("outer_iter", OUTER_ITER)),
+        }
+    return [by_l[L] for L in sorted(by_l)]
+
+
+def _scoreboard_rows() -> list[dict]:
+    """n=7 prior data + finished n=8…11 + higher-n cells (from disk)."""
     rows = [dict(PRIOR_N7)]
-    for n in LADDER_NS:
+    for n in SCOREBOARD_NS:
+        disk = merged_curve(n)
+        rec = row_from_curve(n, disk)
+        sp = summary_path(n)
+        if sp.exists() and not disk:
+            saved = read_json(sp)
+            saved["curve"] = [c for c in saved.get("curve", []) if int(c["L"]) >= L_START]
+            rows.append(saved)
+            continue
+        rows.append(rec)
+    return rows
+
+
+def cell_stats(n: int, depth: int | None = None) -> dict | None:
+    """k/N, n_params, a, dim, pairs, mean p(GS), wall from a canonical cell."""
+    if depth is None:
         sp = summary_path(n)
         if sp.exists():
-            rec = read_json(sp)
-            rec["curve"] = [c for c in rec.get("curve", []) if int(c["L"]) >= L_START]
-            if rec["curve"]:
-                rebuilt = row_from_curve(n, rec["curve"])
-                rec["L_star"] = rebuilt["L_star"]
-                rec["k"] = rebuilt["k"]
-                rec["n_total"] = rebuilt["n_total"]
-                rec["success_prob"] = rebuilt["success_prob"]
-                rec["status"] = rec.get("status") or rebuilt["status"]
-            rows.append(rec)
+            summary = read_json(sp)
+            depth = summary.get("L_star")
+            if depth is None:
+                curve = [c for c in (summary.get("curve") or []) if int(c.get("L", 0)) >= L_START]
+                if curve:
+                    best = max(curve, key=lambda r: (float(r["success_prob"]), -int(r["L"])))
+                    depth = best["L"]
+            if depth is None:
+                return None
+            rec = load_depth_result(n, int(depth)) or summary
+        else:
+            curve = curve_from_disk(n)
+            if not curve:
+                return None
+            chosen = max(curve, key=lambda r: (float(r["success_prob"]), -int(r["L"])))
+            rec = load_depth_result(n, int(chosen["L"]))
+            if rec is None:
+                return None
+            depth = int(chosen["L"])
+    else:
+        rec = load_depth_result(n, int(depth))
+        if rec is None:
+            return None
+    trials = rec.get("trials") or []
+    pgs = [float(t["p_ground"]) for t in trials if "p_ground" in t]
+    proto = rec.get("protocol") or {}
+    spsa = proto.get("spsa") or {}
+    emb = rec.get("embedding") or {}
+    l_used = int(rec.get("L") or rec.get("L_star") or depth)
+    n_params = spsa.get("n_params")
+    if n_params is None:
+        n_params = n_params_for(n, l_used)
+    a = spsa.get("a")
+    if a is None:
+        a = spsa_a_scaled(int(n_params))
+    return {
+        "n": int(n),
+        "L": l_used,
+        "k": int(rec.get("k", 0)),
+        "n_total": int(rec.get("n_total", 0)),
+        "success_prob": float(rec.get("success_prob", 0.0)),
+        "success_fraction": rec.get("success_fraction")
+        or f"{int(rec.get('k', 0))}/{int(rec.get('n_total', 0))}",
+        "wall_s": rec.get("wall_s"),
+        "n_params": int(n_params),
+        "a": float(a),
+        "dim": emb.get("dim"),
+        "pairs": emb.get("n_pairs"),
+        "n_transmons": emb.get("n_transmons"),
+        "n_cavities": emb.get("n_cavities"),
+        "mean_p_ground": float(np.mean(pgs)) if pgs else None,
+        "n_hamiltonians": rec.get("n_hamiltonians"),
+        "n_trials_per_h": rec.get("n_trials_per_h"),
+        "status": rec.get("status"),
+        "scout": bool(rec.get("scout"))
+        or (
+            int(rec.get("n_total", 0)) > 0
+            and int(rec.get("n_total", 0)) < 200
+        ),
+    }
+
+
+def _fmt_wall(wall) -> str:
+    if wall is None:
+        return "—"
+    return f"{float(wall):.1f}"
+
+
+def _fmt_mean_p(val) -> str:
+    if val is None:
+        return "—"
+    return f"{float(val):.4f}"
+
+
+def write_higher_n(status_note: str = "") -> Path:
+    """Write HIGHER_N.md — n=12+ scoreboard with n_params / a / dim / pairs / p(GS)."""
+    lines = [
+        "# ECD system-size scaling — n=12+ (this PR)",
+        "",
+        "Noiseless Gibbs **ECD only** (no SNAP, no GDR / noise).",
+        "Success = `most_likely_bitstring == ground_bitstring`.",
+        "Full cell = **20 Hamiltonians × 10 trials = 200**.",
+        "A cell that is too slow may first report a **5 H × 4 trial scout** (20 trials); that is labelled.",
+        "Protocol: 200 joint SPSA, `a = 0.2 × √(37 / n_params)`, `c=0.15`, vacuum start.",
+        f"Start L={L_START}; if <90% raise L (soft cap **L={L_MAX_HIGHER}** — deeper L at this",
+        "budget already collapsed on n=8). n=7…11 are **not** re-run (PR #15 / #14).",
+        "",
+        "## Hardware growth",
+        "",
+        "Each transmon = 1 logical bit. Each cavity at `FOCK_CUTOFF=8` = 3 Fock bits (MSB first).",
+        "When n exceeds capacity, append one transmon **and** one cavity.",
+        "Idle modes (0 assigned bits) stay vacuum and are omitted from the simulated tensor.",
+        "",
+        "| n | hardware plan | simulated | dim | pairs | idle |",
+        "|---|---------------|-----------|-----|-------|------|",
+        "| 7 | 2T×3C parent (special case) | 1T×2C | 128 | 2 | T1, C2 |",
+        "| 8 | 2T×3C | 2T×2C | 256 | 4 | C2 |",
+        "| 9–11 | 2T×3C | 2T×3C | 2048 | 6 | C2 bits 1…3 |",
+        "| 12 | 3T×4C | 3T×3C | 4096 | 9 | C3 |",
+        "| 13–15 | 3T×4C | 3T×4C | 32768 | 12 | — |",
+        "| 16 | 4T×5C | 4T×4C | 65536 | 16 | C4 |",
+        "| 17–19 | 4T×5C | 4T×5C | 524288 | 20 | — |",
+        "",
+        "`n_params = n_T + 2 n_C + 4 L n_T n_C`.",
+        "",
+        "## Scoreboard (this extension)",
+        "",
+        "| n | L* | k/N | success | n_params | a | dim | pairs | mean p(GS) | wall (s) | status |",
+        "|---|----|-----|---------|----------|---|-----|-------|------------|----------|--------|",
+    ]
+    for n in HIGHER_NS:
+        stats = cell_stats(n)
+        row = row_from_curve(n, curve_from_disk(n))
+        if stats is None or int(row.get("n_total", 0)) == 0:
+            lines.append(f"| {n} | — | — | — | {n_params_for(n, L_START)} | {spsa_a_scaled(n_params_for(n, L_START)):.4f} | — | — | — | — | not_started |")
             continue
-        rows.append(row_from_curve(n, curve_from_disk(n)))
+        lstar = row.get("L_star")
+        l_s = "—" if lstar is None else str(int(lstar))
+        k = stats["k"]
+        ntot = stats["n_total"]
+        wall = _fmt_wall(stats["wall_s"])
+        mean_p = _fmt_mean_p(stats["mean_p_ground"])
+        dim = "—" if stats["dim"] is None else str(int(stats["dim"]))
+        pairs = "—" if stats["pairs"] is None else str(int(stats["pairs"]))
+        status = str(row.get("status") or stats.get("status") or "")
+        if stats.get("scout"):
+            status = (status + " scout").strip()
+        lines.append(
+            f"| {n} | {l_s} | {k}/{ntot} | {stats['success_prob']:.3f} | "
+            f"{stats['n_params']} | {stats['a']:.4f} | {dim} | {pairs} | "
+            f"{mean_p} | {wall} | {status} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Depth curves",
+            "",
+        ]
+    )
+    for n in HIGHER_NS:
+        lines.append(f"### n={n}")
+        lines.append("")
+        curve = curve_from_disk(n)
+        if not curve:
+            lines.append("Not started.")
+            lines.append("")
+            continue
+        lines.append("| L | k/N | success | n_params | a | dim | pairs | mean p(GS) | wall (s) | notes |")
+        lines.append("|---|-----|---------|----------|---|-----|-------|------------|----------|-------|")
+        for c in curve:
+            st = cell_stats(n, int(c["L"]))
+            if st is None:
+                lines.append(
+                    f"| {int(c['L'])} | {int(c['k'])}/{int(c['n_total'])} | "
+                    f"{float(c['success_prob']):.3f} | {n_params_for(n, int(c['L']))} | "
+                    f"{spsa_a_scaled(n_params_for(n, int(c['L']))):.4f} | — | — | — | "
+                    f"{float(c.get('wall_s', 0.0)):.1f} | |"
+                )
+                continue
+            note = "scout" if st.get("scout") else ""
+            lines.append(
+                f"| {st['L']} | {st['k']}/{st['n_total']} | {st['success_prob']:.3f} | "
+                f"{st['n_params']} | {st['a']:.4f} | {st['dim']} | {st['pairs']} | "
+                f"{_fmt_mean_p(st['mean_p_ground'])} | {_fmt_wall(st['wall_s'])} | {note} |"
+            )
+        lines.append("")
+
+    lines.extend(
+        [
+            "## n=7…11 (not re-run; PR #15 / #14)",
+            "",
+            "| n | L* | k/200 | success | n_params | a | dim | pairs | mean p(GS) | wall (s) |",
+            "|---|----|-------|---------|----------|---|-----|-------|------------|----------|",
+            "| 7 | 4 | 186/200 | 0.930 | 37 | 0.2000 | 128 | 2 | — | — |",
+        ]
+    )
+    for n in FINISHED_LADDER_NS:
+        st = cell_stats(n)
+        if st is None:
+            lines.append(f"| {n} | — | — | — | {n_params_for(n, 4)} | {spsa_a_scaled(n_params_for(n, 4)):.4f} | — | — | — | — |")
+            continue
+        lines.append(
+            f"| {n} | {st['L']} | {st['k']}/{st['n_total']} | {st['success_prob']:.3f} | "
+            f"{st['n_params']} | {st['a']:.4f} | {st['dim']} | {st['pairs']} | "
+            f"{_fmt_mean_p(st['mean_p_ground'])} | {_fmt_wall(st['wall_s'])} |"
+        )
+
+    lines.extend(
+        [
+            "## Hardware wall (local-gate ECD, BLAS pinned to 1 thread)",
+            "",
+            "Timed one L=4 circuit on this VM after pinning OpenBLAS. "
+            "Trial estimate = 400 circuits (200 SPSA × 2 evaluations).",
+            "",
+            "| n | simulated | dim | pairs | s/circuit | est. s/trial | est. 200-trial |",
+            "|---|-----------|-----|-------|-----------|--------------|----------------|",
+            "| 12 | 3T×3C | 4096 | 9 | 0.003 | ~1.4 | ~8 min (measured 489s at L=4) |",
+            "| 13–15 | 3T×4C | 32768 | 12 | 0.020 | ~9 | ~0.5 h (n=13 L=4 measured 1685s) |",
+            "| 16 | 4T×4C | 65536 | 16 | 0.054 | ~22 | ~1.2 h |",
+            "| 17–19 | 4T×5C | 524288 | 20 | 0.54 | ~215 | **~12 h — hopeless as a full 200-trial cell** |",
+            "",
+            "A 1-trial 4T×5C smoke is ~4 min; a full n=17…19 scoreboard is not attempted.",
+            "n=16 (4T×4C, C4 idle) is the next register that is even arguably in budget.",
+            "",
+        ]
+    )
+    note = status_note.rstrip() if status_note else (
+        f"Higher-n extension of PR #15. Soft cap L={L_MAX_HIGHER}. "
+        "Do not rerun n=7…11. Noisy/GDR is out of scope."
+    )
+    lines.extend(["## Notes", "", note, ""])
+    path = ROOT / "HIGHER_N.md"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
+def write_conclusion(status_note: str = "") -> Path:
+    """Rebuild SCALE_CONCLUSION.md. n=7 is prior PR #14 data, not this sweep."""
+    rows = _scoreboard_rows()
+    write_higher_n(status_note)
 
     lines = [
         "# ECD system-size scaling — conclusion",
@@ -140,16 +390,18 @@ def write_conclusion(status_note: str = "") -> Path:
         "Success = `most_likely_bitstring == ground_bitstring`.",
         "Each live cell is **20 Hamiltonians × 10 trials = 200**.",
         "Cost = Gibbs `-ln⟨e^{-ηE}⟩` with `sampled_tail` η.",
-        "Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exact fill).",
-        f"Live ladder is **n=8…11 starting at L=4**, **{OUTER_ITER} joint SPSA**, "
-        f"`a = 0.2 × √(37 / n_params)`, "
-        f"increment L until ≥90% or soft cap **L={L_MAX}** (not a hard stop at 20).",
-        f"Protocol tag: `{PROTOCOL_TAG}`.",
+        "Hardware: n=7…11 stay on the locked 2T×3C map (n=11 exact fill, dim 2048).",
+        "For n>11, append one transmon+cavity when the register is full "
+        "(3T+4C capacity 15, dim 32768 when C3 is live). Idle 0-bit modes are omitted.",
+        f"PR #15 live ladder **n=8…11** finished at L*=4. This PR continues **n=12…15** "
+        f"at L={L_START}, **{OUTER_ITER} joint SPSA**, `a = 0.2 × √(37 / n_params)`, "
+        f"soft cap **L={L_MAX_HIGHER}** (do not blindly go to L={L_MAX}).",
+        f"Protocol tag: `{PROTOCOL_TAG}`. Full n=12+ table: `HIGHER_N.md`.",
         "",
         "## Summary table (canonical, 200 joint SPSA)",
         "",
-        "| n | L* | k/200 | success | wall (s) | status |",
-        "|---|----|-------|---------|----------|--------|",
+        "| n | L* | k/N | success | wall (s) | status |",
+        "|---|----|-----|---------|----------|--------|",
     ]
     for row in rows:
         n = int(row["n"])
@@ -247,8 +499,9 @@ def write_conclusion(status_note: str = "") -> Path:
 
     note = status_note.rstrip() if status_note else (
         f"Protocol: n=7 is PR #14 prior data (L*=4, 186/200 = 93%). "
-        f"Live ladder is n=8…11 starting at L=4 with {OUTER_ITER} joint SPSA "
-        f"(L=3 is not scored; L={L_MAX} is a soft cap)."
+        f"n=8…11 is the finished PR #15 ladder (all L*=4, ≥90%). "
+        f"This PR extends n=12…15 at {OUTER_ITER} joint SPSA, soft cap L={L_MAX_HIGHER}. "
+        f"See HIGHER_N.md for n_params / a / dim / pairs / mean p(GS)."
     )
     lines.extend(["## Notes", "", note, ""])
 

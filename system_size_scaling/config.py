@@ -18,10 +18,13 @@ N_HAMILTONIANS = 20
 N_TRIALS = 10
 SEARCH_TRIALS = 4000
 
-# Depth sweep for the live ladder (n=8…11): start L=4, increment until
-# success ≥ 90%. No hard cap at L=20. Soft safety stop at L=40.
+# Depth sweep: start L=4, increment until success ≥ 90%.
+# PR #15 n=8…11 used a soft cap of L=40 (all hit at L=4).
+# This extension (n≥12) uses a soft cap of L=12 — deeper L at 200 SPSA
+# already collapsed on n=8 (L=8 is 84/200 even with scaled a).
 L_START = 4
 L_MAX = 40
+L_MAX_HIGHER = 12
 SUCCESS_THRESHOLD = 0.90
 
 # Canonical optimizer budget — PR #14 / new default (not the superseded 70).
@@ -52,12 +55,16 @@ PRIOR_N7 = {
     },
 }
 
-# Hardware target: 2 transmons × 3 cavities × 8 levels = 2048.
+# Hardware: start at 2T×3C (n=8…11, dim 2048). When the register is full,
+# append one transmon + one cavity (FOCK_CUTOFF stays 8 = 3 logical bits).
+# n=7 stays the production 1T×2C special case.
 N_TRANSMONS = 2
 N_CAVITIES = 3
 FOCK_CUTOFF = 8
-HARDWARE_DIM = 2 * 2 * 8 * 8 * 8  # 2048
-MAX_LOGICAL_BITS = N_TRANSMONS + N_CAVITIES * 3  # 11
+FOCK_BITS = 3  # log2(FOCK_CUTOFF); Fock binary, MSB first
+HARDWARE_DIM = 2 * 2 * 8 * 8 * 8  # 2048 = 2T×3C
+# Encoding is implemented through 4T+5C (capacity 19). n=16+ is optional.
+MAX_LOGICAL_BITS = 19
 
 # Distinct from production four_sat.py (seed 11000) and size-sweep ham seeds.
 HAM_SEED_BASE = 27700
@@ -75,8 +82,13 @@ SEED_BASE = 41000
 CLAUSE_BAND_BELOW = 6
 CLAUSE_BAND_ABOVE = 8
 
-LADDER_NS = (8, 9, 10, 11)
-ALL_NS = (7, 8, 9, 10, 11)
+# PR #15 finished n=8…11 at L*=4. Do not rerun those cells.
+FINISHED_LADDER_NS = (8, 9, 10, 11)
+HIGHER_NS = (12, 13, 14, 15)
+# Default run_ladder range (this PR).
+LADDER_NS = HIGHER_NS
+SCOREBOARD_NS = FINISHED_LADDER_NS + HIGHER_NS
+ALL_NS = (7,) + SCOREBOARD_NS
 
 # Frozen 70-SPSA L=4…20 scoreboard. Not canonical. Deeper L collapsed because
 # a fixed 70-step SPSA budget under-trains the extra parameters (p_ground and
@@ -87,6 +99,37 @@ SUPERSEDED_70_SPSA = {
     10: {"best_L": 4, "k": 11, "n_total": 200, "note": "L=4…20 done; never ≥90%"},
     11: {"best_L": 4, "k": 2, "n_total": 200, "note": "L=4…10 on disk; cancelled"},
 }
+
+
+def plan_capacity(n_transmons: int, n_cavities: int, fock_bits: int = FOCK_BITS) -> int:
+    return int(n_transmons) + int(n_cavities) * int(fock_bits)
+
+
+def plan_hardware_dim(n_transmons: int, n_cavities: int, fock_cutoff: int = FOCK_CUTOFF) -> int:
+    return (2 ** int(n_transmons)) * (int(fock_cutoff) ** int(n_cavities))
+
+
+def hardware_plan(n: int) -> tuple[int, int]:
+    """Return (n_transmons, n_cavities) in the hardware plan for logical n.
+
+    n=7 is the production 1T×2C special case. n≥8 starts at 2T+3C
+    (capacity 11) and appends one T+C whenever n exceeds capacity.
+    """
+    n = int(n)
+    if n < 7:
+        raise ValueError(f"n={n} is below the n=7 production floor")
+    if n == 7:
+        return 1, 2
+    n_t, n_c = int(N_TRANSMONS), int(N_CAVITIES)
+    while n > plan_capacity(n_t, n_c):
+        n_t += 1
+        n_c += 1
+    return n_t, n_c
+
+
+def soft_cap_for_n(n: int) -> int:
+    """L soft-cap: 40 for the finished n=8…11 ladder, 12 for n≥12."""
+    return int(L_MAX_HIGHER) if int(n) >= 12 else int(L_MAX)
 
 
 def clause_window(n: int) -> tuple[int, int, int]:
@@ -110,8 +153,30 @@ def trial_seed(n: int, hid: int, trial: int) -> int:
 N7_L4_NPARAMS = 37
 
 
+def live_register(n: int) -> tuple[int, int]:
+    """Simulated (n_transmons, n_cavities) after dropping idle 0-bit modes."""
+    n = int(n)
+    if n == 7:
+        return 1, 2
+    n_t, n_c = hardware_plan(n)
+    leftover = n - n_t
+    n_c_live = 0
+    for _ in range(n_c):
+        take = min(FOCK_BITS, leftover)
+        leftover -= take
+        if take > 0:
+            n_c_live += 1
+    return n_t, n_c_live
+
+
 def n_joint_params(n_prep: int, ndepth: int, n_pairs: int) -> int:
     return int(n_prep) + 4 * int(ndepth) * int(n_pairs)
+
+
+def n_params_for(n: int, ndepth: int) -> int:
+    """n_params = n_T + 2 n_C + 4 L n_T n_C on the simulated (live) register."""
+    n_t, n_c = live_register(n)
+    return n_joint_params(n_t + 2 * n_c, ndepth, n_t * n_c)
 
 
 def spsa_a_scaled(n_params: int, a0: float = SPSA_A, n_ref: int = N7_L4_NPARAMS) -> float:
