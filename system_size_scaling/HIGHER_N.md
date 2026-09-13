@@ -31,7 +31,7 @@ Idle modes (0 assigned bits) stay vacuum and are omitted from the simulated tens
 | n | L* | k/N | success | n_params | a | dim | pairs | mean p(GS) | wall (s) | status |
 |---|----|-----|---------|----------|---|-----|-------|------------|----------|--------|
 | 12 | — | 145/200 | 0.725 | 153 | 0.0984 | 4096 | 9 | 0.0116 | 489.0 | capped_L12_below_threshold |
-| 13 | — | — | — | 203 | 0.0854 | — | — | — | — | not_started |
+| 13 | — | 80/200 | 0.400 | 203 | 0.0854 | 32768 | 12 | 0.0002 | 1685.1 | in_progress |
 | 14 | — | — | — | 203 | 0.0854 | — | — | — | — | not_started |
 | 15 | — | — | — | 203 | 0.0854 | — | — | — | — | not_started |
 
@@ -53,7 +53,9 @@ Idle modes (0 assigned bits) stay vacuum and are omitted from the simulated tens
 
 ### n=13
 
-Not started.
+| L | k/N | success | n_params | a | dim | pairs | mean p(GS) | wall (s) | notes |
+|---|-----|---------|----------|---|-----|-------|------------|----------|-------|
+| 4 | 80/200 | 0.400 | 203 | 0.0854 | 32768 | 12 | 0.0002 | 1685.1 |  |
 
 ### n=14
 
@@ -75,5 +77,5 @@ Not started.
 
 ## Notes
 
-n=12 finished: best is L=4 at 145/200 (72.5%), never ≥90%. L=5 100/200; L=6–12 are 5H×4 scouts (6,4,6,1,1,0,1 / 20) documenting the same 200-SPSA depth collapse seen on n=8. Soft cap L=12. n=13…15 next.
+n=13 L=4 full 200-trial: 80/200 (40%), dim 32768, pairs 12, n_params 203, a=0.0854, mean p(GS)=0.0002, wall 1685s. Below 90%. n=12 best remains L=4 145/200. 4T×5C (n=17, dim 524288) is ~215s/trial ≈ 12h for 200 — hopeless; n=16 4T×4C ≈ 22s/trial.
 

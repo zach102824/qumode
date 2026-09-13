@@ -19,7 +19,7 @@ Protocol tag: `200_joint_spsa_noiseless_a_scaled`. Full n=12+ table: `HIGHER_N.m
 | 10 | 4 | 196/200 | 0.980 | 157.1 | hit_threshold |
 | 11 | 4 | 188/200 | 0.940 | 158.8 | hit_threshold |
 | 12 | — | 145/200 | 0.725 | 1240.1 | capped_L12_below_threshold |
-| 13 | — | — | — | — | not_started |
+| 13 | — | 80/200 | 0.400 | 1685.1 | in_progress |
 | 14 | — | — | — | — | not_started |
 | 15 | — | — | — | — | not_started |
 
@@ -71,7 +71,9 @@ This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the
 
 ### n=13
 
-Not started under the 200-SPSA protocol.
+| L | k/N | success | wall (s) | SPSA |
+|---|-----|---------|----------|------|
+| 4 | 80/200 | 0.400 | 1685.1 | 200 |
 
 ### n=14
 
@@ -98,5 +100,5 @@ Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7
 
 ## Notes
 
-n=12 finished: best is L=4 at 145/200 (72.5%), never ≥90%. L=5 100/200; L=6–12 are 5H×4 scouts (6,4,6,1,1,0,1 / 20) documenting the same 200-SPSA depth collapse seen on n=8. Soft cap L=12. n=13…15 next.
+n=13 L=4 full 200-trial: 80/200 (40%), dim 32768, pairs 12, n_params 203, a=0.0854, mean p(GS)=0.0002, wall 1685s. Below 90%. n=12 best remains L=4 145/200. 4T×5C (n=17, dim 524288) is ~215s/trial ≈ 12h for 200 — hopeless; n=16 4T×4C ≈ 22s/trial.
 
