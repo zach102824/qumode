@@ -349,11 +349,30 @@ def write_higher_n(status_note: str = "") -> Path:
             f"{_fmt_mean_p(st['mean_p_ground'])} | {_fmt_wall(st['wall_s'])} |"
         )
 
+    lines.extend(
+        [
+            "## Hardware wall (local-gate ECD, BLAS pinned to 1 thread)",
+            "",
+            "Timed one L=4 circuit on this VM after pinning OpenBLAS. "
+            "Trial estimate = 400 circuits (200 SPSA × 2 evaluations).",
+            "",
+            "| n | simulated | dim | pairs | s/circuit | est. s/trial | est. 200-trial |",
+            "|---|-----------|-----|-------|-----------|--------------|----------------|",
+            "| 12 | 3T×3C | 4096 | 9 | 0.003 | ~1.4 | ~8 min (measured 489s at L=4) |",
+            "| 13–15 | 3T×4C | 32768 | 12 | 0.020 | ~9 | ~0.5 h (n=13 L=4 measured 1685s) |",
+            "| 16 | 4T×4C | 65536 | 16 | 0.054 | ~22 | ~1.2 h |",
+            "| 17–19 | 4T×5C | 524288 | 20 | 0.54 | ~215 | **~12 h — hopeless as a full 200-trial cell** |",
+            "",
+            "A 1-trial 4T×5C smoke is ~4 min; a full n=17…19 scoreboard is not attempted.",
+            "n=16 (4T×4C, C4 idle) is the next register that is even arguably in budget.",
+            "",
+        ]
+    )
     note = status_note.rstrip() if status_note else (
         f"Higher-n extension of PR #15. Soft cap L={L_MAX_HIGHER}. "
         "Do not rerun n=7…11. Noisy/GDR is out of scope."
     )
-    lines.extend(["", "## Notes", "", note, ""])
+    lines.extend(["## Notes", "", note, ""])
     path = ROOT / "HIGHER_N.md"
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path

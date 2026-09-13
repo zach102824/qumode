@@ -56,6 +56,7 @@ Idle modes (0 assigned bits) stay vacuum and are omitted from the simulated tens
 | L | k/N | success | n_params | a | dim | pairs | mean p(GS) | wall (s) | notes |
 |---|-----|---------|----------|---|-----|-------|------------|----------|-------|
 | 4 | 80/200 | 0.400 | 203 | 0.0854 | 32768 | 12 | 0.0002 | 1685.1 |  |
+| 5 | 1/20 | 0.050 | 251 | 0.0768 | 32768 | 12 | 0.0001 | 221.7 | scout |
 
 ### n=14
 
@@ -74,8 +75,21 @@ Not started.
 | 9 | 4 | 198/200 | 0.990 | 104 | 0.1193 | 2048 | 6 | 0.0380 | 155.1 |
 | 10 | 4 | 196/200 | 0.980 | 104 | 0.1193 | 2048 | 6 | 0.0355 | 157.1 |
 | 11 | 4 | 188/200 | 0.940 | 104 | 0.1193 | 2048 | 6 | 0.0610 | 158.8 |
+## Hardware wall (local-gate ECD, BLAS pinned to 1 thread)
+
+Timed one L=4 circuit on this VM after pinning OpenBLAS. Trial estimate = 400 circuits (200 SPSA × 2 evaluations).
+
+| n | simulated | dim | pairs | s/circuit | est. s/trial | est. 200-trial |
+|---|-----------|-----|-------|-----------|--------------|----------------|
+| 12 | 3T×3C | 4096 | 9 | 0.003 | ~1.4 | ~8 min (measured 489s at L=4) |
+| 13–15 | 3T×4C | 32768 | 12 | 0.020 | ~9 | ~0.5 h (n=13 L=4 measured 1685s) |
+| 16 | 4T×4C | 65536 | 16 | 0.054 | ~22 | ~1.2 h |
+| 17–19 | 4T×5C | 524288 | 20 | 0.54 | ~215 | **~12 h — hopeless as a full 200-trial cell** |
+
+A 1-trial 4T×5C smoke is ~4 min; a full n=17…19 scoreboard is not attempted.
+n=16 (4T×4C, C4 idle) is the next register that is even arguably in budget.
 
 ## Notes
 
-n=13 L=4 full 200-trial: 80/200 (40%), dim 32768, pairs 12, n_params 203, a=0.0854, mean p(GS)=0.0002, wall 1685s. Below 90%. n=12 best remains L=4 145/200. 4T×5C (n=17, dim 524288) is ~215s/trial ≈ 12h for 200 — hopeless; n=16 4T×4C ≈ 22s/trial.
+n=12 best L=4 145/200 (72.5%). n=13 L=4 80/200 (40%); L=5 scout 1/20 (collapse). Stopped raising L on n=13 after the scout. 4T×5C (dim 524288) ≈ 12 h / 200 trials — not run. Generating n=14…15 next.
 

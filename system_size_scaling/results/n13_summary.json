@@ -5,7 +5,7 @@
   "n_total": 200,
   "success_prob": 0.4,
   "success_fraction": "80/200",
-  "wall_s": 1685.146711325,
+  "wall_s": 1906.8390419359994,
   "status": "in_progress",
   "outer_iter": 200,
   "protocol_tag": "200_joint_spsa_noiseless_a_scaled",
@@ -17,6 +17,14 @@
       "n_total": 200,
       "success_prob": 0.4,
       "wall_s": 1685.146711325,
+      "outer_iter": 200
+    },
+    {
+      "L": 5,
+      "k": 1,
+      "n_total": 20,
+      "success_prob": 0.05,
+      "wall_s": 221.6923306109993,
       "outer_iter": 200
     }
   ],

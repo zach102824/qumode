@@ -19,7 +19,7 @@ Protocol tag: `200_joint_spsa_noiseless_a_scaled`. Full n=12+ table: `HIGHER_N.m
 | 10 | 4 | 196/200 | 0.980 | 157.1 | hit_threshold |
 | 11 | 4 | 188/200 | 0.940 | 158.8 | hit_threshold |
 | 12 | — | 145/200 | 0.725 | 1240.1 | capped_L12_below_threshold |
-| 13 | — | 80/200 | 0.400 | 1685.1 | in_progress |
+| 13 | — | 80/200 | 0.400 | 1906.8 | in_progress |
 | 14 | — | — | — | — | not_started |
 | 15 | — | — | — | — | not_started |
 
@@ -74,6 +74,7 @@ This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the
 | L | k/N | success | wall (s) | SPSA |
 |---|-----|---------|----------|------|
 | 4 | 80/200 | 0.400 | 1685.1 | 200 |
+| 5 | 1/20 | 0.050 | 221.7 | 200 |
 
 ### n=14
 
@@ -100,5 +101,5 @@ Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7
 
 ## Notes
 
-n=13 L=4 full 200-trial: 80/200 (40%), dim 32768, pairs 12, n_params 203, a=0.0854, mean p(GS)=0.0002, wall 1685s. Below 90%. n=12 best remains L=4 145/200. 4T×5C (n=17, dim 524288) is ~215s/trial ≈ 12h for 200 — hopeless; n=16 4T×4C ≈ 22s/trial.
+n=12 best L=4 145/200 (72.5%). n=13 L=4 80/200 (40%); L=5 scout 1/20 (collapse). Stopped raising L on n=13 after the scout. 4T×5C (dim 524288) ≈ 12 h / 200 trials — not run. Generating n=14…15 next.
 
