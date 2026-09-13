@@ -146,13 +146,21 @@ def cell_stats(n: int, depth: int | None = None) -> dict | None:
     """k/N, n_params, a, dim, pairs, mean p(GS), wall from a canonical cell."""
     if depth is None:
         sp = summary_path(n)
-        if not sp.exists():
-            return None
-        summary = read_json(sp)
-        depth = summary.get("L_star") or (summary.get("curve") or [{}])[-1].get("L")
-        if depth is None:
-            return None
-        rec = load_depth_result(n, int(depth)) or summary
+        if sp.exists():
+            summary = read_json(sp)
+            depth = summary.get("L_star") or (summary.get("curve") or [{}])[-1].get("L")
+            if depth is None:
+                return None
+            rec = load_depth_result(n, int(depth)) or summary
+        else:
+            curve = curve_from_disk(n)
+            if not curve:
+                return None
+            chosen = max(curve, key=lambda r: (float(r["success_prob"]), -int(r["L"])))
+            rec = load_depth_result(n, int(chosen["L"]))
+            if rec is None:
+                return None
+            depth = int(chosen["L"])
     else:
         rec = load_depth_result(n, int(depth))
         if rec is None:
@@ -250,7 +258,8 @@ def write_higher_n(status_note: str = "") -> Path:
         if stats is None or int(row.get("n_total", 0)) == 0:
             lines.append(f"| {n} | — | — | — | {n_params_for(n, L_START)} | {spsa_a_scaled(n_params_for(n, L_START)):.4f} | — | — | — | — | not_started |")
             continue
-        lstar = stats["L"]
+        lstar = row.get("L_star")
+        l_s = "—" if lstar is None else str(int(lstar))
         k = stats["k"]
         ntot = stats["n_total"]
         wall = _fmt_wall(stats["wall_s"])
@@ -261,7 +270,7 @@ def write_higher_n(status_note: str = "") -> Path:
         if stats.get("scout"):
             status = (status + " scout").strip()
         lines.append(
-            f"| {n} | {lstar} | {k}/{ntot} | {stats['success_prob']:.3f} | "
+            f"| {n} | {l_s} | {k}/{ntot} | {stats['success_prob']:.3f} | "
             f"{stats['n_params']} | {stats['a']:.4f} | {dim} | {pairs} | "
             f"{mean_p} | {wall} | {status} |"
         )

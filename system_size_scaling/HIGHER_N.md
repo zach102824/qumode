@@ -30,7 +30,7 @@ Idle modes (0 assigned bits) stay vacuum and are omitted from the simulated tens
 
 | n | L* | k/N | success | n_params | a | dim | pairs | mean p(GS) | wall (s) | status |
 |---|----|-----|---------|----------|---|-----|-------|------------|----------|--------|
-| 12 | — | — | — | 153 | 0.0984 | — | — | — | — | not_started |
+| 12 | — | 145/200 | 0.725 | 153 | 0.0984 | 4096 | 9 | 0.0116 | 489.0 | in_progress |
 | 13 | — | — | — | 203 | 0.0854 | — | — | — | — | not_started |
 | 14 | — | — | — | 203 | 0.0854 | — | — | — | — | not_started |
 | 15 | — | — | — | 203 | 0.0854 | — | — | — | — | not_started |
@@ -39,7 +39,10 @@ Idle modes (0 assigned bits) stay vacuum and are omitted from the simulated tens
 
 ### n=12
 
-Not started.
+| L | k/N | success | n_params | a | dim | pairs | mean p(GS) | wall (s) | notes |
+|---|-----|---------|----------|---|-----|-------|------------|----------|-------|
+| 4 | 145/200 | 0.725 | 153 | 0.0984 | 4096 | 9 | 0.0116 | 489.0 |  |
+| 5 | 18/30 | 0.600 | 189 | 0.0885 | 4096 | 9 | 0.0056 | 51.2 | scout |
 
 ### n=13
 
@@ -65,5 +68,5 @@ Not started.
 
 ## Notes
 
-Higher-n extension scaffolded. Embedding generalized; n=12…15 Hamiltonians and ladder not started yet.
+n=12 L=4: 145/200 (72.5%) below 90%; L=5 full 200-trial sweep running. Deeper L at 200 SPSA may collapse as on n=8.
 
