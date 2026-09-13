@@ -18,7 +18,7 @@ Protocol tag: `200_joint_spsa_noiseless_a_scaled`. Full n=12+ table: `HIGHER_N.m
 | 9 | 4 | 198/200 | 0.990 | 155.1 | hit_threshold |
 | 10 | 4 | 196/200 | 0.980 | 157.1 | hit_threshold |
 | 11 | 4 | 188/200 | 0.940 | 158.8 | hit_threshold |
-| 12 | — | 145/200 | 0.725 | 829.8 | in_progress |
+| 12 | — | 145/200 | 0.725 | 1240.1 | capped_L12_below_threshold |
 | 13 | — | — | — | — | not_started |
 | 14 | — | — | — | — | not_started |
 | 15 | — | — | — | — | not_started |
@@ -61,6 +61,13 @@ This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the
 |---|-----|---------|----------|------|
 | 4 | 145/200 | 0.725 | 489.0 | 200 |
 | 5 | 100/200 | 0.500 | 340.8 | 200 |
+| 6 | 6/20 | 0.300 | 41.6 | 200 |
+| 7 | 4/20 | 0.200 | 47.2 | 200 |
+| 8 | 6/20 | 0.300 | 52.8 | 200 |
+| 9 | 1/20 | 0.050 | 59.1 | 200 |
+| 10 | 1/20 | 0.050 | 64.4 | 200 |
+| 11 | 0/20 | 0.000 | 69.7 | 200 |
+| 12 | 1/20 | 0.050 | 75.5 | 200 |
 
 ### n=13
 
@@ -91,5 +98,5 @@ Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7
 
 ## Notes
 
-n=12 L=4 145/200 (72.5%); L=5 100/200 (50%) collapsed. Remaining L=6…12 will be 5H×4 scouts, not full 200.
+n=12 finished: best is L=4 at 145/200 (72.5%), never ≥90%. L=5 100/200; L=6–12 are 5H×4 scouts (6,4,6,1,1,0,1 / 20) documenting the same 200-SPSA depth collapse seen on n=8. Soft cap L=12. n=13…15 next.
 

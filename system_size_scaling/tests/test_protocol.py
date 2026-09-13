@@ -60,6 +60,37 @@ def test_row_from_curve_soft_cap_is_l40():
     assert row12["status"] == "capped_L12_below_threshold"
 
 
+def test_merged_curve_unions_extra_depths():
+    from system_size_scaling.io_util import merged_curve
+
+    extra = [
+        {"L": 6, "k": 1, "n_total": 20, "success_prob": 0.05, "wall_s": 1.0, "outer_iter": 200},
+        {"L": 4, "k": 2, "n_total": 20, "success_prob": 0.10, "wall_s": 1.0, "outer_iter": 200},
+    ]
+    # n=99 has no disk cells; extra should sort by L.
+    got = merged_curve(99, extra=extra)
+    assert [c["L"] for c in got] == [4, 6]
+
+
+def test_n12_scoreboard_uses_best_full_cell_not_last_scout():
+    from system_size_scaling.io_util import cell_stats, curve_from_disk, row_from_curve
+
+    curve = curve_from_disk(12)
+    if not curve:
+        pytest.skip("n=12 results not on disk")
+    row = row_from_curve(12, curve)
+    assert row["k"] == 145
+    assert row["n_total"] == 200
+    assert row["L_star"] is None
+    assert row["status"] == "capped_L12_below_threshold"
+    assert max(c["success_prob"] for c in curve) == pytest.approx(0.725)
+    stats = cell_stats(12)
+    assert stats is not None
+    assert stats["L"] == 4
+    assert stats["k"] == 145
+    assert stats["n_total"] == 200
+
+
 def test_write_conclusion_marks_superseded_70(tmp_path, monkeypatch):
     import system_size_scaling.io_util as io_util
 

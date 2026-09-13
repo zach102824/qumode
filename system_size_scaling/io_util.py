@@ -121,24 +121,38 @@ def row_from_curve(n: int, curve: list[dict]) -> dict:
     }
 
 
+def merged_curve(n: int, extra: list[dict] | None = None) -> list[dict]:
+    """Union of canonical cells on disk (and optional in-memory rows), by L."""
+    by_l: dict[int, dict] = {}
+    for c in curve_from_disk(n):
+        by_l[int(c["L"])] = dict(c)
+    for c in extra or []:
+        if int(c.get("L", 0)) < L_START:
+            continue
+        by_l[int(c["L"])] = {
+            "L": int(c["L"]),
+            "k": int(c["k"]),
+            "n_total": int(c["n_total"]),
+            "success_prob": float(c["success_prob"]),
+            "wall_s": float(c.get("wall_s", 0.0)),
+            "outer_iter": int(c.get("outer_iter", OUTER_ITER)),
+        }
+    return [by_l[L] for L in sorted(by_l)]
+
+
 def _scoreboard_rows() -> list[dict]:
     """n=7 prior data + finished n=8…11 + higher-n cells (from disk)."""
     rows = [dict(PRIOR_N7)]
     for n in SCOREBOARD_NS:
+        disk = merged_curve(n)
+        rec = row_from_curve(n, disk)
         sp = summary_path(n)
-        if sp.exists():
-            rec = read_json(sp)
-            rec["curve"] = [c for c in rec.get("curve", []) if int(c["L"]) >= L_START]
-            if rec["curve"]:
-                rebuilt = row_from_curve(n, rec["curve"])
-                rec["L_star"] = rebuilt["L_star"]
-                rec["k"] = rebuilt["k"]
-                rec["n_total"] = rebuilt["n_total"]
-                rec["success_prob"] = rebuilt["success_prob"]
-                rec["status"] = rec.get("status") or rebuilt["status"]
-            rows.append(rec)
+        if sp.exists() and not disk:
+            saved = read_json(sp)
+            saved["curve"] = [c for c in saved.get("curve", []) if int(c["L"]) >= L_START]
+            rows.append(saved)
             continue
-        rows.append(row_from_curve(n, curve_from_disk(n)))
+        rows.append(rec)
     return rows
 
 
@@ -148,7 +162,12 @@ def cell_stats(n: int, depth: int | None = None) -> dict | None:
         sp = summary_path(n)
         if sp.exists():
             summary = read_json(sp)
-            depth = summary.get("L_star") or (summary.get("curve") or [{}])[-1].get("L")
+            depth = summary.get("L_star")
+            if depth is None:
+                curve = [c for c in (summary.get("curve") or []) if int(c.get("L", 0)) >= L_START]
+                if curve:
+                    best = max(curve, key=lambda r: (float(r["success_prob"]), -int(r["L"])))
+                    depth = best["L"]
             if depth is None:
                 return None
             rec = load_depth_result(n, int(depth)) or summary

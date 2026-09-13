@@ -82,7 +82,7 @@ def test_sample_logical_roundtrip_n13_to_15(n: int):
                 assert nocc < (1 << mode.n_bits)
 
 
-@pytest.mark.parametrize("n", [8, 9])
+@pytest.mark.parametrize("n", [8, 9, 12])
 def test_planted_ground_roundtrip_and_unique_energy(n: int):
     emb = embedding_for_n(n)
     paths = sorted(ham_dir(n).glob("four_sat_[0-9][0-9][0-9].npz"))
@@ -95,8 +95,8 @@ def test_planted_ground_roundtrip_and_unique_energy(n: int):
         tensor = hybrid_energy_tensor(emb, inst["logical_energies"])
         assert tensor[occ] == pytest.approx(0.0, abs=1e-12)
         n_zero = int(np.sum(np.isclose(tensor, 0.0)))
-        if n == 8:
-            # Exact fill of T0+T1+C0+C1: unique hybrid ground.
+        if n in (8, 12):
+            # Exact fill of the simulated register: unique hybrid ground.
             assert n_zero == 1
         else:
             # Unused C2 Fock bits alias the same logical string.

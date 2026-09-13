@@ -44,7 +44,7 @@ from .ecd import hybrid_energy_tensor, random_ecd_parameters, vacuum_prep
 from .embedding import embedding_for_n, hardware_idle_modes
 from .four_sat import load_instance
 from .gibbs import optimize_gibbs_adaptive
-from .io_util import write_conclusion, write_json
+from .io_util import merged_curve, write_conclusion, write_json
 
 
 def _limit_blas(n: int = 1) -> None:
@@ -343,6 +343,7 @@ def run_depth(
 
 
 def summarize_n(n: int, curve: list[dict], wall_s: float) -> dict:
+    curve = merged_curve(n, extra=curve)
     curve = [c for c in curve if int(c["L"]) >= L_START]
     hit = next((c for c in curve if float(c["success_prob"]) >= SUCCESS_THRESHOLD), None)
     best = max(curve, key=lambda r: (float(r["success_prob"]), -int(r["L"]))) if curve else None
