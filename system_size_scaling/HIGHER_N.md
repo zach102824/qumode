@@ -32,7 +32,7 @@ Idle modes (0 assigned bits) stay vacuum and are omitted from the simulated tens
 |---|----|-----|---------|----------|---|-----|-------|------------|----------|--------|
 | 12 | — | 145/200 | 0.725 | 153 | 0.0984 | 4096 | 9 | 0.0116 | 489.0 | capped_L12_below_threshold |
 | 13 | — | 80/200 | 0.400 | 203 | 0.0854 | 32768 | 12 | 0.0002 | 1685.1 | in_progress |
-| 14 | — | — | — | 203 | 0.0854 | — | — | — | — | not_started |
+| 14 | — | 79/200 | 0.395 | 203 | 0.0854 | 32768 | 12 | 0.0003 | 1770.3 | in_progress |
 | 15 | — | — | — | 203 | 0.0854 | — | — | — | — | not_started |
 
 ## Depth curves
@@ -60,7 +60,9 @@ Idle modes (0 assigned bits) stay vacuum and are omitted from the simulated tens
 
 ### n=14
 
-Not started.
+| L | k/N | success | n_params | a | dim | pairs | mean p(GS) | wall (s) | notes |
+|---|-----|---------|----------|---|-----|-------|------------|----------|-------|
+| 4 | 79/200 | 0.395 | 203 | 0.0854 | 32768 | 12 | 0.0003 | 1770.3 |  |
 
 ### n=15
 
@@ -91,5 +93,5 @@ n=16 (4T×4C, C4 idle) is the next register that is even arguably in budget.
 
 ## Notes
 
-n=12 best L=4 145/200 (72.5%). n=13 L=4 80/200 (40%); L=5 scout 1/20 (collapse). Stopped raising L on n=13 after the scout. 4T×5C (dim 524288) ≈ 12 h / 200 trials — not run. Generating n=14…15 next.
+n=12 L=4 145/200 (72.5%) best. n=13 L=4 80/200 (40%); L=5 scout 1/20. n=14 L=4 79/200 (39.5%), dim 32768, pairs 12, wall 1770s. None ≥90%. 4T×5C wall ~12h/200. Generating n=15 next.
 
