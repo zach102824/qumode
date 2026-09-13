@@ -4,19 +4,24 @@ Noiseless Gibbs **ECD only** (no SNAP, no GDR / noise).
 Success = `most_likely_bitstring == ground_bitstring`.
 Each live cell is **20 Hamiltonians × 10 trials = 200**.
 Cost = Gibbs `-ln⟨e^{-ηE}⟩` with `sampled_tail` η.
-Hardware target: **2 transmons × 3 cavities × 8 levels = dim 2048** (n=11 exact fill).
-Live ladder is **n=8…11 starting at L=4**, **200 joint SPSA**, `a = 0.2 × √(37 / n_params)`, increment L until ≥90% or soft cap **L=40** (not a hard stop at 20).
-Protocol tag: `200_joint_spsa_noiseless_a_scaled`.
+Hardware: n=7…11 stay on the locked 2T×3C map (n=11 exact fill, dim 2048).
+For n>11, append one transmon+cavity when the register is full (3T+4C capacity 15, dim 32768 when C3 is live). Idle 0-bit modes are omitted.
+PR #15 live ladder **n=8…11** finished at L*=4. This PR continues **n=12…15** at L=4, **200 joint SPSA**, `a = 0.2 × √(37 / n_params)`, soft cap **L=12** (do not blindly go to L=40).
+Protocol tag: `200_joint_spsa_noiseless_a_scaled`. Full n=12+ table: `HIGHER_N.md`.
 
 ## Summary table (canonical, 200 joint SPSA)
 
-| n | L* | k/200 | success | wall (s) | status |
-|---|----|-------|---------|----------|--------|
+| n | L* | k/N | success | wall (s) | status |
+|---|----|-----|---------|----------|--------|
 | 7 | 4 | 186/200 | 0.930 | — | prior_data_pr14 |
 | 8 | 4 | 196/200 | 0.980 | 85.4 | hit_threshold |
 | 9 | 4 | 198/200 | 0.990 | 155.1 | hit_threshold |
 | 10 | 4 | 196/200 | 0.980 | 157.1 | hit_threshold |
 | 11 | 4 | 188/200 | 0.940 | 158.8 | hit_threshold |
+| 12 | — | — | — | — | not_started |
+| 13 | — | — | — | — | not_started |
+| 14 | — | — | — | — | not_started |
+| 15 | — | — | — | — | not_started |
 
 ## n=7 prior data (not re-run here)
 
@@ -50,6 +55,22 @@ This folder’s n=7 L=3 / 70-SPSA smoke was **158/200 = 79%** and is **not** the
 |---|-----|---------|----------|------|
 | 4 | 188/200 | 0.940 | 158.8 | 200 |
 
+### n=12
+
+Not started under the 200-SPSA protocol.
+
+### n=13
+
+Not started under the 200-SPSA protocol.
+
+### n=14
+
+Not started under the 200-SPSA protocol.
+
+### n=15
+
+Not started under the 200-SPSA protocol.
+
 ## Superseded: 70-SPSA L=3…20 (not canonical)
 
 Previous PR #15 cells used **70** joint SPSA and a hard L=20 cap. They never hit 90% for n=8–10; deeper L was systematically worse. Those JSON files are kept under `results_70spsa_superseded/` and **must not** be mixed into the live scoreboard.
@@ -61,11 +82,11 @@ Previous PR #15 cells used **70** joint SPSA and a hard L=20 cap. They never hit
 | 10 | 4 | 11/200 | L=4…20 done; never ≥90% |
 | 11 | 4 | 2/200 | L=4…10 on disk; cancelled |
 
-Why deeper L looked worse: **not** a unitarity/decoding bug. Full write-up: `DIAGNOSIS.md`. Short version: production `a=0.2` is sized for n=7 L=4 (37 params). n=8 L=4 has 70 params; 70 SPSA + unscaled `a` cannot train them. 200 SPSA with `a = 0.2√(37/n_params)` hits ≥90% at **L=4** for n=8…11. Raising L at a fixed 200-step budget still collapses (n=8 L=8 is 84/200 even with scaled `a`).
+Why deeper L looked worse: not a unitarity/decoding bug (n=7 ECD matches production QuTiP; gates stay norm-preserving at L=20/40). At fixed 70 SPSA, extra layers add parameters that the budget cannot train — both ⟨H⟩ and p_ground degrade. n=7 L=4 was 168/200 at 70 SPSA vs **186/200 at 200 SPSA** in PR #14. This restart tests whether 200 joint SPSA plus uncapped L recovers ≥90% for n=8…11.
 
 Noisy GDR-in-loop / comprehensive κ_φ τ = 0.5 κτ is **deferred** to the n=7 default-redo agent. This ladder is noiseless mode-finding; κ_φ does not enter the cost.
 
 ## Notes
 
-Live ladder **complete** (48h extension received after this already finished; not used for an L=5…40 sweep). Protocol: 200 joint SPSA, `a=0.2*sqrt(37/n_params)`. Every n=8…11 hits ≥90% at **L=4** (n=8 196/200, n=9 198/200, n=10 196/200, n=11 188/200). The original “increase L until ≥90%” rule therefore **stops at L=4**. Diagnosis (`DIAGNOSIS.md`) showed raising L at this budget collapses success (n=8 L=8 is 84/200 even with scaled `a`; 8/200 at unscaled `a=0.2`).
+Higher-n extension scaffolded. Embedding generalized; n=12…15 Hamiltonians and ladder not started yet.
 

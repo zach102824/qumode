@@ -1,16 +1,26 @@
-"""Bit partition of the 2-transmon × 3-cavity × 8-level register.
+"""Bit partition of a growing transmon × cavity register (Fock cutoff 8).
 
-Canonical 11-bit map (bit 0 = MSB of the logical string when all modes are live)::
+Locked n=7…11 map (do not change)::
+
+    n=7          T0 ⊕ C0 ⊕ C1          (1T×2C production subspace)
+    n=8…11       T0,T1 + C0,C1[,C2]    (2T×3C, C2 bits 0…3)
 
     bit 0        T0     transmon, dim 2
-    bit 1        T1     transmon, dim 2
+    bit 1        T1     transmon, dim 2   (n≥8)
     bits 2–4     C0     cavity, 8 Fock levels, 3 bits (Fock binary, MSB first)
     bits 5–7     C1
     bits 8–10    C2
 
-n=11 is an exact fill of this 2048-dimensional space.
-n=8…10 drop trailing C2 bits (then C2 itself once it has 0 bits).
-n=7 uses the production-like subspace T0 ⊕ C0 ⊕ C1 (skip T1 and C2), dim 128.
+When n exceeds the current capacity, append **one transmon and one cavity**
+(cutoff still 8). Capacities: 2T+3C=11, 3T+4C=15, 4T+5C=19, …
+
+    n=12         add T2; leftover 9 bits fill C0–C2; C3 idle
+                 simulate 3T×3C, dim 2³·8³=4096, pairs=9
+    n=13…15      C3 gets 1,2,3 bits → 3T×4C, dim 2³·8⁴=32768, pairs=12
+    n=16…19      add T3+C4; C4 idle at n=16 (4T×4C), live at n=17…19
+
+Idle modes (0 assigned bits) stay vacuum and are omitted from the simulated
+tensor — same rule as C2 at n=8.
 
 Fock decoding uses the lowest ``n_bits`` of the occupation, listed MSB-first
 among those bits — identical to production ``bits_from_qnm`` when ``n_bits=3``.
@@ -23,7 +33,17 @@ from typing import Sequence
 
 import numpy as np
 
-from .config import FOCK_CUTOFF, HARDWARE_DIM, MAX_LOGICAL_BITS, N_CAVITIES, N_TRANSMONS
+from .config import (
+    FOCK_BITS,
+    FOCK_CUTOFF,
+    HARDWARE_DIM,
+    MAX_LOGICAL_BITS,
+    N_CAVITIES,
+    N_TRANSMONS,
+    hardware_plan,
+    plan_capacity,
+    plan_hardware_dim,
+)
 
 
 @dataclass(frozen=True)
@@ -136,11 +156,26 @@ class Embedding:
         return self.decode_occupations(occ)
 
     def as_dict(self) -> dict:
+        n_t_plan, n_c_plan = hardware_plan(self.n_qubits)
+        plan_dim = (
+            HARDWARE_DIM if self.n_qubits == 7 else plan_hardware_dim(n_t_plan, n_c_plan)
+        )
         return {
             "n_qubits": self.n_qubits,
             "dim": self.dim,
-            "hardware_dim": HARDWARE_DIM,
+            "hardware_dim": plan_dim,
             "max_logical_bits": MAX_LOGICAL_BITS,
+            "hardware_plan": {
+                "n_transmons": int(n_t_plan if self.n_qubits != 7 else N_TRANSMONS),
+                "n_cavities": int(n_c_plan if self.n_qubits != 7 else N_CAVITIES),
+                "capacity": int(
+                    plan_capacity(N_TRANSMONS, N_CAVITIES)
+                    if self.n_qubits == 7
+                    else plan_capacity(n_t_plan, n_c_plan)
+                ),
+                "simulated_n_transmons": self.n_transmons,
+                "simulated_n_cavities": self.n_cavities,
+            },
             "dims": list(self.dims),
             "n_transmons": self.n_transmons,
             "n_cavities": self.n_cavities,
@@ -161,27 +196,37 @@ class Embedding:
             ],
             "bit_partition": bit_partition_doc(self),
             "subspace_of_2048": self.dim < HARDWARE_DIM,
+            "subspace_of_hardware": self.dim < plan_dim,
         }
 
 
-def _cavity_bits_for_n(n: int) -> tuple[int, int, int]:
-    """How many logical bits sit on C0, C1, C2 for n=8…11 (T0+T1 always on)."""
-    leftover = int(n) - N_TRANSMONS
+def cavity_bits_for_n(n: int) -> tuple[int, ...]:
+    """Logical bits on C0, C1, … for the hardware plan at this n (idle cavities = 0)."""
+    n = int(n)
+    n_t, n_c = hardware_plan(n)
+    leftover = n - n_t
     if leftover < 0:
-        raise ValueError(f"n={n} cannot use both transmons")
-    caps = [3, 3, 3]
-    assigned = [0, 0, 0]
-    for i in range(N_CAVITIES):
-        take = min(caps[i], leftover)
+        raise ValueError(f"n={n} cannot use {n_t} transmons")
+    assigned = [0] * n_c
+    for i in range(n_c):
+        take = min(FOCK_BITS, leftover)
         assigned[i] = take
         leftover -= take
     if leftover != 0:
-        raise ValueError(f"n={n} does not fit the 2T×3C×3bit map")
-    return assigned[0], assigned[1], assigned[2]
+        raise ValueError(f"n={n} does not fit the {n_t}T×{n_c}C×{FOCK_BITS}bit map")
+    return tuple(assigned)
+
+
+def _cavity_bits_for_n(n: int) -> tuple[int, int, int]:
+    """Back-compat: C0,C1,C2 bits for n=8…11 (T0+T1 always on)."""
+    bits = cavity_bits_for_n(n)
+    if len(bits) != N_CAVITIES:
+        raise ValueError(f"n={n} is not on the 2T×3C register")
+    return bits[0], bits[1], bits[2]
 
 
 def embedding_for_n(n: int) -> Embedding:
-    """Active-mode embedding for one system size."""
+    """Active-mode embedding for one system size (idle modes omitted)."""
     n = int(n)
     if n < 7 or n > MAX_LOGICAL_BITS:
         raise ValueError(f"this study covers n=7…{MAX_LOGICAL_BITS}, got {n}")
@@ -195,15 +240,14 @@ def embedding_for_n(n: int) -> Embedding:
             ("C1", "cavity", FOCK_CUTOFF, 3),
         )
     else:
-        c0, c1, c2 = _cavity_bits_for_n(n)
+        n_t, _n_c = hardware_plan(n)
+        cav_bits = cavity_bits_for_n(n)
         spec_list: list[tuple[str, str, int, int]] = [
-            ("T0", "transmon", 2, 1),
-            ("T1", "transmon", 2, 1),
-            ("C0", "cavity", FOCK_CUTOFF, c0),
-            ("C1", "cavity", FOCK_CUTOFF, c1),
+            (f"T{i}", "transmon", 2, 1) for i in range(n_t)
         ]
-        if c2 > 0:
-            spec_list.append(("C2", "cavity", FOCK_CUTOFF, c2))
+        for i, n_bits in enumerate(cav_bits):
+            if n_bits > 0:
+                spec_list.append((f"C{i}", "cavity", FOCK_CUTOFF, n_bits))
         spec = tuple(spec_list)
 
     for axis, (name, kind, dim, n_bits) in enumerate(spec):
@@ -237,8 +281,21 @@ def bit_partition_doc(emb: Embedding) -> list[dict]:
     return rows
 
 
+def hardware_register_names(n: int) -> list[str]:
+    """Modes present in the hardware plan (including idle vacuum modes).
+
+    n=7 is reported against the parent 2T×3C register (T1 and C2 idle),
+    matching the locked PR #15 map.
+    """
+    n = int(n)
+    if n == 7:
+        n_t, n_c = N_TRANSMONS, N_CAVITIES
+    else:
+        n_t, n_c = hardware_plan(n)
+    return [f"T{i}" for i in range(n_t)] + [f"C{i}" for i in range(n_c)]
+
+
 def hardware_idle_modes(n: int) -> list[str]:
-    """Modes present in the 2048-dim hardware but omitted (vacuum) for this n."""
+    """Modes present in the hardware plan but omitted (vacuum) for this n."""
     live = {m.name for m in embedding_for_n(n).modes}
-    all_names = ["T0", "T1", "C0", "C1", "C2"]
-    return [name for name in all_names if name not in live]
+    return [name for name in hardware_register_names(n) if name not in live]

@@ -1,7 +1,9 @@
-"""Noiseless multi-mode ECD via local gates (no full 2048×2048 unitaries).
+"""Noiseless multi-mode ECD via local gates (no full dim×dim unitaries).
 
-One pair is ``ECD(β) R(θ, φ)`` on a chosen (transmon, cavity), matching
-production ``ecd_rotation_pair``. A layer applies every active transmon–cavity
+Statevector stays local-gate: never materialize a 2048^2 or 32768^2 dense matrix.
+
+One pair is ``ECD(beta) R(theta, phi)`` on a chosen (transmon, cavity), matching
+production ``ecd_rotation_pair``. A layer applies every active transmon-cavity
 pair, cavity-major then transmon (so n=7 reproduces the 1q+2cav UER order).
 """
 

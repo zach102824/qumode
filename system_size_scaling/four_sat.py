@@ -1,4 +1,4 @@
-"""Unique-planted 4-SAT → diagonal Ising, generalized to n=7…11.
+"""Unique-planted 4-SAT → diagonal Ising, generalized to n=7…19.
 
 Same family as ``Hamiltonians/four_sat.py``: plant a locally rigid satisfying
 assignment, greedily add compatible 4-clauses until that assignment is the
