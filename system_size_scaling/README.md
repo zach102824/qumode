@@ -102,6 +102,10 @@ python -m system_size_scaling.run_one_n --n 13 --scout
 # smoke: 1 H × 1 trial × L=4 × 2 SPSA steps
 python -m system_size_scaling.run_one_n --n 8 --L 4 --max-hamiltonians 1 --n-trials 1 --outer-iter 2 --no-sweep
 
+# n=12 diagnosis (round-trip, T2 wiring, random-init, L=4 SPSA fleet)
+python -m system_size_scaling.diagnose_n12 checks
+python -m system_size_scaling.diagnose_n12 fleet --workers 4
+
 # unit tests
 python -m pytest system_size_scaling/tests -q
 ```

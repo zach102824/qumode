@@ -1,0 +1,10 @@
+{
+  "n": 12,
+  "L": 4,
+  "n_samples": 4000,
+  "k": 1,
+  "success_prob": 0.00025,
+  "mean_p_ground": 0.0002337770681431419,
+  "uniform": 0.000244140625,
+  "ratio_to_uniform": 1.024
+}
