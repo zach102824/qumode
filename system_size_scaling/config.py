@@ -10,6 +10,7 @@ HAM_ROOT = ROOT / "Hamiltonians"
 RESULTS_ROOT = ROOT / "results"
 SUPERSEDED_70_ROOT = ROOT / "results_70spsa_superseded"
 DIAGNOSIS_ROOT = ROOT / "results" / "diagnosis"
+DIAGNOSIS_N12_ROOT = ROOT / "results" / "diagnosis_n12"
 
 # Production n=7 4-SAT used ~18 clauses / 7 variables.
 CLAUSE_DENSITY = 18 / 7
